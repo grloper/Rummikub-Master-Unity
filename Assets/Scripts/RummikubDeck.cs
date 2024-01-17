@@ -28,12 +28,15 @@ public class RummikubDeck
             deck.Add(new Card(14, CardColor.Red));
             deck.Add(new Card(14, CardColor.Black));
     }
-    public Card DrawRandomCardFromDeck()
+    public int GetDeckLength()
+    {
+        return deck.Count;
+    }
+    public Card DrawRandomCardFromDeck() 
     {
         if (deck.Count == 0)
         {
-            Debug.LogWarning("Deck is empty!");
-            return null;
+            throw new NullReferenceException();
         }
 
         int randomIndex = Random.Range(0, deck.Count);

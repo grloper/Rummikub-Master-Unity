@@ -7,56 +7,36 @@ public class InitializeGame : MonoBehaviour
 {
     //game Board
     [SerializeField] GameObject BoardGrid;
-    [SerializeField] GameObject PlayerGrid;
+    [SerializeField] GameObject HumanGrid;
     //game Tiles
     [SerializeField] GameObject TileSlotPrefab;
     [SerializeField] GameObject TileSlotPlayerPrefab;
 
-    // Reference to UImanager
-    public UImanager uiManager;
-    public RummikubDeck rummikubDeck;  
-    
+    //Save Human to tell him to start generating
+    public Human human;
+
     // Start is called before the first frame update
     void Start()
     {
-        rummikubDeck = new RummikubDeck();
-        // Connect with UImanager
-        if (uiManager == null)
-        {
-            Debug.LogError("UImanager reference is not set in the Inspector!");
-           // return;
-        }
+       
         //Empty Slot Creater
         Init();
     }
 
     private void Init()
     {
-        // Initialize Game Board
-        for (int i = 0; i < 168; i++)
+        // Initialize Game Board with 175 slots
+        for (int i = 0; i < 175; i++)
         {
             Instantiate(TileSlotPrefab, BoardGrid.transform);
         }
 
-        // Initialize Player Board with 44 slots
-        for (int i = 0; i < 44; i++)
+        // Initialize Human Board with 40 slots
+        for (int i = 0; i < 40; i++)
         {
-            Instantiate(TileSlotPlayerPrefab, PlayerGrid.transform);
+            Instantiate(TileSlotPlayerPrefab, HumanGrid.transform);
         }
-        // Draw random cards and assign them to 14 slots on the player board
-        for (int i = 0; i < 14; i++)
-        {
-            GameObject tileSlot = PlayerGrid.transform.GetChild(i).gameObject;
-
-            // Draw a random card from the deck using RummikubDeck
-            Card randomCard = uiManager.InstinitanteCard(rummikubDeck.DrawRandomCardFromDeck(), tileSlot);
-
-            if (randomCard == null)
-            {
-                Debug.LogWarning("Unable to draw a card for the player's board.");
-            }
-
-        }
+        human.InitBoard();
 
 
     }
