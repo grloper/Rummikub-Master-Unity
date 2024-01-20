@@ -24,7 +24,7 @@ public class Human : Player
         {
             GameObject tileSlot = HumanGrid.transform.GetChild(i).gameObject;
             // Draw a random card from the deck using RummikubDeck
-            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubInstance().DrawRandomCardFromDeck(), tileSlot);
+            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
             board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
             if (randomCard == null)
             {
@@ -70,9 +70,9 @@ public class Human : Player
             {
                 GameObject tileSlot = HumanGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
-                Card randomCard = uiManager.InstinitanteCard(board.GetRummikubInstance().DrawRandomCardFromDeck(), tileSlot);
+                Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
                 board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
-                print(board.GetHumanHand().Count);
+                print("Human hand: "+board.GetHumanHand().Count);
             }
             catch (NullReferenceException)
             {

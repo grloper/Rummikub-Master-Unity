@@ -5,33 +5,68 @@ using UnityEngine;
 
 public class GameBoard : MonoBehaviour
 {
-    private List<Card> humanHand = new List<Card>(); // List of cards in the HumanHand's hand
-    private List<Card> computerHand = new List<Card>(); // List of cards in the computer's hand
-    private List<Card> gameBoardValidSets = new List<Card>(); // List of valid sets on the board
-    private RummikubDeck rummikubDeck = new RummikubDeck(); // Deck of cards
+    // List of cards in the HumanHand's hand
+    private List<Card> humanHand = new List<Card>(); 
+    // List of cards in the computer's hand
+    private List<Card> computerHand = new List<Card>(); 
+    // List of valid sets on the board
+    private List<Card> gameBoardValidSets = new List<Card>(); 
+     // Single Instance! Deck of cards
+    private RummikubDeck rummikubDeck = new RummikubDeck();
 
+    // Move Card from GameBoard to HumanHand
+    public void MoveCardFromGameBoardToHumanHand(Card card)
+    {
+        gameBoardValidSets.Remove(card);
+        humanHand.Add(card);
+    }
+
+
+    //Move Card from HumanHand to GameBoard
+    public void MoveCardFromHumanHandToGameBoard(Card card)
+    {
+        humanHand.Remove(card);
+        gameBoardValidSets.Add(card);
+    }
+    // Move Card from ComputerHand to GameBoard
+    public void MoveCardFromComputerHandToGameBoard(Card card)
+    {
+        computerHand.Remove(card);
+        gameBoardValidSets.Add(card);
+    }
+
+    // Add Card to HumanHand
     public void AddCardToHumanHand(Card card)
     {
         humanHand.Add(card);
     }
 
+    // return instance of human hand
     public List<Card> GetHumanHand()
     {
         return humanHand;
     }
 
+    // Add Card to ComputerHand
     public void AddCardToComputerHand(Card card)
     {
         computerHand.Add(card);
     }
 
+    // return instance of computer hand
     public List<Card> GetComputerHand()
     {
         return computerHand;
     }
 
-    //function that check if the set is a Run, same color and consecutive numbers at least 3 numbers up to 13 it is getting a list of card use List property
-    public bool IsRun(List<Card> set)
+    // explain the game rules
+    public void ExplainGameRules()
+    {
+        Debug.Log("The game is played with two sets of 52 cards and 2 jokers. Each player has 14 cards in his hand. The goal of the game is to get rid of all the cards in your hand. You can do this by creating sets of cards. There are two types of sets: a group and a run. A group is a set of 3 or 4 cards with the same number but different colors. A run is a set of 3 or more cards with the same color and consecutive numbers. A joker can be used as any card. You can add cards to the sets on the board or create new sets. You can also move cards inside the boards as long as you are not breaking the rules and keeps all the sets valids.");
+    }
+    
+    // check if the set is a run 
+    public bool IsRun(List<Card> set) 
     {
         // Check if the set is a run
         bool isSameColor = true;
@@ -71,9 +106,9 @@ public class GameBoard : MonoBehaviour
 
         // Return false if the set is not a run
         return false;
-    }
+    } 
 
-    //function that check if the set is a group, same number and different color at least 3 Colors up to 4 it is getting a list of card use List property the set count is 3 to 4
+    // check if the set is a group of colors
     public bool IsGroupOfColors(List<Card> set)
     {
         // Check if the set is a group
@@ -116,20 +151,9 @@ public class GameBoard : MonoBehaviour
         return false;
     }
 
-    public RummikubDeck GetRummikubInstance()
+    // return instance of rummikub deck
+    public RummikubDeck GetRummikubDeckInstance()
     {
         return this.rummikubDeck;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-     
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }

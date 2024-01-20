@@ -10,6 +10,17 @@ public class Computer : Player
     [SerializeField] private GameBoard board;
     public override void DrawCard()
     {
+        try
+        {
+            // Draw a random card from the deck using RummikubDeck
+            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck());
+            board.AddCardToComputerHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
+            print("Computer hand: "+board.GetComputerHand().Count);
+        }
+        catch (NullReferenceException)
+        {
+            Debug.LogWarning("Deck is Empty.");
+        }
     }
 
     public override void InitBoard()
@@ -20,23 +31,23 @@ public class Computer : Player
             Debug.LogError("UImanager reference is not set in the Inspector!");
             // return;
         }
-        //InitComputerDeck();
+        InitComputerDeck();
     }
 
-    //private void InitComputerDeck()
-    //{
-    //    // Draw random cards and assign them to 14 slots on the Human board
-    //    for (int i = 0; i < 14; i++)
-    //    {
-    //        // Draw a random card from the deck using RummikubDeck
-    //        Card randomCard = uiManager.InstinitanteCard(board.GetRummikubInstance().DrawRandomCardFromDeck(), tileSlot);
-    //        board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
-    //        if (randomCard == null)
-    //        {
-    //            Debug.LogWarning("Unable to draw a card for the Human's board.");
-    //        }
-    //    }
-    //}
+    private void InitComputerDeck()
+    {
+        // Draw random cards and assign them to 14 slots on the Human board
+        for (int i = 0; i < 14; i++)
+        {
+            // Draw a random card from the deck using RummikubDeck
+            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck());
+            board.AddCardToComputerHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
+            if (randomCard == null)
+            {
+                Debug.LogWarning("Unable to draw a card for the Human's board.");
+            }
+        }
+    }
 
     // Start is called before the first frame update
     void Start()

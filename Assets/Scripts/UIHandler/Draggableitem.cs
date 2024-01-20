@@ -9,11 +9,14 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public Image image;
     // The parent of the card after it has been dragged
     [HideInInspector] public Transform parentAfterDrag;
+    [HideInInspector] public Transform parentBeforeDrag;
     // The original position of the card
     private Vector3 originalPosition;
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // Store the original parent of the card
+        parentBeforeDrag = transform.parent;
 
         // Set the parent of the card to the canvas
         parentAfterDrag = transform.parent;

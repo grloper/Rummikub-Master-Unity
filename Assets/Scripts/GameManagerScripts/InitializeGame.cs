@@ -14,6 +14,7 @@ public class InitializeGame : MonoBehaviour
 
     //Save Human to tell him to start generating
     public Human human;
+    public Computer computer;
 
     // Start is called before the first frame update
     void Start()
@@ -25,8 +26,8 @@ public class InitializeGame : MonoBehaviour
 
     private void Init()
     {
-        // Initialize Game Board with 175 slots 7HEIGHT*24WIDTH
-        for (int i = 0; i < 175; i++)
+        // Initialize Game Board with 232 slots 7HEIGHT*24WIDTH
+        for (int i = 0; i < 232; i++)
         {
             Instantiate(TileSlotPrefab, BoardGrid.transform);
         }
@@ -37,6 +38,8 @@ public class InitializeGame : MonoBehaviour
             Instantiate(TileSlotPlayerPrefab, HumanGrid.transform);
         }
         human.InitBoard();
+        computer.InitBoard();
+        
 
 
     }

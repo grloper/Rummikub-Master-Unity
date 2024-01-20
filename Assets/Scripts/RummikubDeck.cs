@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 public class RummikubDeck
 {
-    private List<Card> deck = new List<Card>();
+    private List<Card> initializedDeck = new List<Card>();
     public RummikubDeck()
     {
         InitializeDeck();
@@ -14,7 +14,7 @@ public class RummikubDeck
     private void InitializeDeck()
     {
         //106 tiles at deck
-        deck.Clear();
+        initializedDeck.Clear();
         //loop number
             for (int i = 1; i <= 13; i++)
             {
@@ -24,29 +24,29 @@ public class RummikubDeck
                     CardColor color = (CardColor)j;
                     Card card = new Card(i, color);
                 //two sets of each card
-                    deck.Add(card);
-                    deck.Add(card); 
+                initializedDeck.Add(card);
+                initializedDeck.Add(card); 
                 }
             }
             // Adding jokers manually
-            deck.Add(new Card(14, CardColor.Red));
-            deck.Add(new Card(14, CardColor.Black));
+            initializedDeck.Add(new Card(14, CardColor.Red));
+            initializedDeck.Add(new Card(14, CardColor.Black));
     }
     public int GetDeckLength()
     {
-        return deck.Count;
+        return initializedDeck.Count;
     }
     public Card DrawRandomCardFromDeck() 
     {
         
-        if (deck.Count == 0)
+        if (initializedDeck.Count == 0)
         {
             throw new NullReferenceException();
         }
 
-        int randomIndex = Random.Range(0, deck.Count);
-        Card drawnCard = deck[randomIndex];
-        deck.RemoveAt(randomIndex);
+        int randomIndex = Random.Range(0, initializedDeck.Count);
+        Card drawnCard = initializedDeck[randomIndex];
+        initializedDeck.RemoveAt(randomIndex);
         return drawnCard;
     }
 }

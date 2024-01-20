@@ -5,8 +5,12 @@ using UnityEngine.UI;
 
 public class TileSlot : MonoBehaviour, IDropHandler
 {
+     private GameBoard board;
 
-
+    private void Start()
+    {
+        this.board= GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameBoard>();
+    }
     public void OnDrop(PointerEventData eventData)
     {
         
@@ -26,14 +30,23 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 {
                     // create a new CardPosition object and assign it to the card
                     card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
-                    Debug.Log("Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " in Tile Slot Human");
+                    Debug.Log("Dropped from: "+ draggableItem.parentBeforeDrag.transform.parent.name+" Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid");
+                    if (draggableItem.parentBeforeDrag.transform.parent.name=="BoardGrid")
+                    {
+                        board.MoveCardFromGameBoardToHumanHand(card);
+                    }
+                    
                 }
                 //transform.parent.name == "BoardGrid"
                 else
                 {
                     // create a new CardPosition object and assign it to the card
                     card.Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
-                    Debug.Log("Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column);
+                    Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid");
+                    if (draggableItem.parentBeforeDrag.transform.parent.name == "HumanGrid")
+                    {
+                        board.MoveCardFromHumanHandToGameBoard(card);
+                    }
                 }
             }
         }
@@ -53,15 +66,15 @@ public class TileSlot : MonoBehaviour, IDropHandler
     }
     private int GetRowIndexBoard()
     {
-        //transform.GetSiblingIndex() = the number from 0 to 174 from left to right going upwards
-        int totalColumns = 25;
+        //transform.GetSiblingIndex() = the number from 0 to 231 from left to right going upwards
+        int totalColumns = 29;
         return transform.GetSiblingIndex() / totalColumns;
     }
 
     private int GetColumnIndexBoard()
     {
-        int totalColumns = 25;
-        //transform.GetSiblingIndex() = the number from 0 to 174 from left to right going upwards
+        int totalColumns = 29;
+        //transform.GetSiblingIndex() = the number from 0 to 231 from left to right going upwards
         return transform.GetSiblingIndex() % totalColumns; 
     }
 
