@@ -8,8 +8,8 @@ public class Human : Player
 {
     [SerializeField] GameObject HumanGrid;
     // Reference to UImanager
-    public UImanager uiManager;
-    RummikubDeck rummikubDeck = new RummikubDeck();
+    [SerializeField] private UImanager uiManager;
+    [SerializeField] private GameBoard board;
 
     // Start is called before the first frame update
     void Start()
@@ -23,16 +23,14 @@ public class Human : Player
         for (int i = 0; i < 14; i++)
         {
             GameObject tileSlot = HumanGrid.transform.GetChild(i).gameObject;
-
             // Draw a random card from the deck using RummikubDeck
-            Card randomCard = uiManager.InstinitanteCard(rummikubDeck.DrawRandomCardFromDeck(), tileSlot);
+            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubInstance().DrawRandomCardFromDeck(), tileSlot);
+            board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
             if (randomCard == null)
             {
                 Debug.LogWarning("Unable to draw a card for the Human's board.");
             }
-
         }
-  
 
     }
 
@@ -72,14 +70,15 @@ public class Human : Player
             {
                 GameObject tileSlot = HumanGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
-                Card randomCard = uiManager.InstinitanteCard(rummikubDeck.DrawRandomCardFromDeck(), tileSlot);
+                Card randomCard = uiManager.InstinitanteCard(board.GetRummikubInstance().DrawRandomCardFromDeck(), tileSlot);
+                board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
+                print(board.GetHumanHand().Count);
             }
-            catch (NullReferenceException ex)
+            catch (NullReferenceException)
             {
                 Debug.LogWarning("Deck is Empty.");
             }
         }
-
         else
         {
             Debug.LogWarning("No empty slots available.");
@@ -90,7 +89,6 @@ public class Human : Player
 
     public override void InitBoard()
     {
-        rummikubDeck = new RummikubDeck();
         // Connect with UImanager
         if (uiManager == null)
         {

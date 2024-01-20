@@ -479,6 +479,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HumanGrid: {fileID: 1235662192}
   uiManager: {fileID: 1707528207}
+  board: {fileID: 1707528208}
 --- !u!4 &917680025
 Transform:
   m_ObjectHideFlags: 0
@@ -874,6 +875,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1707528206}
+  - component: {fileID: 1707528208}
   - component: {fileID: 1707528207}
   - component: {fileID: 1707528205}
   m_Layer: 0
@@ -986,6 +988,18 @@ MonoBehaviour:
   PrefabTile: {fileID: 8922378899630301520, guid: df558ee1241ed4a478cdb2e47d6999b9, type: 3}
   btnDeckText: {fileID: 1333908091}
   human: {fileID: 917680024}
+--- !u!114 &1707528208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707528204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c8008cadd04ef546a9de720ced070ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1772970762
 GameObject:
   m_ObjectHideFlags: 0

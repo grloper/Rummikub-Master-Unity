@@ -25,7 +25,7 @@ public class InitializeGame : MonoBehaviour
 
     private void Init()
     {
-        // Initialize Game Board with 175 slots
+        // Initialize Game Board with 175 slots 7HEIGHT*24WIDTH
         for (int i = 0; i < 175; i++)
         {
             Instantiate(TileSlotPrefab, BoardGrid.transform);

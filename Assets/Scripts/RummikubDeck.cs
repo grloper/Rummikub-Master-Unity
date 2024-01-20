@@ -13,17 +13,21 @@ public class RummikubDeck
     }
     private void InitializeDeck()
     {
+        //106 tiles at deck
+        deck.Clear();
+        //loop number
             for (int i = 1; i <= 13; i++)
             {
+            //loop color
                 for (int j = 0; j < 4; j++)
                 {
                     CardColor color = (CardColor)j;
                     Card card = new Card(i, color);
+                //two sets of each card
                     deck.Add(card);
-                    deck.Add(card); // Adding a second set
+                    deck.Add(card); 
                 }
             }
-
             // Adding jokers manually
             deck.Add(new Card(14, CardColor.Red));
             deck.Add(new Card(14, CardColor.Black));
@@ -34,6 +38,7 @@ public class RummikubDeck
     }
     public Card DrawRandomCardFromDeck() 
     {
+        
         if (deck.Count == 0)
         {
             throw new NullReferenceException();

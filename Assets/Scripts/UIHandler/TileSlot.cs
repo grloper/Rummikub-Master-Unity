@@ -1,17 +1,71 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class TileSlot : MonoBehaviour,IDropHandler
+public class TileSlot : MonoBehaviour, IDropHandler
 {
+
+
     public void OnDrop(PointerEventData eventData)
     {
-        if (transform.childCount==0)
+        
+        if (transform.childCount == 0)
         {
+            // Get the card that is being dropped
             GameObject dropped = eventData.pointerDrag;
-            Draggableitem draggableitem = dropped.GetComponent<Draggableitem>();
-            draggableitem.parentAfterDrag = transform;
+            // Set the parent of the dropped card to the tile slot
+            DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
+            // Set the parent of the card to the slot
+            draggableItem.parentAfterDrag = transform;
+            // Set the position of the dropped card
+            Card card = dropped.GetComponent<Card>();
+            if (card != null)
+            {
+                if (transform.parent.name == "HumanGrid")
+                {
+                    // create a new CardPosition object and assign it to the card
+                    card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
+                    Debug.Log("Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " in Tile Slot Human");
+                }
+                //transform.parent.name == "BoardGrid"
+                else
+                {
+                    // create a new CardPosition object and assign it to the card
+                    card.Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
+                    Debug.Log("Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column);
+                }
+            }
         }
     }
+    private int GetRowIndexHuman()
+    {
+        //transform.GetSiblingIndex() = the number from 0 to 39 from left to right going upwards
+        int totalColumns = 20;
+        return transform.GetSiblingIndex() / totalColumns;
+    }
+
+    private int GetColumnIndexHuman()
+    {
+        //transform.GetSiblingIndex() = the number from 0 to 39 from left to right going upwards 
+        int totalColumns = 20;
+        return transform.GetSiblingIndex() % totalColumns;
+    }
+    private int GetRowIndexBoard()
+    {
+        //transform.GetSiblingIndex() = the number from 0 to 174 from left to right going upwards
+        int totalColumns = 25;
+        return transform.GetSiblingIndex() / totalColumns;
+    }
+
+    private int GetColumnIndexBoard()
+    {
+        int totalColumns = 25;
+        //transform.GetSiblingIndex() = the number from 0 to 174 from left to right going upwards
+        return transform.GetSiblingIndex() % totalColumns; 
+    }
+
+
+
+
 }

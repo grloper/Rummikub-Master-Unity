@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CardColor
+public enum CardColor 
 {
     Red, //0
     Black, //1 
