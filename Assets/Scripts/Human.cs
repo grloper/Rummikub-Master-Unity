@@ -40,7 +40,7 @@ public class Human : Player
         
     }
 
-    private int GetEmptySlotIndex()
+    public int GetEmptySlotIndex()
     {
         for (int i = 0; i < HumanGrid.transform.childCount; i++)
         {
@@ -97,4 +97,6 @@ public class Human : Player
         }
         InitHumanDeck();
     }
+
+ 
 }

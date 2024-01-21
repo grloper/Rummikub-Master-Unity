@@ -12,4 +12,5 @@ public abstract class Player : MonoBehaviour
     public abstract void DrawCard();
     public abstract void InitBoard();
 
+
 }

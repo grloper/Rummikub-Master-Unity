@@ -6,14 +6,14 @@ using UnityEngine.UI;
 public class TileSlot : MonoBehaviour, IDropHandler
 {
      private GameBoard board;
-
+     private UImanager uiManager;
     private void Start()
     {
         this.board= GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameBoard>();
+        this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>();
     }
     public void OnDrop(PointerEventData eventData)
     {
-        
         if (transform.childCount == 0)
         {
             // Get the card that is being dropped
@@ -28,16 +28,21 @@ public class TileSlot : MonoBehaviour, IDropHandler
             {
                 if (transform.parent.name == "HumanGrid")
                 {
-                    // create a new CardPosition object and assign it to the card
-                    card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
-                    Debug.Log("Dropped from: "+ draggableItem.parentBeforeDrag.transform.parent.name+" Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid");
-                    if (draggableItem.parentBeforeDrag.transform.parent.name=="BoardGrid")
+                   
+                    if (draggableItem.parentBeforeDrag.transform.parent.name == "BoardGrid")
                     {
-                        board.MoveCardFromGameBoardToHumanHand(card);
+                        // Move the card back to its original position
+                        draggableItem.parentAfterDrag = draggableItem.parentBeforeDrag;
+                        dropped.transform.SetParent(draggableItem.parentAfterDrag);
+                        dropped.transform.localPosition = Vector3.zero;
                     }
-                    
+                    else
+                    {
+                        // create a new CardPosition object and assign it to the card
+                        card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
+                        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid");
+                    }
                 }
-                //transform.parent.name == "BoardGrid"
                 else
                 {
                     // create a new CardPosition object and assign it to the card
@@ -46,6 +51,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                     if (draggableItem.parentBeforeDrag.transform.parent.name == "HumanGrid")
                     {
                         board.MoveCardFromHumanHandToGameBoard(card);
+                        uiManager.AddCardToStack(dropped);
                     }
                 }
             }

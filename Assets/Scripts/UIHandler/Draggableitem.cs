@@ -36,11 +36,13 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     }
 
     public void OnEndDrag(PointerEventData eventData)
-    {
-        // Set the parent of the card to the tile slot
-        transform.SetParent(parentAfterDrag);
-        // Enable raycasting again
-        image.raycastTarget = true;
+    { 
+
+            // Set the parent of the card to the tile slot
+            transform.SetParent(parentAfterDrag);
+            // Enable raycasting again
+            image.raycastTarget = true;
+       
     }
 
     public void OnPointerDown(PointerEventData eventData)
