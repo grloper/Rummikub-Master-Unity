@@ -13,20 +13,21 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     // The original position of the card
     private Vector3 originalPosition;
 
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // Store the original parent of the card
-        parentBeforeDrag = transform.parent;
+        
+            // Store the original parent of the card
+            parentBeforeDrag = transform.parent;
 
-        // Set the parent of the card to the canvas
-        parentAfterDrag = transform.parent;
-        transform.SetParent(transform.root);
-        // Set the card to the top of the hierarchy so it renders on top of other cards
-        transform.SetAsLastSibling();
-        // Disable raycasting so the card doesn't get caught on other cards
-        image.raycastTarget = false;
+            // Set the parent of the card to the canvas
+            parentAfterDrag = transform.parent;
+            transform.SetParent(transform.root);
+            // Set the card to the top of the hierarchy so it renders on top of other cards
+            transform.SetAsLastSibling();
+            // Disable raycasting so the card doesn't get caught on other cards
+            image.raycastTarget = false;
 
-        // Move the card up by a certain amount
     }
 
     public void OnDrag(PointerEventData eventData)

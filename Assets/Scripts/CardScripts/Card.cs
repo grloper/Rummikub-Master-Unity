@@ -13,11 +13,21 @@ public class Card : MonoBehaviour
     public CardColor Color { get => color; set => color = value; }
     public CardPosition Position { get => position; set => position = value; }
 
+    public Card()
+    {
+        // Default constructor
+    }
+
     // Constructor that takes two arguments
     public Card(int number, CardColor color)
     {
         this.number = number;
         this.color = color;
     }
-
+    public override string ToString()
+    {
+        //return all values
+        return "Card: " + number + " " + color + "Y:" + position.Row + ",X:" + position.Column;
+    }
 }
+

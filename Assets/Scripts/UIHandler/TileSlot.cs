@@ -5,16 +5,19 @@ using UnityEngine.UI;
 
 public class TileSlot : MonoBehaviour, IDropHandler
 {
-     private GameBoard board;
-     private UImanager uiManager;
+    [HideInInspector]  private GameBoard board;
+    [HideInInspector] private UImanager uiManager;
+    [HideInInspector] private GameManager gameManager;
     private void Start()
     {
         this.board= GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameBoard>();
         this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>();
+        this.gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
+
     }
     public void OnDrop(PointerEventData eventData)
     {
-        if (transform.childCount == 0)
+        if (gameManager.GetTurn() != 1 && transform.childCount == 0)
         {
             // Get the card that is being dropped
             GameObject dropped = eventData.pointerDrag;
@@ -23,12 +26,11 @@ public class TileSlot : MonoBehaviour, IDropHandler
             // Set the parent of the card to the slot
             draggableItem.parentAfterDrag = transform;
             // Set the position of the dropped card
-            Card card = dropped.GetComponent<Card>();
-            if (card != null)
+            if (dropped.GetComponent<Card>() != null)
             {
                 if (transform.parent.name == "HumanGrid")
                 {
-                   
+
                     if (draggableItem.parentBeforeDrag.transform.parent.name == "BoardGrid")
                     {
                         // Move the card back to its original position
@@ -39,22 +41,31 @@ public class TileSlot : MonoBehaviour, IDropHandler
                     else
                     {
                         // create a new CardPosition object and assign it to the card
-                        card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
-                        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid");
+                        dropped.GetComponent<Card>().Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
+                        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + dropped.GetComponent<Card>().Position.Row + ", Column: " + dropped.GetComponent<Card>().Position.Column + " HumanGrid");
                     }
                 }
                 else
                 {
                     // create a new CardPosition object and assign it to the card
-                    card.Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
-                    Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid");
+                    dropped.GetComponent<Card>().Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
+                    Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + dropped.GetComponent<Card>().Position.Row + ", Column: " + dropped.GetComponent<Card>().Position.Column + " BoardGrid");
                     if (draggableItem.parentBeforeDrag.transform.parent.name == "HumanGrid")
                     {
-                        board.MoveCardFromHumanHandToGameBoard(card);
-                        uiManager.AddCardToStack(dropped);
+                        board.MoveCardFromHumanHandToGameBoard(dropped.GetComponent<Card>());
+                        board.AddCardToPlayerStack(dropped.GetComponent<Card>());
+                    }
+                    else
+                    {
+                        board.PrintGameBoardValidSets();
                     }
                 }
             }
+        }
+        else
+        {
+            // Show dialog box: "Wait For Your Turn"
+            Debug.Log("Wait For Your Turn");
         }
     }
     private int GetRowIndexHuman()
