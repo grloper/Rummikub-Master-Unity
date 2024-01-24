@@ -14,10 +14,18 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     private Vector3 originalPosition;
 
 
+    [HideInInspector] private GameManager gameManager;
+    private void Start()
+    {
+
+        this.gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
+
+    }
     public void OnBeginDrag(PointerEventData eventData)
     {
-        
-            // Store the original parent of the card
+
+        if (this.gameManager.GetTurn() == 0)
+        {   // Store the original parent of the card
             parentBeforeDrag = transform.parent;
 
             // Set the parent of the card to the canvas
@@ -27,36 +35,47 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             transform.SetAsLastSibling();
             // Disable raycasting so the card doesn't get caught on other cards
             image.raycastTarget = false;
+        }
 
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // Set the position of the card to the mouse position with the offset
-        transform.position = Input.mousePosition;
+        if (this.gameManager.GetTurn() == 0)
+        {
+            // Set the position of the card to the mouse position with the offset
+            transform.position = Input.mousePosition;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
-    { 
-
+    {
+        if (this.gameManager.GetTurn() == 0)
+        {
             // Set the parent of the card to the tile slot
             transform.SetParent(parentAfterDrag);
             // Enable raycasting again
             image.raycastTarget = true;
-       
+        }
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Store the original position of the card
-        originalPosition = image.transform.position;
-        // Move the card up by a certain amount
-        image.transform.position = new Vector3(image.transform.position.x, image.transform.position.y + 6, image.transform.position.z);
+        if (this.gameManager.GetTurn() == 0)
+        {
+            // Store the original position of the card
+            originalPosition = image.transform.position;
+            // Move the card up by a certain amount
+            image.transform.position = new Vector3(image.transform.position.x, image.transform.position.y + 6, image.transform.position.z);
+        }
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        // Move the card back to its original position
-        image.transform.position = originalPosition;
+        if (this.gameManager.GetTurn() == 0)
+        {
+            // Move the card back to its original position
+            image.transform.position = originalPosition;
+        }
     }
 }

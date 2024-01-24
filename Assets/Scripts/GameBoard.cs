@@ -16,14 +16,19 @@ public class GameBoard : MonoBehaviour
     private RummikubDeck rummikubDeck = new RummikubDeck();
     // Stack of cards that were moved so we can undo the move
     private Stack<Card> playerMovesStack = new Stack<Card>();
+    // Stack of cards that were moved inside the board so we can undo the move
+    private Stack<Card> boardMovesStack = new Stack<Card>();
     // refeence to the HumanGrid
     [SerializeField] GameObject HumanGrid;
+    // refeence to the BoardGrid
+    [SerializeField] GameObject BoardGrid;
     // Reference to Human so we can draw cards
     [SerializeField] Human human;
 
     // Start is called before the first frame update
     private void Start()
     {
+        gameBoardValidSets = new List<List<Card>>();
         ExplainGameRules();
     }
 
@@ -35,6 +40,30 @@ public class GameBoard : MonoBehaviour
             UndoMoveForCard(card);
         }
     }
+
+    public void UndoBoardMoves()
+    {
+        while (boardMovesStack.Count > 0)
+        {
+            Card card = boardMovesStack.Pop();
+            UndoMoveForBoardCard(card);
+        }
+    }
+
+    private void UndoMoveForBoardCard(Card card)
+    {
+        // Move the card back to its original position
+        DraggableItem draggableItem = card.GetComponent<DraggableItem>();
+        if (draggableItem != null)
+        {
+            draggableItem.parentAfterDrag = draggableItem.parentBeforeDrag;
+            card.transform.SetParent(draggableItem.parentAfterDrag);
+            card.transform.localPosition = Vector3.zero;
+        }
+
+    }
+
+
     private void UndoMoveForCard(Card card)
     {
         // Undo logic for a single card
@@ -50,10 +79,20 @@ public class GameBoard : MonoBehaviour
     {
         playerMovesStack.Push(card);
     }
-    
+
     public Stack<Card> GetPlayerMovesStack()
     {
         return playerMovesStack;
+    }
+    // add card to the stack of moves that the player made inside the board so we can undo them
+    public void AddCardToBoardStack(Card card)
+    {
+        boardMovesStack.Push(card);
+    }
+    // Return instance of board moves stack
+    public Stack<Card> GetBoardMovesStack()
+    {
+        return boardMovesStack;
     }
 
     // Move Card from GameBoard to HumanHand
@@ -61,7 +100,7 @@ public class GameBoard : MonoBehaviour
     {
         foreach (var set in gameBoardValidSets)
         {
-            
+
             if (set.Contains(card))
             {
                 set.Remove(card);
@@ -92,40 +131,120 @@ public class GameBoard : MonoBehaviour
 
 
 
-    public void MoveCardFromHumanHandToGameBoard(Card card)
+    //public void MoveCardFromHumanHandToGameBoard(Card card)
+    //{
+    //    bool addedToExistingSet = false;
+
+    //    // Check if there are existing sets on the board
+    //    foreach (List<Card> cardSet in gameBoardValidSets)
+    //    {
+    //        Card firstCard = cardSet[0];
+    //        Card lastCard = cardSet[cardSet.Count - 1];
+
+    //        // Check if the card is next to the existing set
+    //        if (card.Position.Row == firstCard.Position.Row && card.Position.Column == firstCard.Position.Column - 1)
+    //        {
+    //            cardSet.Insert(0, card); // Add card at the beginning of the set
+    //            addedToExistingSet = true;
+    //            break;
+    //        }
+    //        else if (card.Position.Row == lastCard.Position.Row && card.Position.Column == lastCard.Position.Column + 1)
+    //        {
+    //            cardSet.Add(card); // Add card at the end of the set
+    //            addedToExistingSet = true;
+    //            break;
+    //        }
+    //    }
+
+    //    if (!addedToExistingSet)
+    //    {
+    //        // If not added to an existing set, create a new set for the card
+    //        List<Card> newCardSet = new List<Card> { card };
+    //        gameBoardValidSets.Add(newCardSet);
+    //    }
+    //    PrintGameBoardValidSets();
+//}
+public void MoveCardFromHumanHandToGameBoard(Card card)
     {
-        humanHand.Remove(card);
+        int indexToInsert = -1;
 
-        // Find the appropriate set based on the card's position
-        List<Card> targetSet = FindTargetSet(card.Position);
+        // Check if the card is between two existing sets by exactly 1 column and same row
+        for (int i = 0; i < gameBoardValidSets.Count - 1; i++)
+        {
+            Card lastCardSet1 = gameBoardValidSets[i][gameBoardValidSets[i].Count - 1];
+            Card firstCardSet2 = gameBoardValidSets[i + 1][0];
 
-        // Add the card to the target set
-        targetSet.Add(card);
+            if (card.Position.Row == lastCardSet1.Position.Row &&
+                card.Position.Row == firstCardSet2.Position.Row &&
+                Math.Abs(card.Position.Column - lastCardSet1.Position.Column) == 1 &&
+                Math.Abs(firstCardSet2.Position.Column - card.Position.Column) == 1)
+            {
+                // Combine the two sets into a single set with the new card in between
+                gameBoardValidSets[i].Add(card);
+                gameBoardValidSets[i].AddRange(gameBoardValidSets[i + 1]);
+                gameBoardValidSets.RemoveAt(i + 1);
+                indexToInsert = i;
+                break;
+            }
+        }
 
+        if (indexToInsert == -1)
+        {
+            // If not between two sets, follow the logic for adding to an existing set or creating a new set
+            bool addedToExistingSet = false;
+
+            foreach (List<Card> cardSet in gameBoardValidSets)
+            {
+                Card firstCard = cardSet[0];
+                Card lastCard = cardSet[cardSet.Count - 1];
+
+                if (card.Position.Row == firstCard.Position.Row && card.Position.Column == firstCard.Position.Column - 1)
+                {
+                    cardSet.Insert(0, card);
+                    addedToExistingSet = true;
+                    break;
+                }
+                else if (card.Position.Row == lastCard.Position.Row && card.Position.Column == lastCard.Position.Column + 1)
+                {
+                    cardSet.Add(card);
+                    addedToExistingSet = true;
+                    break;
+                }
+            }
+
+            if (!addedToExistingSet)
+            {
+                // If not added to an existing set, create a new set for the card
+                List<Card> newCardSet = new List<Card> { card };
+                gameBoardValidSets.Add(newCardSet);
+            }
+        }
+
+        // After adding the card, check and combine adjacent sets if needed
+        CombineAdjacentSets();
         PrintGameBoardValidSets();
     }
 
-    private List<Card> FindTargetSet(CardPosition cardPosition)
+    private void CombineAdjacentSets()
     {
-        foreach (var set in gameBoardValidSets)
+        for (int i = 0; i < gameBoardValidSets.Count - 1; i++)
         {
-            // If the set is empty, add the card to it
-            if (set.Count == 0)
-                return set;
+            Card lastCardSet1 = gameBoardValidSets[i][gameBoardValidSets[i].Count - 1];
+            Card firstCardSet2 = gameBoardValidSets[i + 1][0];
 
-            // Get the position of the last card in the set
-            CardPosition lastCardPosition = set[set.Count - 1].Position;
-
-            // Check if the new card is in the same column or consecutive column
-            if (cardPosition.Column == lastCardPosition.Column + 1)
-                return set;
+            // Check if the last card of the first set and the first card of the second set are successive
+            if (lastCardSet1.Position.Row == firstCardSet2.Position.Row &&
+                Math.Abs(lastCardSet1.Position.Column - firstCardSet2.Position.Column) == 1)
+            {
+                // Combine the two sets into a single set
+                gameBoardValidSets[i].AddRange(gameBoardValidSets[i + 1]);
+                gameBoardValidSets.RemoveAt(i + 1);
+                i--; // Move back one index to recheck with the previous set
+            }
         }
-
-        // If no suitable set is found, create a new set
-        List<Card> newSet = new List<Card>();
-        gameBoardValidSets.Add(newSet);
-        return newSet;
     }
+
+
 
     // Move Card from ComputerHand to GameBoard
     public void MoveCardFromComputerHandToGameBoard(Card card)

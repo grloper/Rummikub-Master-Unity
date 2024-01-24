@@ -57,6 +57,9 @@ public class TileSlot : MonoBehaviour, IDropHandler
                     }
                     else
                     {
+                        //board.MoveCardFromGameBoardToGameBoard(dropped.GetComponent<Card>());
+                        print("Pushed to Board Stack " + dropped.GetComponent<Card>().ToString());
+                        board.AddCardToBoardStack(dropped.GetComponent<Card>());
                         board.PrintGameBoardValidSets();
                     }
                 }

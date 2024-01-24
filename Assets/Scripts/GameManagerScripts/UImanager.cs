@@ -34,13 +34,14 @@ public class UImanager : MonoBehaviour
     {
         if (gameManager.GetTurn() == 0)
         {
-            if (board.GetPlayerMovesStack().Count == 0)
+            if (board.GetPlayerMovesStack().Count == 0&&board.GetBoardMovesStack().Count==0)
             {
                 print("No more cards to undo");
                 return;
             }
 
             board.UndoPlayerMoves();
+            board.UndoBoardMoves();
         }
     }
     void Start()
@@ -117,12 +118,14 @@ public class UImanager : MonoBehaviour
                 gameManager.ChangeTurn();
                 turnDisplayText.text = "Turn: Computer";
                 board.GetPlayerMovesStack().Clear();
+                board.GetBoardMovesStack().Clear();
             }
             else
             {
                 gameManager.ChangeTurn();
                 turnDisplayText.text = "Turn: Human";
                 board.GetPlayerMovesStack().Clear();
+                board.GetBoardMovesStack().Clear();
 
             }
 

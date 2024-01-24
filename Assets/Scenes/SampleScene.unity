@@ -1019,7 +1019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21509439, g: 0.1911499, b: 0.1911499, a: 1}
+  m_Color: {r: 0.21509439, g: 0.1911499, b: 0.1911499, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1081,6 +1081,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HumanGrid: {fileID: 1235662192}
+  BoardGrid: {fileID: 0}
   human: {fileID: 917680024}
 --- !u!1 &917680023
 GameObject:
@@ -2160,8 +2161,8 @@ MonoBehaviour:
   - {fileID: -8830801204001448751, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: -561657460166242194, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: 5679537206398847522, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
-  - {fileID: 4352960348550154690, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: -6314890570655124154, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
+  - {fileID: 4352960348550154690, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: 7788007526938220836, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: 1612966352644485568, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: -1048763329410511649, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
@@ -2214,6 +2215,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HumanGrid: {fileID: 1235662192}
+  BoardGrid: {fileID: 914871405}
   human: {fileID: 917680024}
 --- !u!114 &1707528209
 MonoBehaviour:
