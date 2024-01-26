@@ -33,15 +33,18 @@ public class UImanager : MonoBehaviour
     public void BtnUndoClick()
     {
         if (gameManager.GetTurn() == 0)
+
         {
-            if (board.GetPlayerMovesStack().Count == 0&&board.GetBoardMovesStack().Count==0)
+            if (board.GetMovesStack().Count == 0)
             {
                 print("No more cards to undo");
                 return;
             }
-
-            board.UndoPlayerMoves();
-            board.UndoBoardMoves();
+            else
+            {
+                board.UndoMoves();
+            }
+          
         }
     }
     void Start()
@@ -79,61 +82,59 @@ public class UImanager : MonoBehaviour
     {
         if (!board.IsBoardValid())
         {
+        
             print("Invalid Move Undoing");
             BtnUndoClick();
         }
-        else
-        {
-            if (board.GetRummikubDeckInstance().GetDeckLength() != 0)
-            {
-                if (gameManager.GetTurn() == 0)
-                {
-                    human.DrawCard();
-                    gameManager.ChangeTurn();
-                    turnDisplayText.text = "Turn: Computer";
-                }
-                else
-                {
-                    computer.DrawCard();
-                    gameManager.ChangeTurn();
-                    turnDisplayText.text = "Turn: Human";
 
-                }
-                btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
-            }
-            else
-            {
-                btnDeckText.text = "Deck:\nEmpty";
-            }
-        }
-    }
-    public void BtnConfirmMoveClick()
-    {
-        print("Confirm Move");
-        if (board.IsBoardValid())
+        if (board.GetRummikubDeckInstance().GetDeckLength() != 0)
         {
             if (gameManager.GetTurn() == 0)
             {
-
+                human.DrawCard();
                 gameManager.ChangeTurn();
                 turnDisplayText.text = "Turn: Computer";
-                board.GetPlayerMovesStack().Clear();
-                board.GetBoardMovesStack().Clear();
             }
             else
             {
+                computer.DrawCard();
                 gameManager.ChangeTurn();
                 turnDisplayText.text = "Turn: Human";
-                board.GetPlayerMovesStack().Clear();
-                board.GetBoardMovesStack().Clear();
 
             }
-
+            btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
         }
         else
         {
-            print("Invalid Move Undoing");
-            BtnUndoClick();
+            btnDeckText.text = "Deck:\nEmpty";
+        }
+
+    }
+    public void BtnConfirmMoveClick()
+    {
+            //print in yellow confrim move
+            Debug.Log("<color=blue>Confirm Move</color>");
+        
+
+        if (board.IsBoardValid())
+        {
+
+            if (gameManager.GetTurn() == 0)
+            {
+                board.GetMovesStack().Clear();
+                gameManager.ChangeTurn();
+                turnDisplayText.text = "Turn: Computer";
+            }
+            else
+            {
+                board.GetMovesStack().Clear();
+                gameManager.ChangeTurn();
+                turnDisplayText.text = "Turn: Human";
+            }
+        }
+        else
+        {
+            print("Invalid Move");
         }
 
     }

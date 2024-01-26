@@ -4,11 +4,12 @@ using UnityEngine;
 
 public abstract class Player : MonoBehaviour
 {
-
-    void  GetType()
+    protected bool intialMove;
+    private void Start()
     {
-
+        intialMove = false;
     }
+
     public abstract void DrawCard();
     public abstract void InitBoard();
 

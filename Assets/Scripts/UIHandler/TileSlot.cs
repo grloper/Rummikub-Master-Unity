@@ -21,49 +21,69 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             // Get the card that is being dropped
             GameObject dropped = eventData.pointerDrag;
+            Card card = dropped.GetComponent<Card>();
             // Set the parent of the dropped card to the tile slot
             DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
             // Set the parent of the card to the slot
             draggableItem.parentAfterDrag = transform;
             // Set the position of the dropped card
-            if (dropped.GetComponent<Card>() != null)
+            if (card != null)
             {
                 if (transform.parent.name == "HumanGrid")
                 {
-
                     if (draggableItem.parentBeforeDrag.transform.parent.name == "BoardGrid")
                     {
-                        // Move the card back to its original position
-                        draggableItem.parentAfterDrag = draggableItem.parentBeforeDrag;
-                        dropped.transform.SetParent(draggableItem.parentAfterDrag);
-                        dropped.transform.localPosition = Vector3.zero;
+                        if (!card.CameFromHumanHand)
+                        {
+                            // Move the card back to its original position
+                            draggableItem.parentAfterDrag = draggableItem.parentBeforeDrag;
+                            dropped.transform.SetParent(draggableItem.parentAfterDrag);
+                            dropped.transform.localPosition = Vector3.zero;
+                        }
+                        else
+                        {
+                            board.MoveCardFromGameBoardToHumanHand(card);
+                        }
                     }
                     else
                     {
                         // create a new CardPosition object and assign it to the card
-                        dropped.GetComponent<Card>().Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };
-                        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + dropped.GetComponent<Card>().Position.Row + ", Column: " + dropped.GetComponent<Card>().Position.Column + " HumanGrid");
+                        card.Position = new CardPosition { Row = GetRowIndexHuman(), Column = GetColumnIndexHuman() };  
+                        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid " + card.CameFromHumanHand);
                     }
                 }
                 else
                 {
                     // create a new CardPosition object and assign it to the card
-                    dropped.GetComponent<Card>().Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
-                    Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + dropped.GetComponent<Card>().Position.Row + ", Column: " + dropped.GetComponent<Card>().Position.Column + " BoardGrid");
+                    card.Position = new CardPosition { Row = GetRowIndexBoard(), Column = GetColumnIndexBoard() };
+                    Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.name + " Dropped at Row: " + 
+                    card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid "+ card.CameFromHumanHand);
                     if (draggableItem.parentBeforeDrag.transform.parent.name == "HumanGrid")
                     {
-                        board.MoveCardFromHumanHandToGameBoard(dropped.GetComponent<Card>());
-                        board.AddCardToPlayerStack(dropped.GetComponent<Card>());
+                        card.CameFromHumanHand = true;
+                        print("From human to board");
+                        board.MoveCardFromHumanHandToGameBoard(card);
+                        print("Pushed to Player Stack " + card.ToString());
+                        board.AddCardToMovesStack(card);
                     }
                     else
                     {
-                        //board.MoveCardFromGameBoardToGameBoard(dropped.GetComponent<Card>());
-                        print("Pushed to Board Stack " + dropped.GetComponent<Card>().ToString());
-                        board.AddCardToBoardStack(dropped.GetComponent<Card>());
-                        board.PrintGameBoardValidSets();
+                        if (!board.IsExistForStack(card)) // if the card is not in the stack
+                        {
+                            card.CameFromHumanHand = false;
+                            // parentBeforeDrag is saved in case the same card is moved more than once in the board (without this check the undo button will make it go to the last drag pos instead of the first)
+                            card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
+
+                            print("Pushed to Board Stack " + card.ToString());
+                            board.AddCardToMovesStack(card);
+
+                        }
+                        print("From board to board tile");
+                        board.MoveCardFromGameBoardToGameBoard(card);
                     }
                 }
             }
+            board.PrintGameBoardValidSets();
         }
         else
         {

@@ -14,10 +14,8 @@ public class GameBoard : MonoBehaviour
     private List<List<Card>> gameBoardValidSets = new List<List<Card>>();
     // Single Instance! Deck of cards
     private RummikubDeck rummikubDeck = new RummikubDeck();
-    // Stack of cards that were moved so we can undo the move
-    private Stack<Card> playerMovesStack = new Stack<Card>();
-    // Stack of cards that were moved inside the board so we can undo the move
-    private Stack<Card> boardMovesStack = new Stack<Card>();
+    // Stack of moves that the player made so we can undo them
+    private Stack<Card> movesStack = new Stack<Card>();
     // refeence to the HumanGrid
     [SerializeField] GameObject HumanGrid;
     // refeence to the BoardGrid
@@ -31,71 +29,60 @@ public class GameBoard : MonoBehaviour
         gameBoardValidSets = new List<List<Card>>();
         ExplainGameRules();
     }
-
-    public void UndoPlayerMoves()
+    public void UndoMoves()
     {
-        while (playerMovesStack.Count > 0)
+        while (movesStack.Count > 0)
         {
-            Card card = playerMovesStack.Pop();
+            Card card = movesStack.Pop();
             UndoMoveForCard(card);
         }
     }
 
-    public void UndoBoardMoves()
+
+    public bool IsExistForStack(Card card)
     {
-        while (boardMovesStack.Count > 0)
-        {
-            Card card = boardMovesStack.Pop();
-            UndoMoveForBoardCard(card);
-        }
+        return movesStack.Contains(card);
     }
-
-    private void UndoMoveForBoardCard(Card card)
-    {
-        // Move the card back to its original position
-        DraggableItem draggableItem = card.GetComponent<DraggableItem>();
-        if (draggableItem != null)
-        {
-            draggableItem.parentAfterDrag = draggableItem.parentBeforeDrag;
-            card.transform.SetParent(draggableItem.parentAfterDrag);
-            card.transform.localPosition = Vector3.zero;
-        }
-
-    }
-
-
     private void UndoMoveForCard(Card card)
     {
         // Undo logic for a single card
+        if (!card.CameFromHumanHand)
+        {
+            
+            // Move the card back to its original position
+            DraggableItem draggableItem = card.GetComponent<DraggableItem>();
+            if (draggableItem != null)
+            {
+                print("from board to board undo");
+                MoveCardFromGameBoardToGameBoard(card.GetComponent<Card>());
+                //card.ParentBeforeDrag is the tile slot location on board when pushed first to the stack
+                draggableItem.parentAfterDrag =card.ParentBeforeDrag;
+                card.transform.SetParent(draggableItem.parentAfterDrag);
+                card.transform.localPosition = Vector3.zero;
+            }
+        }
+        else
+        {
+            print("from board to human undo");
+            MoveCardFromGameBoardToHumanHand(card.GetComponent<Card>());
+            int emptySlotIndex = human.GetEmptySlotIndex();
+            GameObject tileSlot = HumanGrid.transform.GetChild(emptySlotIndex).gameObject;
+            card.transform.SetParent(tileSlot.transform);
+            card.transform.localPosition = Vector3.zero;
+        }
+    }
+    // add card to the stack of moves   
+    public void AddCardToMovesStack(Card card)
+    {
+        movesStack.Push(card);
+    }
 
-        MoveCardFromGameBoardToHumanHand(card.GetComponent<Card>());
-        int emptySlotIndex = human.GetEmptySlotIndex();
-        GameObject tileSlot = HumanGrid.transform.GetChild(emptySlotIndex).gameObject;
-        card.transform.SetParent(tileSlot.transform);
-        card.transform.localPosition = Vector3.zero;
-    }
-    // add card to the stack of moves that the player made so we can undo them
-    public void AddCardToPlayerStack(Card card)
+    public Stack<Card> GetMovesStack()
     {
-        playerMovesStack.Push(card);
+        return movesStack;
     }
 
-    public Stack<Card> GetPlayerMovesStack()
-    {
-        return playerMovesStack;
-    }
-    // add card to the stack of moves that the player made inside the board so we can undo them
-    public void AddCardToBoardStack(Card card)
-    {
-        boardMovesStack.Push(card);
-    }
-    // Return instance of board moves stack
-    public Stack<Card> GetBoardMovesStack()
-    {
-        return boardMovesStack;
-    }
-
-    // Move Card from GameBoard to HumanHand
+    // Move Card from GameBoard to GameBoard
     public void MoveCardFromGameBoardToHumanHand(Card card)
     {
         foreach (var set in gameBoardValidSets)
@@ -128,43 +115,33 @@ public class GameBoard : MonoBehaviour
             count++;
         }
     }
+    public void MoveCardFromGameBoardToGameBoard(Card card)
+    {
+        //remove the card from the set
+        foreach (var set in gameBoardValidSets)
+        {
+            if (set.Contains(card))
+            {
+                set.Remove(card);
+                if (set.Count == 0)
+                {
+                    gameBoardValidSets.Remove(set);
+                }
+                break;
+            }
+        }
+        // add the card in the set
+        PutInSet(card);
+    }
 
+    public void MoveCardFromHumanHandToGameBoard(Card card)
+    {
+        PutInSet(card);
+        humanHand.Remove(card);
 
-
-    //public void MoveCardFromHumanHandToGameBoard(Card card)
-    //{
-    //    bool addedToExistingSet = false;
-
-    //    // Check if there are existing sets on the board
-    //    foreach (List<Card> cardSet in gameBoardValidSets)
-    //    {
-    //        Card firstCard = cardSet[0];
-    //        Card lastCard = cardSet[cardSet.Count - 1];
-
-    //        // Check if the card is next to the existing set
-    //        if (card.Position.Row == firstCard.Position.Row && card.Position.Column == firstCard.Position.Column - 1)
-    //        {
-    //            cardSet.Insert(0, card); // Add card at the beginning of the set
-    //            addedToExistingSet = true;
-    //            break;
-    //        }
-    //        else if (card.Position.Row == lastCard.Position.Row && card.Position.Column == lastCard.Position.Column + 1)
-    //        {
-    //            cardSet.Add(card); // Add card at the end of the set
-    //            addedToExistingSet = true;
-    //            break;
-    //        }
-    //    }
-
-    //    if (!addedToExistingSet)
-    //    {
-    //        // If not added to an existing set, create a new set for the card
-    //        List<Card> newCardSet = new List<Card> { card };
-    //        gameBoardValidSets.Add(newCardSet);
-    //    }
-    //    PrintGameBoardValidSets();
-//}
-public void MoveCardFromHumanHandToGameBoard(Card card)
+    }
+    // Comlexity O(n^2) when n is the number of cards in the board max is 11,236 106*106
+    public void PutInSet(Card card)
     {
         int indexToInsert = -1;
 
@@ -222,7 +199,6 @@ public void MoveCardFromHumanHandToGameBoard(Card card)
 
         // After adding the card, check and combine adjacent sets if needed
         CombineAdjacentSets();
-        PrintGameBoardValidSets();
     }
 
     private void CombineAdjacentSets()
@@ -288,18 +264,22 @@ public void MoveCardFromHumanHandToGameBoard(Card card)
     // Explain the game rules
     public void ExplainGameRules()
     {
-        Debug.Log("The game is played with two sets of 52 cards and 2 jokers. Each player has 14 cards in his hand. The goal of the game is to get rid of all the cards in your hand. You can do this by creating sets of cards. There are two types of sets: a group and a run. A group is a set of 3 or 4 cards with the same number but different colors. A run is a set of 3 or more cards with the same color and consecutive numbers. A joker can be used as any card. You can add cards to the sets on the board or create new sets. You can also move cards inside the boards as long as you are not breaking the rules and keeps all the sets valids.");
+        print("The game is played with two sets of 52 cards and 2 jokers. Each player has 14 cards in his hand. The goal of the game is to get rid of all the cards in your hand. You can do this by creating sets of cards. There are two types of sets: a group and a run. A group is a set of 3 or 4 cards with the same number but different colors. A run is a set of 3 or more cards with the same color and consecutive numbers. A joker can be used as any card. You can add cards to the sets on the board or create new sets. You can also move cards inside the boards as long as you are not breaking the rules and keeps all the sets valids.");
     }
 
     // Check if the set is a run 
     public bool IsRun(List<Card> set)
     {
         // Check if the set is consecutive numbers and has the same color
-        set.Sort((a, b) => a.Number.CompareTo(b.Number));
+      //  set.Sort((a, b) => a.Number.CompareTo(b.Number));
         CardColor firstCardColor = set[0].Color;
 
         for (int i = 1; i < set.Count; i++)
         {
+            if (set[i].Number==14 || set[i-1].Number==14)
+            {
+                continue;
+            }
             if (set[i].Number != set[i - 1].Number + 1 || set[i].Color != firstCardColor)
             {
                 return false;
@@ -319,6 +299,10 @@ public void MoveCardFromHumanHandToGameBoard(Card card)
 
         foreach (Card card in set)
         {
+            if (card.Number == 14)
+            {
+                continue;
+            }
             if (card.Number != firstCardNumber)
             {
                 return false;
@@ -345,11 +329,6 @@ public void MoveCardFromHumanHandToGameBoard(Card card)
     {
         foreach (var set in gameBoardValidSets)
         {
-            foreach (var card in set)
-            {
-                Debug.Log(card.ToString());
-            }
-
             bool isRun = IsRun(set);
             bool isGroup = IsGroupOfColors(set);
 
