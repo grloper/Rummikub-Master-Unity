@@ -30,7 +30,7 @@ public class UImanager : MonoBehaviour
     [SerializeField] private GameBoard board;
 
 
-    public void BtnUndoClick()
+    public void Undo()
     {
         if (gameManager.GetTurn() == 0)
 
@@ -44,8 +44,12 @@ public class UImanager : MonoBehaviour
             {
                 board.UndoMoves();
             }
-          
+
         }
+    }
+    public void BtnUndoClick()
+    {
+        Undo();
     }
     void Start()
     {
@@ -84,7 +88,7 @@ public class UImanager : MonoBehaviour
         {
         
             print("Invalid Move Undoing");
-            BtnUndoClick();
+            Undo();
         }
 
         if (board.GetRummikubDeckInstance().GetDeckLength() != 0)
