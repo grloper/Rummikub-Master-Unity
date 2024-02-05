@@ -28,9 +28,9 @@ public class RummikubDeck
                 initializedDeck.Add(card); 
                 }
             }
-            // Adding jokers manually
-            initializedDeck.Add(new Card(14, CardColor.Red));
-            initializedDeck.Add(new Card(14, CardColor.Black));
+        //// Adding jokers manually
+        //initializedDeck.Add(new Card(15, CardColor.Red));
+        //initializedDeck.Add(new Card(15, CardColor.Black));
     }
     public int GetDeckLength()
     {
@@ -48,5 +48,13 @@ public class RummikubDeck
         Card drawnCard = initializedDeck[randomIndex];
         initializedDeck.RemoveAt(randomIndex);
         return drawnCard;
+    }
+    public Card DrawJokerRed()
+    {
+        return new Card(15, CardColor.Red);
+    }
+    public Card DrawJokerBlack()
+    {
+        return new Card(15, CardColor.Black);
     }
 }

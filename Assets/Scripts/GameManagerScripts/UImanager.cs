@@ -2,6 +2,7 @@ using Microsoft.Unity.VisualStudio.Editor;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -58,29 +59,29 @@ public class UImanager : MonoBehaviour
     }
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
-        GameObject card = Instantiate(PrefabTile);
-
-        int index = (GivvenCard.Number - 1) * 4 + (int)GivvenCard.Color; // jokers is when number = 14
-        card.GetComponent<Image>().sprite = cardsUI[index];
-
+        Card card = InstinitanteCard(GivvenCard);
         card.transform.parent = tileslot.transform;
-
+        return card;
+    }
+    public Card InstinitanteCard(Card GivvenCard)
+    {
+        GameObject card = Instantiate(PrefabTile);
+        int index = CalculateIndexOfSprite(GivvenCard);
+        card.GetComponent<Image>().sprite = cardsUI[index];
         Card newCard = card.GetComponent<Card>();
         newCard.Color = GivvenCard.Color;
         newCard.Number = GivvenCard.Number;
 
         return newCard;
     }
-    public Card InstinitanteCard(Card GivvenCard)
+    private int CalculateIndexOfSprite(Card card)
     {
-        GameObject card = Instantiate(PrefabTile);
-        int index = (GivvenCard.Number - 1) * 4 + (int)GivvenCard.Color; // jokers is when number = 14
-        card.GetComponent<Image>().sprite = cardsUI[index];
-        Card newCard = card.GetComponent<Card>();
-        newCard.Color = GivvenCard.Color;
-        newCard.Number = GivvenCard.Number;
-
-        return newCard;
+        // we use this function in order to save memory and use less ui elements
+        if (card.Number==15)
+        {
+            return (card.Number - 2) * 4 + (int)card.Color; // jokers is when number = 15 
+        }
+        return (card.Number - 1) * 4 + (int)card.Color; 
     }
     public void BtnDeckClick()
     {
@@ -210,7 +211,7 @@ public class UImanager : MonoBehaviour
             newCard.Color = cardsToSort[i].Color;
             newCard.Number = cardsToSort[i].Number;
             // Set the card's sprite
-            int index = (newCard.Number - 1) * 4 + (int)newCard.Color;
+            int index = CalculateIndexOfSprite(newCard);
             cardObject.GetComponent<Image>().sprite = cardsUI[index];
         }
     }

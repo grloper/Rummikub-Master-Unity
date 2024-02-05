@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
    // Represents a card on the board
 public class Card : MonoBehaviour
 {
-    private int number; // 1-13
+    private int number; // 1-13, joker = 15 = 1111b = 0xf
     private CardColor color; // Red, Blue, Yellow, Black
     private CardPosition position; // Row and Column
     private CardPosition oldPosition; // Row and Column

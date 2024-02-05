@@ -32,6 +32,11 @@ public class Human : Player
             }
         }
 
+        //cheat to test jokers 
+        board.AddCardToHumanHand(uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawJokerBlack(), HumanGrid.transform.GetChild(14).gameObject));
+        board.AddCardToHumanHand(uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawJokerRed(), HumanGrid.transform.GetChild(15).gameObject));
+
+
     }
 
     // Update is called once per frame
