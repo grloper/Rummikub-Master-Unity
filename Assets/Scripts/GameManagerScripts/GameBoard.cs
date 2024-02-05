@@ -45,6 +45,7 @@ public class GameBoard : MonoBehaviour
             Card card = movesStack.Pop();
             UndoMoveForCard(card);
         }
+        PrintGameBoardValidSets();
     }
 
 
@@ -63,8 +64,11 @@ public class GameBoard : MonoBehaviour
             if (draggableItem != null)
             {
                 Debug.Log("<color=yellow>from board to board undo</color>");
-
-                MoveCardFromGameBoardToGameBoard(card.GetComponent<Card>());
+                // change the position of the card to match the logic of the PutInSet() called in the MoveCardFromGameBoardToGameBoard
+                CardPosition tempPos = card.Position;
+                card.Position = card.OldPosition;
+                card.OldPosition = tempPos;
+                MoveCardFromGameBoardToGameBoard(card);
                 //card.ParentBeforeDrag is the tile slot location on board when pushed first to the stack
                 draggableItem.parentAfterDrag =card.ParentBeforeDrag;
                 card.transform.SetParent(draggableItem.parentAfterDrag);
@@ -73,9 +77,10 @@ public class GameBoard : MonoBehaviour
         }
         else
         {
+            // working
             Debug.Log("<color=yellow>from board to human undo</color>");
 
-            MoveCardFromGameBoardToHumanHand(card.GetComponent<Card>());
+            MoveCardFromGameBoardToHumanHand(card);
             int emptySlotIndex = human.GetEmptySlotIndex();
             GameObject tileSlot = HumanGrid.transform.GetChild(emptySlotIndex).gameObject;
             card.transform.SetParent(tileSlot.transform);
@@ -96,18 +101,16 @@ public class GameBoard : MonoBehaviour
     // Move Card from GameBoard to GameBoard
     public void MoveCardFromGameBoardToHumanHand(Card card)
     {
-        foreach (List<CardsSet> set in gameBoardValidSets) // set to a variable of type List<CardsSet>
+        foreach (CardsSet cardsSet in gameBoardValidSets[card.Position.Row])
         {
-            foreach (var item in set) // item to a variable of type CardsSet
+            if (cardsSet.IsContainsCard(card))
             {
-                if (item.IsContainsCard(card))// if the set contains the card
+                cardsSet.RemoveCard(card);
+                if (cardsSet.set.Count == 0)
                 {
-                    item.RemoveCard(card); // remove the card from the set
-
-                    if (item.set.Count == 0)
-                        gameBoardValidSets.Remove(set);// if the set is empty remove it from the board
-                    break;
+                    gameBoardValidSets[card.Position.Row].Remove(cardsSet);
                 }
+                break;
             }
         }
         humanHand.Add(card);
@@ -130,6 +133,30 @@ public class GameBoard : MonoBehaviour
             count++;
         }
     }
+    // worked without changing the postion when calling from UndoMoveForCard
+    //public void MoveCardFromGameBoardToGameBoardUndo(Card card)
+    //{
+
+    //    //print old postions and postions in red and green
+    //    Debug.Log("<color=red>Old Position: " + card.OldPosition.Row + ", " + card.OldPosition.Column + "</color>");
+    //    Debug.Log("<color=green>New Position: " + card.Position.Row + ", " + card.Position.Column + "</color>");
+    //    foreach (CardsSet cardsSet in gameBoardValidSets[card.Position.Row])
+    //    {
+    //        if (cardsSet.IsContainsCard(card))
+    //        {
+    //            cardsSet.RemoveCard(card);
+    //            if (cardsSet.set.Count == 0)
+    //            {
+    //                gameBoardValidSets[card.Position.Row].Remove(cardsSet);
+    //            }
+    //            break;
+    //        }
+    //    }
+    //    CardPosition tempPos =card.Position;
+    //    card.Position = card.OldPosition;
+    //    card.OldPosition = tempPos;
+    //    PutInSet(card);
+    //}
     public void MoveCardFromGameBoardToGameBoard(Card card)
     {
 
@@ -155,7 +182,6 @@ public class GameBoard : MonoBehaviour
     {
         PutInSet(card);
         humanHand.Remove(card);
-
     }
     //complexity O(n^2) when n is the number of sets in the row 
     public void PutInSet(Card card)
@@ -199,6 +225,7 @@ public class GameBoard : MonoBehaviour
             {
                 if (cardsSet != cardsSet1)
                 {
+                    // cardset1 is the right of cardset 
                     if (cardsSet.LastCard().Position.Column == cardsSet1.FirstCard().Position.Column - 1)
                     {
                         cardsSet.Combine(cardsSet, cardsSet1);
@@ -206,6 +233,7 @@ public class GameBoard : MonoBehaviour
                         gameBoardValidSets[cardPosition.Row].Remove(cardsSet1);
                         return;
                     }
+                    // cardset1 is the left of cardset
                     else if (cardsSet.FirstCard().Position.Column == cardsSet1.LastCard().Position.Column + 1)
                     {
                         cardsSet1.Combine(cardsSet1, cardsSet);
