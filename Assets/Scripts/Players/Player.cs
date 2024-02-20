@@ -1,13 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public abstract class Player : MonoBehaviour
 {
-    protected bool intialMove;
+    protected bool initialMove;
     private void Start()
     {
-        intialMove = false;
+        initialMove = false;
     }
 
     public abstract void DrawCard();

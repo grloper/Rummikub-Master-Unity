@@ -1,12 +1,7 @@
-using Microsoft.Unity.VisualStudio.Editor;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Dynamic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 public class UImanager : MonoBehaviour
 {
@@ -32,153 +27,143 @@ public class UImanager : MonoBehaviour
 
 
     public void Undo()
-    {
-        if (gameManager.GetTurn() == 0)
-
+    {   
+        // Undo all moves for the human
+        if (gameManager.GetTurn() == Constants.HumanTurn)
         {
-            if (board.GetMovesStack().Count == 0)
-            {
-                print("No more cards to undo");
-                return;
-            }
-            else
-            {
+            // If the stack is empty, print an error
+            if (board.GetMovesStack().Count == Constants.EmptyStack)
+               throw new EmptyDeckException();
+            else                
                 board.UndoMoves();
-            }
-
         }
     }
     public void BtnUndoClick()
     {
-        Undo();
+        try
+        {
+            Undo();
+        }
+        catch (EmptyDeckException)
+        {
+            print("No moves to undo");
+        }
     }
     void Start()
     {
+        // Set the initial text for the turn display 
         turnDisplayText.text = "Turn: Player";
-
     }
+    // Function to instantiate a card - the connection between the Card.cs code to the visible Card on screen
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
         Card card = InstinitanteCard(GivvenCard);
-        card.transform.parent = tileslot.transform;
+        card.transform.SetParent( tileslot.transform);
         return card;
     }
+    // Sub function to instantiate a card
     public Card InstinitanteCard(Card GivvenCard)
     {
         GameObject card = Instantiate(PrefabTile);
-        int index = CalculateIndexOfSprite(GivvenCard);
-        card.GetComponent<Image>().sprite = cardsUI[index];
+        // Set the card's sprite to the correct sprite
+        card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(GivvenCard)];
+        // Change the variable from GameObject to Card 
         Card newCard = card.GetComponent<Card>();
+        // Set the card's color and number
         newCard.Color = GivvenCard.Color;
         newCard.Number = GivvenCard.Number;
-
+        newCard.Position = GivvenCard.Position;
+        
         return newCard;
     }
+    // Function to calculate the index of the sprite in the list of spritesUI
     private int CalculateIndexOfSprite(Card card)
     {
-        // we use this function in order to save memory and use less ui elements
-        if (card.Number==15)
+        if (card.Number==Constants.JokerRank)
         {
-            return (card.Number - 2) * 4 + (int)card.Color; // jokers is when number = 15 
+            return (card.Number - 2) * Constants.MaxSuit + (int)card.Color; //handler for jokers (assumes jokers = 14) to save memory
         }
-        return (card.Number - 1) * 4 + (int)card.Color; 
+        return (card.Number - 1) * Constants.MaxSuit + (int)card.Color;  // algorithm thats gets the location of the card in the sprite list
     }
+    // Function to draw a card from the deck
     public void BtnDeckClick()
     {
-        if (!board.IsBoardValid())
+        if (gameManager.GetTurn()==Constants.HumanTurn)
+            DrawACardFromDeck();
+    }
+    public void UpdateTurnText() => //update to the current turn 
+        turnDisplayText.text = gameManager.GetTurn() == Constants.HumanTurn ? "Turn: Human" : "Turn: Computer";
+
+    public void DrawACardFromDeck()
+    {
+        // if there is a move to undo - undo it
+        if (board.GetMovesStack().Count > Constants.EmptyStack)
         {
-        
-            print("Invalid Move Undoing");
+            print("Undoing");
             Undo();
-        }
-
-        if (board.GetRummikubDeckInstance().GetDeckLength() != 0)
+        } // if the deck is not empty - draw a card and update the turn\deck text
+        if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
         {
-            if (gameManager.GetTurn() == 0)
-            {
+            if (gameManager.GetTurn() == Constants.HumanTurn)
                 human.DrawCard();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Computer";
-            }
             else
-            {
                 computer.DrawCard();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Human";
+            gameManager.ChangeTurn();
+            UpdateTurnText();
 
-            }
             btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
         }
         else
-        {
+        { // if the deck is empty - update the deck text
             btnDeckText.text = "Deck:\nEmpty";
         }
-
     }
+    
+
+    // Function to confirm the move of the player
     public void BtnConfirmMoveClick()
     {
-            //print in yellow confrim move
-            Debug.Log("<color=blue>Confirm Move</color>");
-        
-
+        if (gameManager.GetTurn()==Constants.HumanTurn)
+            ConfirmMove();
+    }
+    public void ConfirmMove()
+    {
+        //print confirm in blue use debug log and <color blue
+        Debug.Log("<color=blue>Confirm</color>");
         if (board.IsBoardValid())
         {
-
-            if (gameManager.GetTurn() == 0)
-            {
-                board.GetMovesStack().Clear();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Computer";
-            }
-            else
-            {
-                board.GetMovesStack().Clear();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Human";
-            }
-        }
-        else
-        {
-            print("Invalid Move");
-        }
-
+            // If the board is valid, change the turn and clear the moves stack
+            gameManager.ChangeTurn();
+            UpdateTurnText();
+            board.GetMovesStack().Clear();
+        } // we have handler to print error when not valid
     }
+  
     public void BtnSortByRun()
     {
-       
         // Sort the cards by run
         SortHumanGrid((card1, card2) =>
         {
-            // Sort by number first, then by color
             if (card1.Color == card2.Color)
-            {
                 return card1.Number.CompareTo(card2.Number);
-            }
             else
-            {
                 return card1.Color.CompareTo(card2.Color);
-            }
         });
     }
 
     public void BtnSortByGroup()
     {
         // Sort the cards by group
-        
         SortHumanGrid((card1, card2) =>
         {
-            // Sort by color first, then by number
             if (card1.Number == card2.Number)
-            {
                 return card1.Color.CompareTo(card2.Color);
-            }
             else
-            {
                 return card1.Number.CompareTo(card2.Number);
-            }
         });
 }
 
+    // Function to sort the human grid by a given comparison 
     private void SortHumanGrid(Comparison<Card> comparison)
     {
         // Get all the tile slots
@@ -191,7 +176,7 @@ public class UImanager : MonoBehaviour
         List<Card> cardsToSort = new List<Card>();
         foreach (Transform tileSlot in tileSlots)
         {
-            if (tileSlot.childCount > 0)
+            if (tileSlot.childCount > Constants.EmptyTileSlot)
             {
                 Card card = tileSlot.GetChild(0).GetComponent<Card>();
                 cardsToSort.Add(card);

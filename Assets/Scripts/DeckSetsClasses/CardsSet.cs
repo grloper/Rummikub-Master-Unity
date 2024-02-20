@@ -1,23 +1,22 @@
-using System;
-using System.Collections;
+
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Burst.CompilerServices;
-using Unity.VisualScripting.FullSerializer;
-using UnityEngine;
 
-public class CardsSet 
+
+public class CardsSet : ICardSet
 {
+    // a certain set of cards on board
     public List<Card> set;
-
+    // 3-13 cards in a set if it represents a run 
+    // 3-4 cards in a set if it represents a group of colors
+    // Default Constructor
     public CardsSet()
     {
         set = new List<Card>();
     }
-
+    // Constructor for a set of cards with a single card in it uses the default constructor
     public CardsSet(Card card) : this()
-    {
-        set.Add(card);
+    {     
+       set.Add(card);
     }
 
     // Utility methods
@@ -26,10 +25,10 @@ public class CardsSet
     public Card GetLastCard() => set[set.Count - 1];
 
 
-    //add card beggining and end in two function called AddCardBeggining and AddCardEnd
+    //add card beggining and end in two function 
     public void AddCardBeggining(Card card)
     {
-        if (set.Count == 0)
+        if (set.Count == Constants.EmptyCardsSet)
         {
             set.Add(card);
             return;
@@ -38,7 +37,7 @@ public class CardsSet
     }
     public void AddCardEnd(Card card)
     {
-        if (set.Count == 0)
+        if (set.Count == Constants.EmptyCardsSet)
         {
             set.Add(card);
             return;
@@ -56,20 +55,25 @@ public class CardsSet
     {
         return GetLastCard().Position.Column == card.Position.Column - 1;
     }
+    // check if the set contains a certain card
     public bool IsContainsCard(Card card)
     {
         return set.Contains(card);
     }
+    // Combine two sets of cards and return the new set of cards
     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
         foreach (Card c in set2.set)
         {
             set1.set.Add(c);
         }
+        // Sort the set by column positio, we assume that the cards are already sorted by row position
         set1.set.Sort((x, y) => x.Position.Column.CompareTo(y.Position.Column));
         set2.set.Clear();
         return set1;
     }
+    // Uncombine the set of cards and return the new set of cards,
+    // the offset is the number of cards to remove from the set because they are at another list
     public CardsSet UnCombine(int offset)
     {
         CardsSet newSet = new CardsSet();
@@ -81,7 +85,7 @@ public class CardsSet
         return newSet;
     }
 
-
+    // Remove a card from the set and return its index in the set
     public int RemoveCard(Card card)
     {
         int i = set.FindIndex(c => c == card);
@@ -93,7 +97,7 @@ public class CardsSet
     // Check if a run is valid
     public bool IsRun()
     {
-        if (set == null || set.Count < 3 || set.Count > 13)
+        if (set == null || set.Count < Constants.MinInRun || set.Count > Constants.MaxInRun)
         {
             return false; // A run must have at least 3 cards but no more than 13
         }
@@ -106,9 +110,9 @@ public class CardsSet
         
         for (; i < set.Count; i++)
         {
-            if ( CurrentNum == 14 || // the number is bigger than 13
-                (CurrentNum & set[i].Number) != CurrentNum++|| // the number is not in sequence (we also check for jokers = 0xf)
-                !isSameColor(set[i], SetColor)) // the color is not the same
+            if ( CurrentNum == Constants.MaxRank+1 || // the number is bigger than 13
+               CurrentNum++ != set[i].Number && !IsJoker(set[i]) || // the number is not in sequence (we also check for jokers = 0xf)
+                !IsSameColor(set[i], SetColor)) // the color is not the same
             {
                 return false;
             }
@@ -118,7 +122,7 @@ public class CardsSet
     // Check if a group of colors is valid
     public bool IsGroupOfColors()
     {
-        if (set == null || (set.Count != 3 && set.Count != 4))
+        if (set == null || (set.Count != Constants.MinInGroup && set.Count != Constants.MaxInGroup))
         {
             return false; // A group must have either 3 or 4 cards
         }
@@ -130,7 +134,7 @@ public class CardsSet
 
         for (; i < set.Count; i++)
         {
-            if (!distinctColors.Add((int)set[i].Color) || (CurrentNum & set[i].Number) != CurrentNum)
+            if (!IsJoker(set[i]) && (!distinctColors.Add((int)set[i].Color) || CurrentNum != set[i].Number))
             {
                 return false; // If a color is repeated, the group is invalid
             }
@@ -138,20 +142,24 @@ public class CardsSet
 
         return true;
     }
-    public bool isSameColor(Card c1,CardColor color)
+    // check if a card is the same color as the given color, if joker return true
+    public bool IsSameColor(Card c1,CardColor color)
     {
         return IsJoker(c1) || c1.Color == color;
     }
+    public bool IsConsicutive(Card c1, Card c2)
+    {
+        return IsJoker(c1)||c1.Number == c2.Number + 1;
+    }
+    // check if a card is a joker and return true if it is
     public bool IsJoker(Card card)
     {
-        return card.Number == 0xf; // the joker is a mask of 1111b
+        return card.Number == Constants.JokerRank; // the joker is a mask of 1111b
     }
-
-
-
+    // get the first index of a card that is not a joker
     public int GetFirstIndexOfNotJoker()
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i <= Constants.MaxJoker; i++)
         {
             if (!IsJoker(set[i]))
             {
@@ -170,17 +178,5 @@ public class CardsSet
         }
         return setStr;
     }
-
-    public int CountJokers()
-    {
-        int count = 0;
-        foreach (Card card in set)
-        {
-            if (IsJoker(card))
-                count++;
-        }
-        return count;
-    }
-
 
 }

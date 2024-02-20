@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class Computer : Player
@@ -12,17 +11,25 @@ public class Computer : Player
     {
         try
         {
-            // Draw a random card from the deck using RummikubDeck
+            // Draw a random card from the deck using RummikubDeck via the GameBoard instance
             Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck());
-            board.AddCardToComputerHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
+            board.AddCardToComputerHand(randomCard); // Add the drawn card to the computerDeck in the GameBoard.cs script
             print("Computer hand: "+board.GetComputerHand().Count);
         }
-        catch (NullReferenceException)
+        catch (EmptyDeckException)
         {
             Debug.LogWarning("Deck is Empty.");
         }
     }
+    public bool GetInitialMove()
+    {
+        return initialMove;
+    }
 
+    public void SetInitialMove(bool value)
+    {
+        initialMove = value;
+    }
     public override void InitBoard()
     {
         // Connect with UImanager
@@ -38,27 +45,17 @@ public class Computer : Player
     private void InitComputerDeck()
     {
         // Draw random cards and assign them to 14 slots on the Human board
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < Constants.CardsToDraw; i++)
         {
             // Draw a random card from the deck using RummikubDeck
             Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck());
             board.AddCardToComputerHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
             if (randomCard == null)
             {
-                Debug.LogWarning("Unable to draw a card for the Human's board.");
+                Debug.LogWarning("Unable to draw a card for the Computer's Hand.");
             }
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
 
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 }

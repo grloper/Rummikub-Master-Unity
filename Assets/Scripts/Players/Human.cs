@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
+
 using UnityEngine;
 
 public class Human : Player
@@ -20,7 +18,7 @@ public class Human : Player
     private void InitHumanDeck()
     {
         // Draw random cards and assign them to 14 slots on the Human board
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < Constants.CardsToDraw; i++)
         {
             GameObject tileSlot = HumanGrid.transform.GetChild(i).gameObject;
             // Draw a random card from the deck using RummikubDeck
@@ -28,21 +26,19 @@ public class Human : Player
             board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
             if (randomCard == null)
             {
-                Debug.LogWarning("Unable to draw a card for the Human's board.");
+                Debug.LogWarning("Unable to draw a card for the Human's Hand.");
             }
         }
-
-        //cheat to test jokers 
-        board.AddCardToHumanHand(uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawJokerBlack(), HumanGrid.transform.GetChild(14).gameObject));
-        board.AddCardToHumanHand(uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawJokerRed(), HumanGrid.transform.GetChild(15).gameObject));
-
-
     }
 
-    // Update is called once per frame
-    void Update()
+    public bool GetInitialMove()
     {
-        
+        return initialMove;
+    }
+    
+    public void SetInitialMove(bool value)
+    {
+        initialMove = value;
     }
 
     public int GetEmptySlotIndex()
@@ -52,7 +48,7 @@ public class Human : Player
             GameObject tileSlot = HumanGrid.transform.GetChild(i).gameObject;
 
             // Check if the slot is empty
-            if (tileSlot.transform.childCount == 0)
+            if (tileSlot.transform.childCount == Constants.EmptyTileSlot)
             {
                 // Return the index of the empty slot
                 return i;
@@ -67,7 +63,6 @@ public class Human : Player
     {
         // Get the index of the first empty slot
         int emptySlotIndex = GetEmptySlotIndex();
-
         // Check if an empty slot is found
         if (emptySlotIndex != -1)
         {
@@ -79,7 +74,7 @@ public class Human : Player
                 board.AddCardToHumanHand(randomCard); // Add the drawn card to the humanDeck in the GameBoard.cs script
                 print("Human hand: "+board.GetHumanHand().Count);
             }
-            catch (NullReferenceException)
+            catch (EmptyDeckException)
             {
                 Debug.LogWarning("Deck is Empty.");
             }

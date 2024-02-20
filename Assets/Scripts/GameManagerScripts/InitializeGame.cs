@@ -1,14 +1,12 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class InitializeGame : MonoBehaviour
 {
-    //game Board
+    //Grids of the game
     [SerializeField] GameObject BoardGrid;
     [SerializeField] GameObject HumanGrid;
-    //game Tiles
+    //Tile Slot Prefabs 
     [SerializeField] GameObject TileSlotPrefab;
     [SerializeField] GameObject TileSlotPlayerPrefab;
 
@@ -19,33 +17,25 @@ public class InitializeGame : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-       
         //Empty Slot Creater
         Init();
     }
 
     private void Init()
     {
-        // Initialize Game Board with 232 slots 7HEIGHT*24WIDTH
-        for (int i = 0; i < 232; i++)
+        // Initialize Game Board with 232 slots 8HEIGHT*29WIDTH
+        for (int i = 0; i < Constants.MaxGameBoardSlots; i++)
         {
             Instantiate(TileSlotPrefab, BoardGrid.transform);
         }
 
-        // Initialize Human Board with 40 slots
-        for (int i = 0; i < 40; i++)
+        // Initialize Human Board with 40 slots 2HEIGHT*20WIDTH
+        for (int i = 0; i < Constants.MaxHumanBoardSlots; i++)
         {
             Instantiate(TileSlotPlayerPrefab, HumanGrid.transform);
         }
+        // call Players to start generating their decks with 14 random cards
         human.InitBoard();
         computer.InitBoard();
-        
-
-
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

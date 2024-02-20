@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -24,7 +23,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public void OnBeginDrag(PointerEventData eventData)
     {
 
-        if (this.gameManager.GetTurn() == 0)
+        if (this.gameManager.GetTurn() == Constants.HumanTurn)
         {   // Store the original parent of the card
             parentBeforeDrag = transform.parent;
 
@@ -41,7 +40,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (this.gameManager.GetTurn() == 0)
+        if (this.gameManager.GetTurn() == Constants.HumanTurn)
         {
             // Set the position of the card to the mouse position with the offset
             transform.position = Input.mousePosition;
@@ -50,7 +49,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (this.gameManager.GetTurn() == 0)
+        if (this.gameManager.GetTurn() == Constants.HumanTurn)
         {
             // Set the parent of the card to the tile slot
             transform.SetParent(parentAfterDrag);
@@ -61,7 +60,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (this.gameManager.GetTurn() == 0)
+        if (this.gameManager.GetTurn() == Constants.HumanTurn)
         {
             // Store the original position of the card
             originalPosition = image.transform.position;
@@ -72,7 +71,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (this.gameManager.GetTurn() == 0)
+        if (this.gameManager.GetTurn() == Constants.HumanTurn)
         {
             // Move the card back to its original position
             image.transform.position = originalPosition;

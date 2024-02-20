@@ -292,8 +292,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -79.254, y: 0}
+  m_SizeDelta: {x: -158.51, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &289480372
 MonoBehaviour:
@@ -308,14 +308,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.93207544, b: 0.67013925, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 6708496529001351643, guid: 0fcae182c14d23b41b767ff44e318d4b, type: 3}
+  m_Sprite: {fileID: 3731760902742376702, guid: 95c64d59be205e64eaab504af9853b29, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -341,7 +341,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 289480370}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: c973fafbb6f84274bae8ee22b2140bec, type: 2}
   m_CullingMode: 0
@@ -1106,6 +1106,8 @@ MonoBehaviour:
   HumanGrid: {fileID: 1235662192}
   BoardGrid: {fileID: 0}
   human: {fileID: 917680024}
+  computer: {fileID: 0}
+  gameManager: {fileID: 0}
 --- !u!1 &917680023
 GameObject:
   m_ObjectHideFlags: 0
@@ -1548,9 +1550,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1094154172}
   - {fileID: 1193130864}
   - {fileID: 863038480}
+  - {fileID: 1094154172}
   - {fileID: 1391731650}
   - {fileID: 1317287984}
   - {fileID: 547226684}
@@ -2240,6 +2242,8 @@ MonoBehaviour:
   HumanGrid: {fileID: 1235662192}
   BoardGrid: {fileID: 914871405}
   human: {fileID: 917680024}
+  computer: {fileID: 2118693698}
+  gameManager: {fileID: 1707528209}
 --- !u!114 &1707528209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2252,6 +2256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f359fc1c575bb0242941dc6354d37a99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  board: {fileID: 1707528208}
 --- !u!1 &1772970762
 GameObject:
   m_ObjectHideFlags: 0
@@ -2468,6 +2473,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2118693697}
   - component: {fileID: 2118693698}
+  - component: {fileID: 2118693699}
   m_Layer: 0
   m_Name: Computer
   m_TagString: Untagged
@@ -2504,6 +2510,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 1707528208}
+--- !u!114 &2118693699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2118693696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80849466bf928694e927a69a2ccb9d5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  computerMoveDelay: 0.1
+  BoardGrid: {fileID: 914871405}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
