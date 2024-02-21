@@ -1,7 +1,8 @@
 
+using TMPro;
 using UnityEngine;
 
-   // Represents a card on the board
+// Represents a card on the board
 public class Card : MonoBehaviour
 {
     private int number; // 1-13, joker = 15 = 1111b = 0xf
@@ -15,7 +16,7 @@ public class Card : MonoBehaviour
     public CardColor Color { get => color; set => color = value; }
     public CardPosition Position { get => position; set => position = value; }
     public CardPosition OldPosition { get => oldPosition; set => oldPosition = value; }
-    public bool CameFromHumanHand { get => cameFromHumanHand; set => cameFromHumanHand = value; } 
+    public bool CameFromHumanHand { get => cameFromHumanHand; set => cameFromHumanHand = value; }
     public Transform ParentBeforeDrag { get => parentBeforeDrag; set => parentBeforeDrag = value; }
     public Card()
     {
@@ -25,7 +26,7 @@ public class Card : MonoBehaviour
     // Constructor that takes two arguments
     public Card(int number, CardColor color)
     {
-        
+
         this.number = number;
         this.color = color;
         OldPosition = new CardPosition();
@@ -35,7 +36,7 @@ public class Card : MonoBehaviour
     public override string ToString()
     {
         // Return a string representation of the card
-        return "Card: " + number + " " + color+ "Y:" + position.Row + " X:" + position.Column;
+        return "Card: " + number + " " + color + "Y:" + position.Row + " X:" + position.Column;
 
     }
 }

@@ -1,6 +1,6 @@
 
 // Represents the position of a card on the board
-public class CardPosition 
+public class CardPosition
 {
 
     public CardPosition()

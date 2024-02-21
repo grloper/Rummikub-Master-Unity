@@ -1,8 +1,11 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
-public enum CardColor 
+public enum CardColor
 {
-    Red,   //0
+    Red, //0
     Black, //1 
-    Blue,  //2
-    Orange //3
+    Orange, //2
+    Blue //3
 }
