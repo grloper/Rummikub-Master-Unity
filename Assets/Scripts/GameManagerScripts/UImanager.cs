@@ -14,10 +14,14 @@ public class UImanager : MonoBehaviour
     [SerializeField] private GameObject PrefabTile;
     [SerializeField] private GameObject PrefabTileSlot;
     [SerializeField] private GameObject PrefabTileSlotPlayer;
-    [SerializeField] private GameController gameManager;
+    [SerializeField] private GameController gameController;
     [SerializeField] private GameObject PrefabPlayerGrid;
     [SerializeField] private GameObject Canvas;
     [SerializeField] private TextMeshProUGUI turnDisplayText;
+    [SerializeField] private GameBoard board;
+    // Reference to the deck button so we can change the text
+    [SerializeField] TextMeshProUGUI btnDeckText;
+
 
 
     //institnate player grid in the canvas
@@ -32,8 +36,52 @@ public class UImanager : MonoBehaviour
 
     private void Start()
     {
-        gameManager = GetComponent<GameController>();
+        this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
         UpdateTurnText();
+    }
+    public void BtnDeckClick()
+    {
+        DrawACardFromDeck();
+    }
+    public void DrawACardFromDeck()
+    {
+        // if there is a move to undo - undo it
+        if (board.GetMovesStack().Count > Constants.EmptyStack)
+        {
+            print("Undoing");
+            Undo();
+        } // if the deck is not empty - draw a card and update the turn\deck text
+        if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
+        {
+            gameController.GetCurrentPlayer().DrawCardFromDeck();
+            gameController.ChangeTurn();
+            UpdateTurnText();
+
+            btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
+        }
+        else
+        { // if the deck is empty - update the deck text
+            btnDeckText.text = "Deck:\nEmpty";
+        }
+    }
+    public void Undo()
+    {
+        // If the stack is empty, print an error
+        if (board.GetMovesStack().Count == Constants.EmptyStack)
+            throw new EmptyDeckException();
+        else
+            board.UndoMoves();
+    }
+    public void BtnUndoClick()
+    {
+        try
+        {
+            Undo();
+        }
+        catch (EmptyDeckException)
+        {
+            print("No moves to undo");
+        }
     }
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
@@ -51,7 +99,7 @@ public class UImanager : MonoBehaviour
         // Set the card's color and number
         newCard.Color = GivvenCard.Color;
         newCard.Number = GivvenCard.Number;
-        //newCard.Position = GivvenCard.Position;
+        newCard.Position = GivvenCard.Position;
         return newCard;
     }
     private int CalculateIndexOfSprite(Card card)
@@ -89,13 +137,25 @@ public class UImanager : MonoBehaviour
     }
     public void ConfirmMove()
     {
-        gameManager.Confrim();
-        UpdateTurnText();
+        if (board.GetMovesStack().Count == Constants.EmptyStack)//check if dropped cards are valid)
+        {
+            print("You Did not dropped any cards, tip: draw a card to skip this turn");
+        }
+        else
+        {
+            if (board.IsBoardValid())
+            {
+                // If the board is valid, change the turn and clear the moves stack
+                gameController.ChangeTurn();
+                UpdateTurnText();
+                board.GetMovesStack().Clear();
+            } // we have handler to print error when not valid
+        }
     }
 
 
     public void UpdateTurnText() => //update to the current turn 
-    turnDisplayText.text = "Player " + (gameManager.GetCurrentPlayerIndex() + 1) + "'s Turn";
+    turnDisplayText.text = "Player " + (gameController.GetCurrentPlayerIndex() + 1) + "'s Turn";
 
 
 
@@ -130,7 +190,7 @@ public class UImanager : MonoBehaviour
     // Function to sort the Player grid by a given comparison 
     private void SortPlayerGrid(Comparison<Card> comparison)
     {
-        GameObject playerGrid = gameManager.GetCurrentPlayer().GetPlayerGrid();
+        GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
         // Get all the tile slots
         List<Transform> tileSlots = new List<Transform>();
         foreach (Transform child in playerGrid.transform)

@@ -1,5 +1,4 @@
 
-using TMPro;
 using UnityEngine;
 
 // Represents a card on the board

@@ -165,7 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 0
+  playerType: 1
 --- !u!1 &306871405
 GameObject:
   m_ObjectHideFlags: 0
@@ -317,6 +317,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
+    - target: {fileID: 2527784457773719130, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1707528207}
+    - target: {fileID: 2527784457773719130, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: BtnUndoClick
+      objectReference: {fileID: 0}
     - target: {fileID: 2714301273696078255, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
       propertyPath: m_fontAsset
       value: 
@@ -385,6 +393,14 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 8121233994720094352, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1707528207}
+    - target: {fileID: 8121233994720094352, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: BtnDeckClick
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -441,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 0
+  playerType: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -534,6 +550,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &805861678 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2714301273696078255, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+  m_PrefabInstance: {fileID: 428904521}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &914871405
 GameObject:
   m_ObjectHideFlags: 0
@@ -549,7 +576,7 @@ GameObject:
   - component: {fileID: 914871410}
   m_Layer: 5
   m_Name: BoardGrid
-  m_TagString: Untagged
+  m_TagString: BoardGrid
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -763,10 +790,12 @@ MonoBehaviour:
   PrefabTile: {fileID: 8922378899630301520, guid: df558ee1241ed4a478cdb2e47d6999b9, type: 3}
   PrefabTileSlot: {fileID: 2894873449019977871, guid: 0598a9fc9c75e0844a48ac9ac0165ccd, type: 3}
   PrefabTileSlotPlayer: {fileID: 2894873449019977871, guid: 4c3a0b5fd0030934191135c6218ce27d, type: 3}
-  gameManager: {fileID: 1707528208}
+  gameController: {fileID: 1707528208}
   PrefabPlayerGrid: {fileID: 2818766243601629669, guid: c8387cf4ab5e32c47977da2abe689a6b, type: 3}
   Canvas: {fileID: 306871405}
   turnDisplayText: {fileID: 1187755894}
+  board: {fileID: 914871410}
+  btnDeckText: {fileID: 805861678}
 --- !u!114 &1707528208
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -898,7 +927,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2134636682
 Transform:
   m_ObjectHideFlags: 0
@@ -928,7 +957,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 0
+  playerType: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

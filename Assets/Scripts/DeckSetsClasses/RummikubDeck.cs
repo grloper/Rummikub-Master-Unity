@@ -39,4 +39,11 @@ public class RummikubDeck
         deck.RemoveAt(randomIndex);
         return drawnCard;
     }
+
+    // Get the length of the deck
+
+    public int GetDeckLength()
+    {
+        return deck.Count;
+    }
 }

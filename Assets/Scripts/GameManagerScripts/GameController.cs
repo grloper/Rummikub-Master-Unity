@@ -34,8 +34,7 @@ public class GameController : MonoBehaviour
             {
                 playersList.Add(player);
                 GameObject playerGrid = uiManager.InstantiatePlayerGrid();
-                player.SetPlayer(playerGrid);
-            }
+                player.SetPlayer(playerGrid);}
             else
             {
                 throw new System.Exception("Player object does not have a Player component!");
@@ -43,7 +42,7 @@ public class GameController : MonoBehaviour
         }
     }
     // change the turn to the next player
-    private void ChangeTurn()
+    public void ChangeTurn()
     {
         playersList[currentTurn].SetBoardVisiblity(false);
         currentTurn = (currentTurn + 1) % playersList.Count;
@@ -51,13 +50,7 @@ public class GameController : MonoBehaviour
 
     }
 
-    public void Confrim()
-    {
-        if (isBoardValid())
-        {
-            ChangeTurn();
-        }
-    }
+
     public bool isBoardValid()
     {
         return true;

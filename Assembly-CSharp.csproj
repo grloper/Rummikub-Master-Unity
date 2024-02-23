@@ -82,6 +82,7 @@
     <Compile Include="Assets\Scripts\Players\Player.cs" />
     <Compile Include="Assets\Scripts\GameManagerScripts\Constants.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\CameraController.cs" />
+    <Compile Include="Assets\Scripts\DeckSetsClasses\CardsSet.cs" />
     <Compile Include="Assets\Scripts\UIHandler\Draggableitem.cs" />
     <Compile Include="Assets\Scripts\CardScripts\CardPosition.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark03.cs" />
@@ -109,6 +110,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
     <Compile Include="Assets\Scripts\GameManagerScripts\UImanager.cs" />
     <Compile Include="Assets\Scripts\GameManagerScripts\GameController.cs" />
+    <Compile Include="Assets\Scripts\DeckSetsClasses\ICardSet.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
   </ItemGroup>
   <ItemGroup>
