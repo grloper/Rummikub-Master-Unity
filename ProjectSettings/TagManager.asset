@@ -5,8 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - GameManager
-  - BoardGrid
-  - PlayerGrid
+  - HumanGrid
   layers:
   - Default
   - TransparentFX
