@@ -9,180 +9,189 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 public class UImanager : MonoBehaviour
 {
-
-
-    // List of sprites for the cards UI so we can assign them to the cards in the inspector
     public List<Sprite> cardsUI = new List<Sprite>();
-    // Reference to the card prefab so we can instantiate it
-    [SerializeField] GameObject PrefabTile;
+    //Game Tiles, TileSlots prefabs
+    [SerializeField] private GameObject PrefabTile;
+    [SerializeField] private GameObject PrefabTileSlot;
+    [SerializeField] private GameObject PrefabTileSlotPlayer;
+    [SerializeField] private GameController gameController;
+    [SerializeField] private GameObject PrefabPlayerGrid;
+    [SerializeField] private GameObject Canvas;
+    [SerializeField] private TextMeshProUGUI turnDisplayText;
+    [SerializeField] private GameBoard board;
     // Reference to the deck button so we can change the text
     [SerializeField] TextMeshProUGUI btnDeckText;
-    // Reference to the turn text so we can change it
-    [SerializeField] TextMeshProUGUI turnDisplayText;
-    // Reference to Human so we can draw cards
-    [SerializeField] Human human;
-    // Reference to Computer so we can draw cards
-    [SerializeField] Computer computer;
-    // Reference to GameManager so we can change turns
-    [SerializeField] GameManager gameManager;
-    // Reference to the HumanGrid
-    [SerializeField] GameObject HumanGrid;
-    [SerializeField] private GameBoard board;
 
 
+
+    //institnate player grid in the canvas
+    public GameObject InstantiatePlayerGrid()
+    {
+        GameObject playerGrid = Instantiate(PrefabPlayerGrid, Canvas.transform);
+        //PreserveRectTransformValues(playerGrid.GetComponent<RectTransform>(), PrefabPlayerGrid.GetComponent<RectTransform>());
+        playerGrid.SetActive(false);
+        return playerGrid;
+    }
+
+
+    private void Start()
+    {
+        this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
+    }
+    public void BtnDeckClick()
+    {
+        DrawACardFromDeck();
+    }
+    public void DrawACardFromDeck()
+    {
+        // if there is a move to undo - undo it
+        if (board.GetMovesStack().Count > Constants.EmptyStack)
+        {
+            print("Undoing");
+            Undo();
+        } // if the deck is not empty - draw a card and update the turn\deck text
+        if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
+        {
+            gameController.GetCurrentPlayer().DrawCardFromDeck();
+            gameController.ChangeTurn();
+            UpdateTurnText();
+
+            btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
+        }
+        else
+        { // if the deck is empty - update the deck text
+            btnDeckText.text = "Deck:\nEmpty";
+        }
+    }
     public void Undo()
     {
-        if (gameManager.GetTurn() == 0)
-
-        {
-            if (board.GetMovesStack().Count == 0)
-            {
-                print("No more cards to undo");
-                return;
-            }
-            else
-            {
-                board.UndoMoves();
-            }
-
-        }
+        // If the stack is empty, print an error
+        if (board.GetMovesStack().Count == Constants.EmptyStack)
+            throw new EmptyDeckException();
+        else
+            board.UndoMoves();
     }
     public void BtnUndoClick()
     {
-        Undo();
-    }
-    void Start()
-    {
-        turnDisplayText.text = "Turn: Player";
-
+        try
+        {
+            Undo();
+        }
+        catch (EmptyDeckException)
+        {
+            print("No moves to undo");
+        }
     }
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
-        GameObject card = Instantiate(PrefabTile);
-
-        int index = (GivvenCard.Number - 1) * 4 + (int)GivvenCard.Color; // jokers is when number = 14
-        card.GetComponent<Image>().sprite = cardsUI[index];
-
-        card.transform.parent = tileslot.transform;
-
-        Card newCard = card.GetComponent<Card>();
-        newCard.Color = GivvenCard.Color;
-        newCard.Number = GivvenCard.Number;
-
-        return newCard;
+        Card card = InstinitanteCard(GivvenCard);
+        card.transform.SetParent(tileslot.transform);
+        return card;
     }
     public Card InstinitanteCard(Card GivvenCard)
     {
         GameObject card = Instantiate(PrefabTile);
-        int index = (GivvenCard.Number - 1) * 4 + (int)GivvenCard.Color; // jokers is when number = 14
-        card.GetComponent<Image>().sprite = cardsUI[index];
+        // Set the card's sprite to the correct sprite
+        card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(GivvenCard)];
+        // Change the variable from GameObject to Card 
         Card newCard = card.GetComponent<Card>();
+        // Set the card's color and number
         newCard.Color = GivvenCard.Color;
         newCard.Number = GivvenCard.Number;
-
+        newCard.Position = GivvenCard.Position;
         return newCard;
     }
-    public void BtnDeckClick()
+    private int CalculateIndexOfSprite(Card card)
     {
-        if (!board.IsBoardValid())
+        if (card.Number == Constants.JokerRank)
         {
-        
-            print("Invalid Move Undoing");
-            Undo();
+            return (card.Number - 2) * Constants.MaxSuit + (int)card.Color; //handler for jokers (assumes jokers = 14) to save memory
+        }
+        return (card.Number - 1) * Constants.MaxSuit + (int)card.Color;  // algorithm thats gets the location of the card in the sprite list
+    }
+
+    // Initialize Player Board with 40 slots 2HEIGHT*20WIDTH
+    public void InitPlayerTileSlots(Transform playerGrid)
+    {
+        // Initialize Player Board with 44 slots
+        for (int i = 0; i < Constants.MaxPlayerBoardSlots; i++)
+        {
+            Instantiate(PrefabTileSlotPlayer, playerGrid.transform);
         }
 
-        if (board.GetRummikubDeckInstance().GetDeckLength() != 0)
+    }
+    // Initialize Game Board with 232 slots 8HEIGHT*29WIDTH
+    public void InitBoardTileSlots(Transform boardGrid)
+    {
+        // Initialize Game Board
+        for (int i = 0; i < Constants.MaxGameBoardSlots; i++)
         {
-            if (gameManager.GetTurn() == 0)
-            {
-                human.DrawCard();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Computer";
-            }
-            else
-            {
-                computer.DrawCard();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Human";
-
-            }
-            btnDeckText.text = "Deck:\n" + board.GetRummikubDeckInstance().GetDeckLength();
-        }
-        else
-        {
-            btnDeckText.text = "Deck:\nEmpty";
+            Instantiate(PrefabTileSlot, boardGrid.transform);
         }
 
     }
     public void BtnConfirmMoveClick()
     {
-            //print in yellow confrim move
-            Debug.Log("<color=blue>Confirm Move</color>");
-        
-
-        if (board.IsBoardValid())
+        ConfirmMove();
+    }
+    public void ConfirmMove()
+    {
+        if (board.GetMovesStack().Count == Constants.EmptyStack)//check if dropped cards are valid)
         {
-
-            if (gameManager.GetTurn() == 0)
-            {
-                board.GetMovesStack().Clear();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Computer";
-            }
-            else
-            {
-                board.GetMovesStack().Clear();
-                gameManager.ChangeTurn();
-                turnDisplayText.text = "Turn: Human";
-            }
+            print("You Did not dropped any cards, tip: draw a card to skip this turn");
         }
         else
         {
-            print("Invalid Move");
+            if (board.IsBoardValid())
+            {
+                // If the board is valid, change the turn and clear the moves stack
+                gameController.ChangeTurn();
+                UpdateTurnText();
+                board.GetMovesStack().Clear();
+            } // we have handler to print error when not valid
         }
-
     }
+
+
+    public void UpdateTurnText() =>
+           turnDisplayText.text = "Turn: " + gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
+);
+
+
+
+
+
     public void BtnSortByRun()
     {
-       
         // Sort the cards by run
-        SortHumanGrid((card1, card2) =>
+        SortPlayerGrid((card1, card2) =>
         {
-            // Sort by number first, then by color
             if (card1.Color == card2.Color)
-            {
                 return card1.Number.CompareTo(card2.Number);
-            }
             else
-            {
                 return card1.Color.CompareTo(card2.Color);
-            }
         });
     }
 
     public void BtnSortByGroup()
     {
         // Sort the cards by group
-        
-        SortHumanGrid((card1, card2) =>
+        SortPlayerGrid((card1, card2) =>
         {
-            // Sort by color first, then by number
             if (card1.Number == card2.Number)
-            {
                 return card1.Color.CompareTo(card2.Color);
-            }
             else
-            {
                 return card1.Number.CompareTo(card2.Number);
-            }
         });
-}
+    }
 
-    private void SortHumanGrid(Comparison<Card> comparison)
+    // Function to sort the Player grid by a given comparison 
+    private void SortPlayerGrid(Comparison<Card> comparison)
     {
+        GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
         // Get all the tile slots
         List<Transform> tileSlots = new List<Transform>();
-        foreach (Transform child in HumanGrid.transform)
+        foreach (Transform child in playerGrid.transform)
         {
             tileSlots.Add(child);
         }
@@ -190,7 +199,7 @@ public class UImanager : MonoBehaviour
         List<Card> cardsToSort = new List<Card>();
         foreach (Transform tileSlot in tileSlots)
         {
-            if (tileSlot.childCount > 0)
+            if (tileSlot.childCount > Constants.EmptyTileSlot)
             {
                 Card card = tileSlot.GetChild(0).GetComponent<Card>();
                 cardsToSort.Add(card);
@@ -210,9 +219,17 @@ public class UImanager : MonoBehaviour
             newCard.Color = cardsToSort[i].Color;
             newCard.Number = cardsToSort[i].Number;
             // Set the card's sprite
-            int index = (newCard.Number - 1) * 4 + (int)newCard.Color;
+            int index = CalculateIndexOfSprite(newCard);
             cardObject.GetComponent<Image>().sprite = cardsUI[index];
         }
     }
 
+    public void MoveCardToBoard(Card card, int tileslot)
+    {
+        GameObject tileSlot = this.board.transform.GetChild(tileslot).gameObject;
+        card.CameFromPlayerHand = true;
+        card.ParentBeforeDrag = card.transform.parent;
+        card.transform.SetParent(tileSlot.transform);
+    }
 }
+

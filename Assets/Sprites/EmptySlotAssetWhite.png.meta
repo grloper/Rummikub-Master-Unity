@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 320821892e1b2124dbee2e252f94a8ce
+guid: a28b3ae57a3eb0448af37ab0149686f9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7764467840739387950
-    second: EmptySlotAssetwHITE_0
+      213: -5440753720794050218
+    second: EmptySlotAssetWhite_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: EmptySlotAssetwHITE_0
+      name: EmptySlotAssetWhite_0
       rect:
         serializedVersion: 2
         x: 0
@@ -127,8 +127,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e2a273dfc5ee0cb60800000000000000
-      internalID: 7764467840739387950
+      spriteID: 6519fa9315f8e74b0800000000000000
+      internalID: -5440753720794050218
       vertices: []
       indices: 
       edges: []
@@ -144,7 +144,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      EmptySlotAssetwHITE_0: 7764467840739387950
+      EmptySlotAssetWhite_0: -5440753720794050218
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
