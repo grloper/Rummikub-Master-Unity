@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class GameBoard : MonoBehaviour
 {
     private RummikubDeck rummikubDeck = new RummikubDeck();
     [SerializeField] private UImanager uiManager;
-    private List<List<CardsSet>> gameBoardValidSets = new List<List<CardsSet>>();
+    private List<CardsSet>[] gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
     private Stack<Card> movesStack = new Stack<Card>();
     private GameController gameController;
 
@@ -22,13 +23,13 @@ public class GameBoard : MonoBehaviour
         // this class is actually the board grid so we send "transform" 
         uiManager.InitBoardTileSlots(transform);
         //game board valid sets need to have at max 0-7 sets which is the rows on board and every set can have many CardsSet which will held by location on board
-        gameBoardValidSets = new List<List<CardsSet>>();
+        gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
         for (int i = 0; i < Constants.MaxBoardRows; i++)
         {
-            gameBoardValidSets.Add(new List<CardsSet>());
+            gameBoardValidSets[i]=(new List<CardsSet>());
         }
         ExplainGameRules();
-
+        
     }
     public void UndoMoves()
     {
@@ -110,7 +111,7 @@ public class GameBoard : MonoBehaviour
     }
 
     // Handle the movement of a card from the game board to the game board
-    public void MoveCardFromGameBoardToGameBoard(Card card)
+    public async void MoveCardFromGameBoardToGameBoard(Card card)
     {
         int i = -1;
         foreach (CardsSet cardsSet in gameBoardValidSets[card.OldPosition.Row])
@@ -122,7 +123,11 @@ public class GameBoard : MonoBehaviour
                 // if the card were removed from the set in the middle uncombine into two sets
                 if (i > 0 && i < cardsSet.set.Count)
                 {
-                    CardsSet set = cardsSet.UnCombine(i);
+                    CardsSet set = null;
+                    Task.Run(() =>
+                    {
+                        set = cardsSet.UnCombine(i);
+                    }).Wait(); // Wait for UnCombine to complete
                     gameBoardValidSets[card.OldPosition.Row].Add(set);
                 }
                 if (cardsSet.set.Count == Constants.EmptyCardsSet)
@@ -159,18 +164,22 @@ public class GameBoard : MonoBehaviour
                 if (cardSet.CanAddCardBeggining(card)) // if the card can be added to the beginning of the set, add it
                 {
                     cardSet.AddCardToBeggining(card);
-                    Combine(card.Position); // combine the sets if they are consecutive
+                    Task.Run(() =>
+                    {
+                        Combine(card.Position); // combine the sets if they are consecutive
+                    }).Wait(); // Wait for Combine to complete
                     return;
                 }
                 else if (cardSet.CanAddCardEnd(card)) // if the card can be added to the end of the set, add it
                 { 
                    cardSet.AddCardToEnd(card);
-                  Combine(card.Position); // combine the sets if they are consecutive
-                  return;
+                    Task.Run(() =>
+                    {
+                        Combine(card.Position); // combine the sets if they are consecutive
+                    }).Wait(); // Wait for Combine to complete
+                    return;
                 }
-                print("4");
             }
-            print("5");
             // if the card can't be added to any of the sets in the row add it to a new set
             gameBoardValidSets[card.Position.Row].Add(new CardsSet(card));
         }
@@ -228,7 +237,6 @@ public class GameBoard : MonoBehaviour
 
     public bool IsBoardValid()
     {
-        return true;
         bool humanCheck = gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
         if (GetMovesStackSum() >= Constants.MinFirstSet || humanCheck)
         {
@@ -251,7 +259,7 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    // Check if a set of cards is valid
+    // Check if a set of cards is valid (either run or either group)
     private bool IsSetValid(CardsSet cardsSet)
     {
         if (!cardsSet.IsRun() && !cardsSet.IsGroupOfColors())
@@ -310,6 +318,7 @@ public class GameBoard : MonoBehaviour
       int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
       foreach (Card card in cardsSet.set)
         {
+            gameController.GetCurrentPlayer().RemoveCardFromList(card);
             card.Position = new CardPosition(tileslot);
             uiManager.MoveCardToBoard(card,tileslot);
             tileslot++;

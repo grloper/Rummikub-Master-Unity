@@ -35,8 +35,26 @@ public class Card : MonoBehaviour
     public override string ToString()
     {
         // Return a string representation of the card
-        return "Card: " + number + " " + color + "Y:" + position.Row + " X:" + position.Column;
+        return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color> Y:" + position.Row + " X:" + position.Column;
+    }
+    public override bool Equals(object obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
 
+        Card otherCard = (Card)obj;
+        return number == otherCard.number && color == otherCard.color;
+    }
+
+    public override int GetHashCode()
+    {
+        // Combine the hash codes of number and color for a unique identifier
+        unchecked
+        {
+            return number.GetHashCode() * 31 + color.GetHashCode();
+        }
     }
 }
 

@@ -26,7 +26,10 @@ public class CardsSet : ICardSet
 
     public Card GetLastCard() => set[set.Count - 1];
 
-
+    public void SetList(List<Card> newList)
+    {
+        this.set = newList;
+    }
     //add card beggining and end in two function 
     public void AddCardToBeggining(Card card)
     {

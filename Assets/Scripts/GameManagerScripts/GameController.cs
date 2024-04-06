@@ -23,6 +23,11 @@ public class GameController : MonoBehaviour
         currentTurn = UnityEngine.Random.Range(0, playersList.Count);
         playersList[currentTurn].SetBoardVisiblity(true);
         uiManager.UpdateTurnText();
+        CheckIfComputerTurn();
+
+    }
+    public void CheckIfComputerTurn()
+    {
         if (GetCurrentPlayer().IsComputer())
         {
             Computer computer = GetCurrentPlayer().GetComponent<Computer>();
@@ -30,7 +35,6 @@ public class GameController : MonoBehaviour
         }
 
     }
-
     // Function to initialize the playersList
     private void InitPlayerList()
     {
@@ -64,11 +68,7 @@ public class GameController : MonoBehaviour
         playersList[currentTurn].SetBoardVisiblity(false);
         currentTurn = (currentTurn + 1) % playersList.Count;
         playersList[currentTurn].SetBoardVisiblity(true);
-        if (GetCurrentPlayer().IsComputer())
-        {
-            Computer computer = GetCurrentPlayer().GetComponent<Computer>();
-            StartCoroutine(computer.ComputerMove());
-        }
+        CheckIfComputerTurn();
     }
 
 
