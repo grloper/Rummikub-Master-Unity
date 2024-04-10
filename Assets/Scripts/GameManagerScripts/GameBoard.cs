@@ -8,6 +8,8 @@ public class GameBoard : MonoBehaviour
     private RummikubDeck rummikubDeck = new RummikubDeck();
     [SerializeField] private UImanager uiManager;
     private List<CardsSet>[] gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
+    private Dictionary<int, CardsSet> boardSets = new Dictionary<int, CardsSet>();
+    private Dictionary<CardPosition, int> setsPostion = new Dictionary<CardPosition, int>();
     private Stack<Card> movesStack = new Stack<Card>();
     private GameController gameController;
 
@@ -111,7 +113,7 @@ public class GameBoard : MonoBehaviour
     }
 
     // Handle the movement of a card from the game board to the game board
-    public async void MoveCardFromGameBoardToGameBoard(Card card)
+    public void MoveCardFromGameBoardToGameBoard(Card card)
     {
         int i = -1;
         foreach (CardsSet cardsSet in gameBoardValidSets[card.OldPosition.Row])
@@ -123,6 +125,7 @@ public class GameBoard : MonoBehaviour
                 // if the card were removed from the set in the middle uncombine into two sets
                 if (i > 0 && i < cardsSet.set.Count)
                 {
+                    print("uncombine because i is : " + i);
                     CardsSet set = null;
                     Task.Run(() =>
                     {
@@ -141,8 +144,8 @@ public class GameBoard : MonoBehaviour
     }
     public void MoveCardFromPlayerHandToGameBoard(Card card)
     {
-        PutInSet(card);
         gameController.GetCurrentPlayer().RemoveCardFromList(card);
+        PutInSet(card);
     }
     //complexity O(n^2) when n is the number of sets in the row 
     public void PutInSet(Card card)
@@ -237,7 +240,7 @@ public class GameBoard : MonoBehaviour
 
     public bool IsBoardValid()
     {
-        bool humanCheck = gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
+        bool humanCheck = true; gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
         if (GetMovesStackSum() >= Constants.MinFirstSet || humanCheck)
         {
             foreach (List<CardsSet> listCardsSet in gameBoardValidSets) // scan all the CardsSets in the board
@@ -292,7 +295,7 @@ public class GameBoard : MonoBehaviour
             {
                 emptySlotsCount[row]++;
                 // Check if we have found 'amount' consecutive empty slots on the same row
-                if (emptySlotsCount[row] == amount +1&& (i - amount) % Constants.MaxPlayerColumns == 0)
+                if (emptySlotsCount[row] == amount +1&& (i - amount) % Constants.MaxBoardColumns == 0)
                 {
                     return i - amount;
                 }
@@ -318,12 +321,13 @@ public class GameBoard : MonoBehaviour
       int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
       foreach (Card card in cardsSet.set)
         {
-            gameController.GetCurrentPlayer().RemoveCardFromList(card);
             card.Position = new CardPosition(tileslot);
             uiManager.MoveCardToBoard(card,tileslot);
             tileslot++;
+            // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
-            MoveCardFromGameBoardToPlayerHand(card);
+            // move and remove the card
+            MoveCardFromPlayerHandToGameBoard(card);
         }
     }
 }

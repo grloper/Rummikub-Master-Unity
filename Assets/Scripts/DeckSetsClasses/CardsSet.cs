@@ -97,7 +97,7 @@ public class CardsSet : ICardSet
         set.Remove(card);
         return i;
     }
-
+    
 
     // Check if a run is valid
     public bool IsRun()
@@ -123,6 +123,17 @@ public class CardsSet : ICardSet
             }
         }
         return isRun = true;
+    }
+    public bool IsContainThisColor(CardColor c)
+    {
+        foreach (Card card in set)
+        {
+            if (card.Color==c)
+            {
+                return true;
+            }
+        }
+        return false;
     }
     // Check if a group of colors is valid
     public bool IsGroupOfColors()

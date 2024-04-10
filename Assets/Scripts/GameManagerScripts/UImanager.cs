@@ -185,50 +185,96 @@ public class UImanager : MonoBehaviour
         });
     }
 
-    // Function to sort the Player grid by a given comparison 
+    //Function to sort the Player grid by a given comparison
+    //private void SortPlayerGrid(Comparison<Card> comparison)
+    //{
+    //    GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
+    //    // Get all the tile slots
+    //    List<Transform> tileSlots = new List<Transform>();
+    //    foreach (Transform child in playerGrid.transform)
+    //    {
+    //        tileSlots.Add(child);
+    //    }
+    //    // Sort the cards in the tile slots
+    //    List<Card> cardsToSort = new List<Card>();
+    //    foreach (Transform tileSlot in tileSlots)
+    //    {
+    //        if (tileSlot.childCount > Constants.EmptyTileSlot)
+    //        {
+    //            Card card = tileSlot.GetChild(0).GetComponent<Card>();
+    //            cardsToSort.Add(card);
+    //            Destroy(tileSlot.GetChild(0).gameObject);
+    //        }
+    //    }
+    //    // Sort the cards
+    //    cardsToSort.Sort(comparison);
+    //    // Instantiate the cards in the tile slots
+    //    for (int i = 0; i < cardsToSort.Count; i++)
+    //    {
+    //        GameObject cardObject = Instantiate(PrefabTile);
+    //        cardObject.transform.SetParent(tileSlots[i]);
+    //        cardObject.transform.localPosition = Vector3.zero;
+    //        // Set the card's color and number
+    //        Card newCard = cardObject.GetComponent<Card>();
+    //        newCard.Color = cardsToSort[i].Color;
+    //        newCard.Number = cardsToSort[i].Number;
+    //        // Set the card's sprite
+    //        int index = CalculateIndexOfSprite(newCard);
+    //        cardObject.GetComponent<Image>().sprite = cardsUI[index];
+    //    }
+    //}
+
     private void SortPlayerGrid(Comparison<Card> comparison)
     {
         GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
-        // Get all the tile slots
+
+        // Get all the tile slots and existing cards
         List<Transform> tileSlots = new List<Transform>();
-        foreach (Transform child in playerGrid.transform)
-        {
-            tileSlots.Add(child);
-        }
-        // Sort the cards in the tile slots
         List<Card> cardsToSort = new List<Card>();
-        foreach (Transform tileSlot in tileSlots)
+        foreach (Transform tileSlot in playerGrid.transform)
         {
+            tileSlots.Add(tileSlot);
             if (tileSlot.childCount > Constants.EmptyTileSlot)
             {
                 Card card = tileSlot.GetChild(0).GetComponent<Card>();
                 cardsToSort.Add(card);
-                Destroy(tileSlot.GetChild(0).gameObject);
             }
         }
+
         // Sort the cards
         cardsToSort.Sort(comparison);
-        // Instantiate the cards in the tile slots
+
+        // Rearrange the cards within existing tile slots
         for (int i = 0; i < cardsToSort.Count; i++)
         {
-            GameObject cardObject = Instantiate(PrefabTile);
-            cardObject.transform.SetParent(tileSlots[i]);
-            cardObject.transform.localPosition = Vector3.zero;
-            // Set the card's color and number
-            Card newCard = cardObject.GetComponent<Card>();
-            newCard.Color = cardsToSort[i].Color;
-            newCard.Number = cardsToSort[i].Number;
-            // Set the card's sprite
-            int index = CalculateIndexOfSprite(newCard);
-            cardObject.GetComponent<Image>().sprite = cardsUI[index];
+            Card card = cardsToSort[i];
+            Transform targetSlot = tileSlots[i]; // Get the target tile slot
+
+            // Check if the card needs to be moved
+            if (card.transform.parent != targetSlot)
+            {
+                card.transform.SetParent(targetSlot); // Move the card to the target slot
+            }
+        }
+
+        // Update card sprites (optional)
+        for (int i = 0; i < cardsToSort.Count; i++)
+        {
+            Card card = cardsToSort[i];
+            int index = CalculateIndexOfSprite(card);
+            card.GetComponent<Image>().sprite = cardsUI[index];
         }
     }
 
+
     public void MoveCardToBoard(Card card, int tileslot)
     {
+        // get the tileslot location from board
         GameObject tileSlot = this.board.transform.GetChild(tileslot).gameObject;
+        //update value for proper undo function
         card.CameFromPlayerHand = true;
         card.ParentBeforeDrag = card.transform.parent;
+        // visual the card on the new postion
         card.transform.SetParent(tileSlot.transform);
     }
 }

@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] protected GameBoard board;
     private GameObject PlayerGrid;
     [SerializeField] private PlayerType playerType;
-    protected List<Card> playerHand;
+    [SerializeField]  protected List<Card> playerHand;
     protected bool initialMove;
 
     // act as a constructor for the player because we are using : MonoBehaviour
@@ -120,6 +120,7 @@ public class Player : MonoBehaviour
                 GameObject tileSlot =PlayerGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
                 Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
+                playerHand.Add(randomCard);
             }
             catch (EmptyDeckException)
             {
@@ -140,7 +141,7 @@ public class Player : MonoBehaviour
 
     public List<Card> GetPlayerHand()
     {
-        return playerHand;
+        return this.playerHand;
     }
 
     public object GetPlayerType()
