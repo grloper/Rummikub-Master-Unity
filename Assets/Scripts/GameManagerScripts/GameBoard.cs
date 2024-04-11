@@ -212,6 +212,7 @@ public class GameBoard : MonoBehaviour
                     }
                 }
             }
+            // fe
         }
     }
     // Check if two numbers are consecutive
