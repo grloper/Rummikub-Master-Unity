@@ -7,16 +7,17 @@ public class GameBoard : MonoBehaviour
 {
     private RummikubDeck rummikubDeck = new RummikubDeck();
     [SerializeField] private UImanager uiManager;
-    private List<CardsSet>[] gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
-    private Dictionary<int, CardsSet> boardSets = new Dictionary<int, CardsSet>();
-    private Dictionary<CardPosition, int> setsPostion = new Dictionary<CardPosition, int>();
+   //private List<CardsSet>[] gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
+    
+    // <int = CardPosition.Row *1 - represent the start of an existing set
+    private Dictionary<int, CardsSet> gameBoardValidSets = new Dictionary<int, CardsSet>();
     private Stack<Card> movesStack = new Stack<Card>();
     private GameController gameController;
 
 
     // Return instance of rummikub deck
     public RummikubDeck GetRummikubDeckInstance() => rummikubDeck;
-    public List<CardsSet>[] GetBoard() => gameBoardValidSets;
+    public Dictionary<int, CardsSet> GetBoard() => gameBoardValidSets;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,10 +29,10 @@ public class GameBoard : MonoBehaviour
         gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
         for (int i = 0; i < Constants.MaxBoardRows; i++)
         {
-            gameBoardValidSets[i]=(new List<CardsSet>());
+            gameBoardValidSets[i] = (new List<CardsSet>());
         }
         ExplainGameRules();
-        
+
     }
     public void UndoMoves()
     {
@@ -60,7 +61,7 @@ public class GameBoard : MonoBehaviour
                 MoveCardFromGameBoardToGameBoard(card);
                 //card.ParentBeforeDrag is the tile slot location on board when pushed first to the stack
                 draggableItem.parentAfterDrag = card.ParentBeforeDrag;
-                card.transform.parent=draggableItem.parentAfterDrag;
+                card.transform.parent = draggableItem.parentAfterDrag;
                 card.transform.localPosition = Vector3.zero;
             }
         }
@@ -116,8 +117,10 @@ public class GameBoard : MonoBehaviour
     public void MoveCardFromGameBoardToGameBoard(Card card)
     {
         int i = -1;
+        int setNumber=-1;
         foreach (CardsSet cardsSet in gameBoardValidSets[card.OldPosition.Row])
         {
+            setNumber++;
             if (cardsSet.IsContainsCard(card))
             {
                 //save the index of the card in the set
@@ -125,13 +128,12 @@ public class GameBoard : MonoBehaviour
                 // if the card were removed from the set in the middle uncombine into two sets
                 if (i > 0 && i < cardsSet.set.Count)
                 {
-                    print("uncombine because i is : " + i);
+                    print("uncombine because i is : " + i+"\nsetNumber = "+setNumber);
                     CardsSet set = null;
-                    Task.Run(() =>
-                    {
-                        set = cardsSet.UnCombine(i);
-                    }).Wait(); // Wait for UnCombine to complete
-                    gameBoardValidSets[card.OldPosition.Row].Add(set);
+                    // set will be the left side from the card in the set, while cardsSet remain the set from the right of the card
+                    set = cardsSet.UnCombine(i);
+                    // insert the new set (from the left) at the position of the original set to keep track of the correct order
+                    gameBoardValidSets[card.OldPosition.Row].Insert(setNumber,set);
                 }
                 if (cardsSet.set.Count == Constants.EmptyCardsSet)
                 {
@@ -150,6 +152,7 @@ public class GameBoard : MonoBehaviour
     //complexity O(n^2) when n is the number of sets in the row 
     public void PutInSet(Card card)
     {
+        int indexSet = 0, i = 0;
         //add card in the row postion in a new CardsSet
         //print in blue the card postion row
         if (gameBoardValidSets[card.Position.Row].Count == Constants.ZeroCardsSet)
@@ -161,60 +164,55 @@ public class GameBoard : MonoBehaviour
         else
         {
             // iterate over the CardsSet in the row and check if the card can be added to the one of them at the beginning or at the end
-            foreach (CardsSet cardSet in gameBoardValidSets[card.Position.Row])
+            foreach (CardsSet cardsSet in gameBoardValidSets[card.Position.Row])
             {
 
-                if (cardSet.CanAddCardBeggining(card)) // if the card can be added to the beginning of the set, add it
+                if (cardsSet.CanAddCardBeggining(card)) // if the card can be added to the beginning of the set, add it
                 {
-                    cardSet.AddCardToBeggining(card);
-                    Task.Run(() =>
+                    cardsSet.AddCardToBeggining(card);
+                    return;
+
+                }
+                else if (cardsSet.CanAddCardEnd(card)) // if the card can be added to the end of the set, add it
+                {
+                    cardsSet.AddCardToEnd(card);
+                    // if the row contain more than 1 set, potintial to occur a combine need
+                    if(gameBoardValidSets[card.Position.Row].Count>1 && 
+                    i+1<gameBoardValidSets[card.Position.Row].Count) // if we are adding a card at the end of the last cardset no need of combine
+                   
                     {
-                        Combine(card.Position); // combine the sets if they are consecutive
-                    }).Wait(); // Wait for Combine to complete
+                    // check if the next set column is 1 gap away from the current set
+                    
+                    CardsSet otherSet = gameBoardValidSets[card.Position.Row][i + 1];
+                    print("other set babe "+ otherSet.ToString());
+                    CheckCombine(cardsSet, otherSet, card);
+                    }
                     return;
                 }
-                else if (cardSet.CanAddCardEnd(card)) // if the card can be added to the end of the set, add it
-                { 
-                   cardSet.AddCardToEnd(card);
-                    Task.Run(() =>
-                    {
-                        Combine(card.Position); // combine the sets if they are consecutive
-                    }).Wait(); // Wait for Combine to complete
-                    return;
+                if (cardsSet.GetLastCard().Position.Column < card.Position.Column)
+                {
+                    indexSet++;
                 }
             }
             // if the card can't be added to any of the sets in the row add it to a new set
-            gameBoardValidSets[card.Position.Row].Add(new CardsSet(card));
+            gameBoardValidSets[card.Position.Row].Insert(indexSet, new CardsSet(card));
         }
     }
+
+    private void CheckCombine(CardsSet cardsSet, CardsSet otherSet, Card card)
+    {
+        if (AreConsecutive(cardsSet.GetLastCard().Position.Column, otherSet.GetFirstCard().Position.Column))
+        {
+            cardsSet.Combine(cardsSet, otherSet);
+            gameBoardValidSets[card.Position.Row].Remove(otherSet);
+        }
+    }
+
+
 
 
     // function that combine two sets if they are consecutive by postion of column
-    public void Combine(CardPosition cardPosition)
-    {
-        foreach (CardsSet cardsSet in gameBoardValidSets[cardPosition.Row])
-        {
-            foreach (CardsSet otherSet in gameBoardValidSets[cardPosition.Row])
-            {
-                if (cardsSet != otherSet)
-                {
-                    if (AreConsecutive(cardsSet.GetLastCard().Position.Column, otherSet.GetFirstCard().Position.Column))
-                    {
-                        cardsSet.Combine(cardsSet, otherSet);
-                        gameBoardValidSets[cardPosition.Row].Remove(otherSet);
-                        return;
-                    }
-                    else if (AreConsecutive(cardsSet.GetFirstCard().Position.Column, otherSet.GetLastCard().Position.Column))
-                    {
-                        otherSet.Combine(otherSet, cardsSet);
-                        gameBoardValidSets[cardPosition.Row].Remove(cardsSet);
-                        return;
-                    }
-                }
-            }
-            // fe
-        }
-    }
+
     // Check if two numbers are consecutive
     public bool AreConsecutive(int num1, int num2) => Math.Abs(num1 - num2) == 1;
     public void ExplainGameRules()
@@ -257,7 +255,7 @@ public class GameBoard : MonoBehaviour
     public void UpdateIntialMove()
     {
         // Update the initial move for the player - means he dropped sets with more than 30 points
-        if (!gameController.GetCurrentPlayer().GetInitialMove() )
+        if (!gameController.GetCurrentPlayer().GetInitialMove())
             gameController.GetCurrentPlayer().SetInitialMove(true);
 
     }
@@ -296,11 +294,11 @@ public class GameBoard : MonoBehaviour
             {
                 emptySlotsCount[row]++;
                 // Check if we have found 'amount' consecutive empty slots on the same row
-                if (emptySlotsCount[row] == amount +1&& (i - amount) % Constants.MaxBoardColumns == 0)
+                if (emptySlotsCount[row] == amount + 1 && (i - amount) % Constants.MaxBoardColumns == 0)
                 {
                     return i - amount;
                 }
-                else if (emptySlotsCount[row] == amount+1)
+                else if (emptySlotsCount[row] == amount + 1)
                 {
                     // Calculate the index of the first slot in the sequence
                     return i - amount + 1;
@@ -319,16 +317,24 @@ public class GameBoard : MonoBehaviour
 
     internal void PlayCardSetOnBoard(CardsSet cardsSet)
     {
-      int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
-      foreach (Card card in cardsSet.set)
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
+        foreach (Card card in cardsSet.set)
         {
             card.Position = new CardPosition(tileslot);
-            uiManager.MoveCardToBoard(card,tileslot);
+            uiManager.MoveCardToBoard(card, tileslot);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
             MoveCardFromPlayerHandToGameBoard(card);
         }
+    }
+    internal void PlayCardOnBoard(Card card, int tileslot)
+    {
+        // assume already check no nehibors to combine my love
+        uiManager.MoveCardToBoard(card, tileslot);
+        AddCardToMovesStack(card);
+        MoveCardFromPlayerHandToGameBoard(card);
+
     }
 }

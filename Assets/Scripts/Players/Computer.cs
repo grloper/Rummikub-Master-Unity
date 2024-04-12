@@ -146,7 +146,9 @@ public class Computer : Player
         this.computerHand = myPlayer.GetPlayerHand();
         bool dropped = MaximizeValidDrops();
       //  MaximizePartialDrops();
-      if (dropped)
+
+      bool added= AssignFreeCardsToExistsSets();
+      if(dropped)
       {
         uiManager.ConfirmMove();
       }else
@@ -155,6 +157,11 @@ public class Computer : Player
       }
   
        
+    }
+
+    private bool AssignFreeCardsToExistsSets()
+    {
+        return true;
     }
 
     private bool MaximizePartialDrops()

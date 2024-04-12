@@ -75,8 +75,6 @@ public class CardsSet : ICardSet
         {
             set1.set.Add(c);
         }
-        // Sort the set by column positio, we assume that the cards are already sorted by row position
-        set1.set.Sort((x, y) => x.Position.Column.CompareTo(y.Position.Column));
         set2.set.Clear();
         return set1;
     }
@@ -89,7 +87,7 @@ public class CardsSet : ICardSet
         {
             newSet.set.Add(set[i]);
         }
-        set.RemoveRange(0, offset);
+        set.RemoveRange(0,offset);
         return newSet;
     }
 
