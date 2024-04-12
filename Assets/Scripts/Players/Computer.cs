@@ -145,7 +145,14 @@ public class Computer : Player
     {
         this.computerHand = myPlayer.GetPlayerHand();
         bool dropped = MaximizeValidDrops();
-        MaximizePartialDrops();
+      //  MaximizePartialDrops();
+      if (dropped)
+      {
+        uiManager.ConfirmMove();
+      }else
+      {
+        uiManager.DrawACardFromDeck();
+      }
   
        
     }
@@ -306,7 +313,6 @@ public class Computer : Player
 
     public void SortByRun()
     {
-      //  print("Run");
         computerHand.Sort((card1, card2) =>
         {
             if (card1.Color == card2.Color)
@@ -314,8 +320,6 @@ public class Computer : Player
             else
                 return card1.Color.CompareTo(card2.Color);
         });
-       // PrintCards();
-
     }
 
      
