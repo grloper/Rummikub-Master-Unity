@@ -73,7 +73,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
         }
     }
 
-    private void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
+    private async void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
     {
         card.Position = new CardPosition(GetRowIndexBoard(), GetColumnIndexBoard());
         Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " +card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
@@ -83,7 +83,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             card.CameFromPlayerHand = true;
             // update the position of the card in the game board
-            board.MoveCardFromPlayerHandToGameBoard(card);
+           await board.MoveCardFromPlayerHandToGameBoard(card);
             // push the card to the moves stack
             // print("Pushed to Player Stack " + card.ToString());
             board.AddCardToMovesStack(card);
@@ -102,7 +102,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 board.AddCardToMovesStack(card);
             }
             //update the position of the card in the game board
-            board.MoveCardFromGameBoardToGameBoard(card);
+           await board.MoveCardFromGameBoardToGameBoard(card);
         }
     }
 

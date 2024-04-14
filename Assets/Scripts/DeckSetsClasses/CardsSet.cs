@@ -23,15 +23,18 @@ public class CardsSet : ICardSet
     }
 
     // Utility methods
+    //O(1)
     public Card GetFirstCard() => set[0];
 
+    // O(1)
     public Card GetLastCard() => set[set.Count - 1];
-
+    // O(1)
     public void SetList(List<Card> newList)
     {
         this.set = newList;
     }
     //add card beggining and end in two function 
+    // O(n)
     public void AddCardToBeginning(Card card)
     {
         if (set.Count == Constants.EmptyCardsSet)
@@ -42,7 +45,7 @@ public class CardsSet : ICardSet
         set.Insert(0, card);
     }
 
-
+    // O(n)
     public void AddCardToEnd(Card card)
     {
         if (set.Count == Constants.EmptyCardsSet)
@@ -54,11 +57,13 @@ public class CardsSet : ICardSet
     }
 
     // can add at the begginging of the set of List<Card> return bool true it check if the postion of the card colum + 1 is equal to the first card postion colum
+    // O(1)
     public bool CanAddCardBeggining(Card card)
     {
         return GetFirstCard().Position.Column == card.Position.Column + 1;
     }
     // can add at the end of the set of List<Card> return bool true it check if the postion of the card colum - 1 is equal to the last card postion colum
+     // O(1)
     public bool CanAddCardEnd(Card card)
     {
         return GetLastCard().Position.Column == card.Position.Column - 1;
@@ -67,11 +72,13 @@ public class CardsSet : ICardSet
   
     
     // check if the set contains a certain card
+    // O(n)
     public bool IsContainsCard(Card card)
     {
         return set.Contains(card);
     }
     // Combine two sets of cards and return the new set of cards
+    // O(n) when n is the number of cards in the second set
     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
         foreach (Card c in set2.set)
@@ -83,6 +90,7 @@ public class CardsSet : ICardSet
     }
     // Uncombine the set of cards and return the new set of cards,
     // the offset is the number of cards to remove from the set because they are at another list
+    // O(n) when n is the number of cards to remove
     public CardsSet UnCombine(int offset)
     {
         CardsSet newSet = new CardsSet();
@@ -90,11 +98,12 @@ public class CardsSet : ICardSet
         {
             newSet.set.Add(set[i]);
         }
-        set.RemoveRange(0,offset);
+        set.RemoveRange(0, offset);
         return newSet;
     }
 
     // Remove a card from the set and return its index in the set
+    // O(n) when n is the number of cards in the set
     public int RemoveCard(Card card)
     {
         int i = set.FindIndex(c => c == card);
@@ -104,6 +113,7 @@ public class CardsSet : ICardSet
     
 
     // Check if a run is valid
+    // O(n) when n is the number of cards in the set
     public bool IsRun()
     {
         if (set == null || set.Count < Constants.MinInRun || set.Count > Constants.MaxInRun)
@@ -128,6 +138,9 @@ public class CardsSet : ICardSet
         }
         return isRun = true;
     }
+    
+    // Check if a set contains a certain color
+    // O(n) when n is the number of cards in the set
     public bool IsContainThisColor(CardColor c)
     {
         foreach (Card card in set)
@@ -140,6 +153,7 @@ public class CardsSet : ICardSet
         return false;
     }
     // Check if a group of colors is valid
+    // O(n) when n is the number of cards in the set
     public bool IsGroupOfColors()
     {
         if (set == null || (set.Count != Constants.MinInGroup && set.Count != Constants.MaxInGroup))
@@ -163,20 +177,25 @@ public class CardsSet : ICardSet
         return isGroupOfColors = true;
     }
     // check if a card is the same color as the given color, if joker return true
+    // O(1)
     public bool IsSameColor(Card c1, CardColor color)
     {
         return IsJoker(c1) || c1.Color == color;
     }
+    // check if two cards are consecutive, if joker return true
+    // O(1)
     public bool IsConsicutive(Card c1, Card c2)
     {
         return IsJoker(c1) || c1.Number == c2.Number + 1;
     }
     // check if a card is a joker and return true if it is
+    // O(1)
     public bool IsJoker(Card card)
     {
         return card.Number == Constants.JokerRank; // the joker is a mask of 1111b
     }
     // get the first index of a card that is not a joker
+    // O(n) when n is the number of cards in the set
     public int GetFirstIndexOfNotJoker()
     {
         for (int i = 0; i <= Constants.MaxJoker; i++)
@@ -198,6 +217,7 @@ public class CardsSet : ICardSet
         }
         return setStr;
     }
+
 
     public bool CanAddCardBegginingRun(Card card)
     {
@@ -232,11 +252,12 @@ public class CardsSet : ICardSet
         return check;
     }
 
+    // Remove a card from the set at a certain index and return the card
+    // O(n) when n is the number of cards in the set
     internal Card RemoveCardAt(int i)
     {
         Card card = set[i];
         set.RemoveAt(i);
         return card;
-        
     }
 }

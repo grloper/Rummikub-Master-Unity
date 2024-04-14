@@ -35,7 +35,7 @@ public class Card : MonoBehaviour
     public override string ToString()
     {
         // Return a string representation of the card
-        return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color> Y:" + position.Row + " X:" + position.Column;
+        return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color>("+((position.Row*100)+position.Column)+")";// + position.Row + " X:" + position.Column;
     }
     public override bool Equals(object obj)
     {

@@ -103,19 +103,68 @@ public class GameBoard : MonoBehaviour
     // Print all items in gameBoardValidSets
     public void PrintGameBoardValidSets()
     {
-        Debug.Log("<color=red>Print Sets:</color>");
-        int count = Constants.EmptyCardsSet;
-        foreach (CardsSet set in gameBoardValidSets.Values)
+
+         Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
+        //print the keys and their values from gameboard
+        foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
         {
-            // Print The CardsSet
-            Debug.Log("<color=orange>" + set.ToString() + "</color>");
-            count++;
+            Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value + "</color>");
         }
+                Debug.Log("<color=red>Print keys of Sets</color>");
+        foreach (int key in cardsInSets.Keys)
+        {
+            Debug.Log("<color=orange> Key:" + key + " Set Pos:" + cardsInSets[key].GetId() +"</color>");
+        }
+        //print in green board rules passed or in red rules not passed
+        if (IsBoardValidRule())
+        {
+            Debug.Log("<color=green>Board is valid</color>");
+        }
+        else
+        {
+            Debug.Log("<color=red>Board is not valid</color>");
+        }
+
+    }
+    public bool IsBoardValidRule()
+    {
+      // this checks if the first card key is the same as the first card in the set that its point and that the pos and sets are syncs
+      // that keyis FirstCard.Pos.row*100+firstcard.pos.Col
+        foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
+        {
+            if (entry.Value.GetFirstCard().Position.Row * 100 + entry.Value.GetFirstCard().Position.Column != GetKeyFromPosition(entry.Value.GetFirstCard().Position))
+            {
+                return false;
+            }
+            if (entry.Value.GetLastCard().Position.Row * 100 + entry.Value.GetLastCard().Position.Column != GetKeyFromPosition(entry.Value.GetLastCard().Position))
+            {
+                return false;
+            }
+            if (cardsInSets[GetKeyFromPosition(entry.Value.GetFirstCard().Position)] != entry.Key)
+            {
+                return false;
+            }
+            if (cardsInSets[GetKeyFromPosition(entry.Value.GetLastCard().Position)] != entry.Key)
+            {
+                return false;
+            }
+            //also if there a key that point to some SetPos that not exist in the gameBoardValidSets
+
+                foreach (int key in cardsInSets.Keys)
+                {
+                    if (!gameBoardValidSets.ContainsKey(cardsInSets[key]))
+                    {
+                        return false;
+                    }
+                }
+
+        }
+        return true;
     }
 
 
     // Handle the movement of a card from the game board to the game board
-    public void MoveCardFromGameBoardToGameBoard(Card card)
+    public async void MoveCardFromGameBoardToGameBoard(Card card)
     {
         SetPosition oldSetPos = new SetPosition(-1);
         CardsSet oldSet = new CardsSet();
@@ -135,6 +184,7 @@ public class GameBoard : MonoBehaviour
                     oldSetPos = cardsInSets[key];
                     oldSet = gameBoardValidSets[oldSetPos];
                     found = true;
+                    print("Found pos "+oldSetPos.GetId());
                 }
             }
         }
@@ -151,26 +201,31 @@ public class GameBoard : MonoBehaviour
             gameBoardValidSets.Remove(oldSetPos);
         }
         // If the card was removed from the middle of the set, split the set into two
-        if (oldSet.set.Count > 1)
+        else
         {
-            if (cardIndex > 0 && cardIndex < oldSet.set.Count - 1)
+            print("oldset before if >1"+oldSet.ToString());
+            print("inside if, Card index "+cardIndex);
+            if (cardIndex > 0 && cardIndex < oldSet.set.Count)
             {
                 // new set = the set from the left 
                 // set from the right is the old set with the card removed, oldSetPos
                 CardsSet newSet = oldSet.UnCombine(cardIndex);
                 SetPosition newSetPos = new SetPosition(SetCount++);
-                gameBoardValidSets[newSetPos] = newSet;
+                print("New set pos "+newSetPos.GetId());
+                print("new set "+newSet.ToString());
+                gameBoardValidSets.Add(newSetPos ,newSet);
                 //upate the first card and last card to point to that newSetPos
                 cardsInSets[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
                 cardsInSets[GetKeyFromPosition(newSet.GetLastCard().Position)] = newSetPos;
                 // update the last card in the old set to point to the oldSetPos
-                cardsInSets[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
                 cardsInSets[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
+                cardsInSets[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
 
                 // Update the cardsInSets dictionary to reflect the split
             }
             else
             {
+                //handle beginning and end
                 // If the card was removed from the beginning or the end of the set,
                 // for the begining -> 1,2,3,4
                 //1 and 4 point to that set
@@ -178,13 +233,16 @@ public class GameBoard : MonoBehaviour
                 // for the end -> 1,2,3,4
                 //1 and 4 point to that set
                 // so we want 3 to point to that set, and remove 4 from the dictionary
-                if (cardIndex == 0 && oldSet.set.Count > 0)
+                print("Card index "+cardIndex);
+                if (cardIndex == 0)
                 {
-                    cardsInSets.Remove(GetKeyFromPosition(oldSet.GetFirstCard().Position));
+                    cardsInSets.Remove(GetKeyFromPosition(card.OldPosition));
+                    cardsInSets[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
                 }
-                else if (cardIndex == oldSet.set.Count && oldSet.set.Count > 0)
+                else if (cardIndex == oldSet.set.Count)
                 {
-                    cardsInSets.Remove(GetKeyFromPosition(oldSet.GetLastCard().Position));
+                    cardsInSets.Remove(GetKeyFromPosition(card.OldPosition));
+                    cardsInSets[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
                 }
             }
         }
@@ -208,12 +266,11 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    public void PutInSet(Card card)
+    public async void PutInSet(Card card)
     {
         int key = GetKeyFromPosition(card.Position);
         int rightKey = key + 1;
         int leftKey = key - 1;
-
         if (cardsInSets.ContainsKey(rightKey) && cardsInSets.ContainsKey(leftKey))
         {
             // Combine two sets gameBoardValidSets[cardsInSets[leftKey]].set and gameBoardValidSets[cardsInSets[rightKey].set]
@@ -225,14 +282,14 @@ public class GameBoard : MonoBehaviour
             leftSet.AddCardToEnd(card);
             leftSet.Combine(leftSet, rightSet);
             gameBoardValidSets.Remove(rightSetPos);
-            if (leftSet.set.Count != 3)
+            if (rightKey != GetKeyFromPosition(leftSet.GetLastCard().Position))
             {
                 cardsInSets.Remove(rightKey);
-                cardsInSets.Remove(leftKey);
             }
-
-
-
+            if( leftKey != GetKeyFromPosition(leftSet.GetFirstCard().Position))
+            {
+              cardsInSets.Remove(leftKey);
+            }
         }
         else if (cardsInSets.ContainsKey(rightKey))
         {

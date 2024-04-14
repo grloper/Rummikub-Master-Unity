@@ -7,4 +7,8 @@ public class SetPosition
     {
         this.id = id;
     }
+    public int GetId()
+    {
+        return id;
+    }
 }
