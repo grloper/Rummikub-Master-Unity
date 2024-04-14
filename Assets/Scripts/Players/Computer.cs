@@ -37,17 +37,17 @@ public class Computer : Player
             {
                 list.Add(list[i]);
                 list.Remove(list[i]);
-               // remove the card and add it at the end
+                // remove the card and add it at the end
             }
             if (list[i].Number == list[i - 1].Number + 1
              && list[i].Color == list[i - 1].Color
-             && currentSet.set.Count <=maxRangeInclusive)
+             && currentSet.set.Count <= maxRangeInclusive)
             {
                 currentSet.AddCardToEnd(list[i]);
             }
             else
             {
-                if (currentSet.set.Count >= minRangeInclusive&& currentSet.set.Count<=maxRangeInclusive)
+                if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
                 {
                     cardsSets.Add(currentSet);
                 }
@@ -76,7 +76,7 @@ public class Computer : Player
             {
                 currentSet.AddCardToEnd(list[i]);
             }
-           
+
             else
             {
                 if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
@@ -89,18 +89,9 @@ public class Computer : Player
         }
         return cardsSets;
     }
-    private int GetTotalCards(List<CardsSet> list)
-    {
-        int totalCards = 0;
-        foreach (CardsSet set in list)
-        {
-            totalCards += set.set.Count();
-        }
-        return totalCards;
 
-    }
 
-   public  bool MaximizeValidDrops()
+    public bool MaximizeValidDrops()
     {
         bool dropped = false;
         List<CardsSet> setsRun = ExtractMaxValidRunSets(this.computerHand, Constants.MinInRun, Constants.MaxInRun);
@@ -145,132 +136,95 @@ public class Computer : Player
     {
         this.computerHand = myPlayer.GetPlayerHand();
         bool dropped = MaximizeValidDrops();
-      //  MaximizePartialDrops();
+        //  MaximizePartialDrops();
 
-      bool added= AssignFreeCardsToExistsSets();
-      if(dropped)
-      {
-        uiManager.ConfirmMove();
-      }else
-      {
-        uiManager.DrawACardFromDeck();
-      }
-  
-       
+        bool added = AssignFreeCardsToExistsSets();
+        if (dropped || added)
+        {
+            uiManager.ConfirmMove();
+        }
+        else
+        {
+            uiManager.DrawACardFromDeck();
+        }
+
+
     }
+
 
     private bool AssignFreeCardsToExistsSets()
     {
-        return true;
-    }
+        bool added = false;
 
-    private bool MaximizePartialDrops()
-    {
-        bool dropped = false;
-        List<CardsSet> setsRun = ExtractMaxValidRunSets(this.computerHand, Constants.MaxPartialSet, Constants.MaxPartialSet);
-        List<CardsSet> playSets = new List<CardsSet>();
-        List<CardsSet> freeCardsFromBoard = new List<CardsSet>();
-        if (setsRun.Count > 0)
+        foreach (Card card in this.computerHand)
         {
-       //     freeCardsFromBoard = ExtractFreeCardsFromBoard();
-            foreach (CardsSet set in setsRun)
+            foreach (CardsSet set in gameBoard.GetGameBoardValidSetsTable().Values)
             {
-                // can we add to the begining or to the end witht he extracted free cards:
-                foreach (CardsSet freeSets in freeCardsFromBoard)
+                if (set.CanAddCard(card))
                 {
-                    foreach (Card card in freeSets.set)
+                    int tileslot = -1;
+                    int leftKey = -1;
+                    int rightKey = -1;
+                    SetPosition setPos = new SetPosition(-1);
+                    int newLeftkey = -1;
+                    int newRightkey = -1;
+                    if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                     {
+                        // If the card can be added to the end of the set, calculate the tileslot accordingly
+                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                        added = true;
+                        foreach (Card cardInSet in set.set)
+                        {
+                            cardInSet.Position = new CardPosition(tileslot); // save the first location
+                            uiManager.MoveCardToBoard(cardInSet, tileslot); // start from the first card till the end
+                            tileslot++;
+                        }
+                        card.Position = new CardPosition(tileslot);// save the last location
+                        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+                        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+                        newRightkey++;
+                        //update the new keys
+                        // we assume the board is always valid ( more than 2 cards in the set)
+                        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPos;
+                        gameBoard.GetCardsInSetsTable()[newRightkey] = setPos;
+                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
+                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
+                        gameBoard.PlayCardOnBoard(card, tileslot); // add last
 
-                        dropped = false;
-                        if (set.CanAddCardBegginingRun(card))
-                        {
-                            dropped = true;
-                            set.AddCardToBeginning(card);
-
-                        }
-                        else if (set.CanAddCardEndRun(card))
-                        {
-                            dropped = true;
-                            set.AddCardToEnd(card);
-                        }
-                        if (dropped)
-                        {
-                            playSets.Add(set);
-                        }
                     }
-                    foreach (CardsSet cardsSet in playSets)
+                    else if (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
                     {
-                        gameBoard.PlayCardSetOnBoard(cardsSet);
+                        leftKey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+                        rightKey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+                        setPos = gameBoard.GetCardsInSetsTable()[leftKey];
 
+                        //card pos = tileslot, set[0]. pos = tileslot++
+                        // If the card can be added to the end of the set, calculate the tileslot accordingly
+                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength());
+                        card.Position = new CardPosition(tileslot); // save the first location
+                        added = true;
+                        foreach (Card cardInSet in set.set)
+                        {
+                            tileslot++;//start from the second card till the end
+                            cardInSet.Position = new CardPosition(tileslot); // save the first location
+                            uiManager.MoveCardToBoard(cardInSet, tileslot);
+                        }
+                        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+                        newLeftkey--;
+                        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+                        //update the new keys
+                        // we assume the board is always valid ( more than 2 cards in the set)
+                        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPos;
+                        gameBoard.GetCardsInSetsTable()[newRightkey] = setPos;
+                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
+                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
+                        gameBoard.PlayCardOnBoard(card, tileslot); // add first  
                     }
+
                 }
-
             }
         }
-        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(this.computerHand, Constants.MaxPartialSet, Constants.MaxPartialSet);
-        if (setsGroup.Count > 0)
-        {
-         //   freeCardsFromBoard = ExtractFreeCardsFromBoard();
-            foreach (CardsSet set in setsGroup)
-            {
-                // can we add to the begining or to the end witht he extracted free cards:
-                foreach (CardsSet freeSets in freeCardsFromBoard)
-                {
-                    foreach (Card card in freeSets.set)
-                    {
-                        int size = freeSets.set.Count;
-                        dropped = false;
-                        if (set.CanAddCardBegginingGroup(card))
-                        {
-                            dropped = true;
-                            set.AddCardToBeginning(card);
-                        }
-                        else if (set.CanAddCardEndGroup(card))
-                        {
-                            dropped = true;
-                            set.AddCardToEnd(card);
-                        }
-                        if (dropped)
-                        {
-                            playSets.Add(set);
-                        }
-                    }
-                    foreach (CardsSet cardsSet in playSets)
-                    {
-                        gameBoard.PlayCardSetOnBoard(cardsSet);
-
-                    }
-                }
-
-            }
-        }
-        return dropped;
-    }
-
-   
-
-    private CardsSet ExtractFreeCardsFromCardsSet(CardsSet cardsSets)
-    {
-        CardsSet result = null;
-        foreach (Card card in cardsSets.set)
-        {
-            if (cardsSets.set.Count<6)
-            {
-                result.AddCardToEnd(cardsSets.GetFirstCard());
-                result.AddCardToEnd(cardsSets.GetLastCard());
-            }
-            if (cardsSets.set.Count>6)
-            {
-                result.AddCardToEnd(cardsSets.GetFirstCard());
-                result.AddCardToEnd(cardsSets.GetLastCard());
-                for (int i = 3; i < cardsSets.set.Count-Constants.MaxInGroup; i++)
-                {
-                    result.AddCardToEnd(cardsSets.set[i]);
-                }
-
-            }
-        }
-        return result;
+        return added;
     }
 
     public void PrintCards()
@@ -310,6 +264,6 @@ public class Computer : Player
         });
     }
 
-     
+
 
 }

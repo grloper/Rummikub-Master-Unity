@@ -144,6 +144,7 @@ public class UImanager : MonoBehaviour
         {
             if (board.IsBoardValid())
             {
+                board.SaveGameState();
                 // If the board is valid, change the turn and clear the moves stack
                 gameController.ChangeTurn();
                 UpdateTurnText();

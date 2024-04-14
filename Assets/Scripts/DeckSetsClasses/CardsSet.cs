@@ -21,7 +21,10 @@ public class CardsSet : ICardSet
     {
         set.Add(card);
     }
-
+    public int GetDeckLength()
+    {
+        return set.Count;
+    }
     // Utility methods
     //O(1)
     public Card GetFirstCard() => set[0];
@@ -54,6 +57,10 @@ public class CardsSet : ICardSet
             return;
         }
         set.Add(card);
+    }
+    public bool CanAddCard(Card card)
+    {
+        return this.CanAddCardEnd(card) || this.CanAddCardBeggining(card);
     }
 
     // can add at the begginging of the set of List<Card> return bool true it check if the postion of the card colum + 1 is equal to the first card postion colum
