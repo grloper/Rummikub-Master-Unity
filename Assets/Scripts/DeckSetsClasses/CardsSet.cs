@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 
@@ -31,7 +32,7 @@ public class CardsSet : ICardSet
         this.set = newList;
     }
     //add card beggining and end in two function 
-    public void AddCardToBeggining(Card card)
+    public void AddCardToBeginning(Card card)
     {
         if (set.Count == Constants.EmptyCardsSet)
         {
@@ -40,6 +41,8 @@ public class CardsSet : ICardSet
         }
         set.Insert(0, card);
     }
+
+
     public void AddCardToEnd(Card card)
     {
         if (set.Count == Constants.EmptyCardsSet)
@@ -198,7 +201,7 @@ public class CardsSet : ICardSet
 
     public bool CanAddCardBegginingRun(Card card)
     {
-        AddCardToBeggining(card);
+        AddCardToBeginning(card);
         bool check= this.IsRun();
         this.set.RemoveAt(0);
         return check;
@@ -214,7 +217,7 @@ public class CardsSet : ICardSet
     }
     public bool CanAddCardBegginingGroup(Card card)
     {
-        AddCardToBeggining(card);
+        AddCardToBeginning(card);
         bool check = this.IsGroupOfColors();
         this.set.RemoveAt(0);
         return check;
@@ -227,5 +230,13 @@ public class CardsSet : ICardSet
         bool check = this.IsGroupOfColors();
         this.set.RemoveAt(this.set.Count - 1);
         return check;
+    }
+
+    internal Card RemoveCardAt(int i)
+    {
+        Card card = set[i];
+        set.RemoveAt(i);
+        return card;
+        
     }
 }

@@ -28,4 +28,5 @@ public class CardPosition
     public int Column { get; set; }
 
 
+
 }

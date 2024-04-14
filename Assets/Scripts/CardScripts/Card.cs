@@ -48,13 +48,6 @@ public class Card : MonoBehaviour
         return number == otherCard.number && color == otherCard.color;
     }
 
-    public override int GetHashCode()
-    {
-        // Combine the hash codes of number and color for a unique identifier
-        unchecked
-        {
-            return number.GetHashCode() * 31 + color.GetHashCode();
-        }
-    }
+
 }
 

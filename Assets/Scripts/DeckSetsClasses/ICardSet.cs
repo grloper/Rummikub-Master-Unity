@@ -9,7 +9,7 @@ public interface ICardSet
     bool IsContainsCard(Card card);
     Card GetFirstCard();
     Card GetLastCard();
-    void AddCardToBeggining(Card card);
+    void AddCardToBeginning(Card card);
     void AddCardToEnd(Card card);
     bool IsSameColor(Card c1, CardColor color);
     bool IsConsicutive(Card c1, Card c2);

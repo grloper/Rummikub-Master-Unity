@@ -172,7 +172,7 @@ public class Computer : Player
         List<CardsSet> freeCardsFromBoard = new List<CardsSet>();
         if (setsRun.Count > 0)
         {
-            freeCardsFromBoard = ExtractFreeCardsFromBoard();
+       //     freeCardsFromBoard = ExtractFreeCardsFromBoard();
             foreach (CardsSet set in setsRun)
             {
                 // can we add to the begining or to the end witht he extracted free cards:
@@ -185,7 +185,7 @@ public class Computer : Player
                         if (set.CanAddCardBegginingRun(card))
                         {
                             dropped = true;
-                            set.AddCardToBeggining(card);
+                            set.AddCardToBeginning(card);
 
                         }
                         else if (set.CanAddCardEndRun(card))
@@ -210,7 +210,7 @@ public class Computer : Player
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(this.computerHand, Constants.MaxPartialSet, Constants.MaxPartialSet);
         if (setsGroup.Count > 0)
         {
-            freeCardsFromBoard = ExtractFreeCardsFromBoard();
+         //   freeCardsFromBoard = ExtractFreeCardsFromBoard();
             foreach (CardsSet set in setsGroup)
             {
                 // can we add to the begining or to the end witht he extracted free cards:
@@ -223,7 +223,7 @@ public class Computer : Player
                         if (set.CanAddCardBegginingGroup(card))
                         {
                             dropped = true;
-                            set.AddCardToBeggining(card);
+                            set.AddCardToBeginning(card);
                         }
                         else if (set.CanAddCardEndGroup(card))
                         {
@@ -247,26 +247,7 @@ public class Computer : Player
         return dropped;
     }
 
-    private List<CardsSet> ExtractFreeCardsFromBoard()
-    {
-        List<CardsSet> result = new List<CardsSet>();
-      for (int i = 0; i<Constants.MaxBoardRows;i++) 
-      {
-            foreach (CardsSet set in gameBoard.GetBoard()[i])
-            {
-                if (set.set.Count>3)
-                {
-                    CardsSet tmp = ExtractFreeCardsFromCardsSet(set);
-                    if (tmp!= null)
-                    {
-                        result.Add(tmp);
-                    }
-                }
-            }  
-      }
-        return result;
-        
-    }
+   
 
     private CardsSet ExtractFreeCardsFromCardsSet(CardsSet cardsSets)
     {
