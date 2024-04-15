@@ -11,8 +11,13 @@ public class CardPosition
     }
     public CardPosition(int emptySlotIndex)
     {
+        //this is from tile index to row and column
         this.Row = emptySlotIndex / Constants.MaxBoardColumns;
         this.Column = emptySlotIndex % Constants.MaxBoardColumns;
+    }
+    public int GetTileSlot()
+    {
+        return this.Row * Constants.MaxBoardColumns + this.Column;
     }
 
 

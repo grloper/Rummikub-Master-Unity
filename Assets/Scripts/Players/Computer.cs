@@ -151,74 +151,63 @@ public class Computer : Player
 
     }
 
-
     private bool AssignFreeCardsToExistsSets()
     {
         bool added = false;
-
         foreach (Card card in this.computerHand)
         {
-            foreach (CardsSet set in gameBoard.GetGameBoardValidSetsTable().Values)
+            // Create a copy of the keys
+            var keys = new List<SetPosition>(gameBoard.GetGameBoardValidSetsTable().Keys);
+
+            foreach (SetPosition key in keys)
             {
-                if (set.CanAddCard(card))
+                CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
+                int tileslot = -1;
+                int leftKey = -1;
+                int rightKey = -1;
+                SetPosition setPos = new SetPosition(-1);
+                int newLeftkey = -1;
+                int newRightkey = -1;
+                if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                 {
-                    int tileslot = -1;
-                    int leftKey = -1;
-                    int rightKey = -1;
-                    SetPosition setPos = new SetPosition(-1);
-                    int newLeftkey = -1;
-                    int newRightkey = -1;
-                    if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
+                    GameObject secondTileSlot = this.gameBoard.transform.GetChild(set.GetLastCard().Position.GetTileSlot() + 2).gameObject; // 1,2,3, _, this
+                    if (secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
                     {
-                        // If the card can be added to the end of the set, calculate the tileslot accordingly
-                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
-                        added = true;
-                        foreach (Card cardInSet in set.set)
-                        {
-                            cardInSet.Position = new CardPosition(tileslot); // save the first location
-                            uiManager.MoveCardToBoard(cardInSet, tileslot); // start from the first card till the end
-                            tileslot++;
-                        }
-                        card.Position = new CardPosition(tileslot);// save the last location
-                        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
-                        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
-                        newRightkey++;
-                        //update the new keys
-                        // we assume the board is always valid ( more than 2 cards in the set)
-                        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPos;
-                        gameBoard.GetCardsInSetsTable()[newRightkey] = setPos;
-                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
-                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
-                        gameBoard.PlayCardOnBoard(card, tileslot); // add last
+                        //move card to board via uimanger, give the tile slot and before upadte his position
+                        //uiManager.MoveCardToBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
+                        // but gameBoard. PlayCardOnBoard will run this line 
+                        //now board is valid by visual and the card has the correct values all need to do is:
+                        // update teh board state via gameBoard
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
 
                     }
-                    else if (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
+                    else
                     {
-                        leftKey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
-                        rightKey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
-                        setPos = gameBoard.GetCardsInSetsTable()[leftKey];
+                        // need to move the whole set to a free spot
+                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                        MoveCardsToEndOfSet(set, tileslot);
+                        UpdateKeysAfterAddingCard(set, tileslot, out newLeftkey, out newRightkey);
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
 
-                        //card pos = tileslot, set[0]. pos = tileslot++
-                        // If the card can be added to the end of the set, calculate the tileslot accordingly
-                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength());
-                        card.Position = new CardPosition(tileslot); // save the first location
-                        added = true;
-                        foreach (Card cardInSet in set.set)
-                        {
-                            tileslot++;//start from the second card till the end
-                            cardInSet.Position = new CardPosition(tileslot); // save the first location
-                            uiManager.MoveCardToBoard(cardInSet, tileslot);
-                        }
-                        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
-                        newLeftkey--;
-                        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
-                        //update the new keys
-                        // we assume the board is always valid ( more than 2 cards in the set)
-                        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPos;
-                        gameBoard.GetCardsInSetsTable()[newRightkey] = setPos;
-                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
-                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
-                        gameBoard.PlayCardOnBoard(card, tileslot); // add first  
+                    }
+
+
+                }
+                else if (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
+                {
+                    GameObject secondTileSlot = this.gameBoard.transform.GetChild(set.GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
+                    if (secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    {
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
+
+                    }
+                    else
+                    {
+                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                        MoveCardsToBeginningOfSet(set, tileslot+1);
+                        UpdateKeysAfterAddingCard(set, tileslot, out newLeftkey, out newRightkey);
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
+
                     }
 
                 }
@@ -226,6 +215,39 @@ public class Computer : Player
         }
         return added;
     }
+    private void UpdateKeysAfterAddingCard(CardsSet set, int tileslot, out int newLeftkey, out int newRightkey)
+    {
+
+        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+        print("new keys: " + newLeftkey + " " + newRightkey + " " + tileslot);
+        newRightkey++;
+        gameBoard.GetCardsInSetsTable()[newLeftkey] = new SetPosition(-1);
+        gameBoard.GetCardsInSetsTable()[newRightkey] = new SetPosition(-1);
+
+    }
+
+    private void MoveCardsToEndOfSet(CardsSet set, int tileslot)
+    {
+        foreach (Card cardInSet in set.set)
+        {
+            cardInSet.Position = new CardPosition(tileslot);
+            uiManager.MoveCardToBoard(cardInSet, tileslot);
+            tileslot++;
+        }
+    }
+
+    private void MoveCardsToBeginningOfSet(CardsSet set, int tileslot)
+    {
+        foreach (Card cardInSet in set.set)
+        {
+            tileslot++;
+            cardInSet.Position = new CardPosition(tileslot);
+            uiManager.MoveCardToBoard(cardInSet, tileslot);
+        }
+    }
+
+
 
     public void PrintCards()
     {
@@ -236,11 +258,9 @@ public class Computer : Player
         }
     }
 
-
+        // Sort the cards by group
     public void SortByGroup()
     {
-        //print("Group");
-        // Sort the cards by group
         computerHand.Sort((card1, card2) =>
         {
             if (card1.Number == card2.Number)
@@ -248,11 +268,11 @@ public class Computer : Player
             else
                 return card1.Number.CompareTo(card2.Number);
         });
-        //PrintCards();
 
     }
 
 
+        // Sort the cards by run 
     public void SortByRun()
     {
         computerHand.Sort((card1, card2) =>
