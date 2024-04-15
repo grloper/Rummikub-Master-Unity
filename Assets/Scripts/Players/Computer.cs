@@ -156,58 +156,73 @@ public class Computer : Player
         bool added = false;
         foreach (Card card in this.computerHand)
         {
+            var keys = gameBoard.GetGameBoardValidSetsTable().Keys.ToList();
             // Create a copy of the keys
-            var keys = new List<SetPosition>(gameBoard.GetGameBoardValidSetsTable().Keys);
-
             foreach (SetPosition key in keys)
             {
                 CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
                 int tileslot = -1;
-                int leftKey = -1;
-                int rightKey = -1;
-                SetPosition setPos = new SetPosition(-1);
-                int newLeftkey = -1;
-                int newRightkey = -1;
+                int leftKey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+                int rightKey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
                 if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                 {
-                    GameObject secondTileSlot = this.gameBoard.transform.GetChild(set.GetLastCard().Position.GetTileSlot() + 2).gameObject; // 1,2,3, _, this
-                    if (secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    GameObject secondTileSlot = null;
+                    if (set.GetLastCard().Position.Column != Constants.MaxBoardColumns - 1)
                     {
-                        //move card to board via uimanger, give the tile slot and before upadte his position
-                        //uiManager.MoveCardToBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
-                        // but gameBoard. PlayCardOnBoard will run this line 
-                        //now board is valid by visual and the card has the correct values all need to do is:
-                        // update teh board state via gameBoard
+                        secondTileSlot = this.gameBoard.transform.GetChild(set.GetLastCard().Position.GetTileSlot() + 2).gameObject; // 1,2,3, _, this
+                    }
+                    if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    {
+                        card.Position = new CardPosition(set.GetLastCard().Position.GetTileSlot() + 1);
                         gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
-
                     }
                     else
                     {
                         // need to move the whole set to a free spot
                         tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
-                        MoveCardsToEndOfSet(set, tileslot);
-                        UpdateKeysAfterAddingCard(set, tileslot, out newLeftkey, out newRightkey);
+                        //<
+                        foreach (Card cardInSet in set.set)
+                        {
+                            cardInSet.Position = new CardPosition(tileslot);
+                            uiManager.MoveCardToBoard(cardInSet, tileslot);
+                            tileslot++;
+                        } //>
+                        card.Position = new CardPosition(tileslot);
+                        UpdateKeysAfterAddingCard(set, key);
                         gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
-
+                        // cant modify the dictionary while iterating over it
+                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
+                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
                     }
-
-
                 }
                 else if (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
                 {
-                    GameObject secondTileSlot = this.gameBoard.transform.GetChild(set.GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
-                    if (secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    GameObject secondTileSlot = null;
+                    if (set.GetFirstCard().Position.Column != 0)
                     {
-                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
+                        secondTileSlot = this.gameBoard.transform.GetChild(set.GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
+                    }
 
+                    if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    {
+                        card.Position = new CardPosition(set.GetFirstCard().Position.GetTileSlot() - 1);
+                        gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1);
                     }
                     else
                     {
-                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
-                        MoveCardsToBeginningOfSet(set, tileslot+1);
-                        UpdateKeysAfterAddingCard(set, tileslot, out newLeftkey, out newRightkey);
-                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
 
+                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                        card.Position = new CardPosition(tileslot);
+                        foreach (Card cardInSet in set.set)
+                        {
+                            tileslot++;
+                            cardInSet.Position = new CardPosition(tileslot);
+                            uiManager.MoveCardToBoard(cardInSet, tileslot);
+                        }
+                        UpdateKeysAfterAddingCard(set, key);
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1);
+                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
+                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
                     }
 
                 }
@@ -215,39 +230,14 @@ public class Computer : Player
         }
         return added;
     }
-    private void UpdateKeysAfterAddingCard(CardsSet set, int tileslot, out int newLeftkey, out int newRightkey)
+    private void UpdateKeysAfterAddingCard(CardsSet set, SetPosition setPosition)
     {
-
-        newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
-        newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
-        print("new keys: " + newLeftkey + " " + newRightkey + " " + tileslot);
-        newRightkey++;
-        gameBoard.GetCardsInSetsTable()[newLeftkey] = new SetPosition(-1);
-        gameBoard.GetCardsInSetsTable()[newRightkey] = new SetPosition(-1);
+        int newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
+        int newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPosition;
+        gameBoard.GetCardsInSetsTable()[newRightkey] = setPosition;
 
     }
-
-    private void MoveCardsToEndOfSet(CardsSet set, int tileslot)
-    {
-        foreach (Card cardInSet in set.set)
-        {
-            cardInSet.Position = new CardPosition(tileslot);
-            uiManager.MoveCardToBoard(cardInSet, tileslot);
-            tileslot++;
-        }
-    }
-
-    private void MoveCardsToBeginningOfSet(CardsSet set, int tileslot)
-    {
-        foreach (Card cardInSet in set.set)
-        {
-            tileslot++;
-            cardInSet.Position = new CardPosition(tileslot);
-            uiManager.MoveCardToBoard(cardInSet, tileslot);
-        }
-    }
-
-
 
     public void PrintCards()
     {
@@ -258,7 +248,7 @@ public class Computer : Player
         }
     }
 
-        // Sort the cards by group
+    // Sort the cards by group
     public void SortByGroup()
     {
         computerHand.Sort((card1, card2) =>
@@ -272,7 +262,7 @@ public class Computer : Player
     }
 
 
-        // Sort the cards by run 
+    // Sort the cards by run 
     public void SortByRun()
     {
         computerHand.Sort((card1, card2) =>
