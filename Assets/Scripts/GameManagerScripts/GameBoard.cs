@@ -251,11 +251,15 @@ public class GameBoard : MonoBehaviour
         PutInSet(card);
     }
 
-    public async Task MoveCardFromPlayerHandToGameBoard(Card card)
+    public async Task MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
     {
-        gameController.GetCurrentPlayer().RemoveCardFromList(card);
+        if (canRemove)
+        {
+            gameController.GetCurrentPlayer().RemoveCardFromList(card);
+        }
         await PutInSet(card);
     }
+
 
     // hash function 
     public int GetKeyFromPosition(CardPosition cardPosition)
@@ -422,7 +426,7 @@ public class GameBoard : MonoBehaviour
         return -1;
     }
 
-    internal void PlayCardSetOnBoard(CardsSet cardsSet)
+    internal async Task PlayCardSetOnBoard(CardsSet cardsSet)
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
         foreach (Card card in cardsSet.set)
@@ -433,15 +437,22 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            MoveCardFromPlayerHandToGameBoard(card);
+          await MoveCardFromPlayerHandToGameBoard(card);
         }
     }
-    internal void PlayCardOnBoard(Card card, int tileslot)
+    internal async Task PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
     {
         // assume already check no nehibors to combine my love
         uiManager.MoveCardToBoard(card, tileslot);
         AddCardToMovesStack(card);
-        MoveCardFromPlayerHandToGameBoard(card);
+        if(canRemove)
+        {
+        await MoveCardFromPlayerHandToGameBoard(card);
+        }
+        else    
+        {
+        await MoveCardFromPlayerHandToGameBoard(card,false);
+        }
 
     }
 
