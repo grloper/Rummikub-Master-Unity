@@ -24,6 +24,7 @@ public class Computer : Player
     // Player reference
     private Player myPlayer;
     private bool added;
+    private bool dropped;
 
     private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
@@ -93,28 +94,27 @@ public class Computer : Player
     }
 
 
-    public bool MaximizeValidDrops()
+    public async Task MaximizeValidDrops()
     {
-        bool dropped = false;
+        this.dropped = false;
         List<CardsSet> setsRun = ExtractMaxValidRunSets(this.computerHand, Constants.MinInRun, Constants.MaxInRun);
         if (setsRun.Count > 0)
         {
-            dropped = true;
+            this.dropped = true;
             foreach (CardsSet set in setsRun)
             {
-                gameBoard.PlayCardSetOnBoard(set);
+              await  gameBoard.PlayCardSetOnBoard(set);
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(this.computerHand, Constants.MinInGroup, Constants.MaxInGroup);
         if (setsGroup.Count > 0)
         {
-            dropped = true;
+            this.dropped = true;
             foreach (CardsSet set in setsGroup)
             {
-                gameBoard.PlayCardSetOnBoard(set);
+              await  gameBoard.PlayCardSetOnBoard(set);
             }
         }
-        return dropped;
 
     }
     public void Initialize(Player player)
@@ -137,7 +137,7 @@ public class Computer : Player
     private async void DoComputerMove()
     {
         this.computerHand = myPlayer.GetPlayerHand();
-        bool dropped = MaximizeValidDrops();
+        await MaximizeValidDrops();
         //  MaximizePartialDrops();
         added = false;
         await AssignFreeCardsToExistsSets();
@@ -190,14 +190,11 @@ public class Computer : Player
                 CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
                 // check if the card can be added to the set without needing to move it
                 int tileslot = -1;
-                // get the current left and right keys that appear in the dictionary named: gameBoard.GetCardsInSetsTable()
-                int leftKey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
-                int rightKey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
+
                 // if we keeping a set valid then we need to update the keys in the dictionary and add the card
                 if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                 {
                     // tell the computer that it added a card to a set (need to confirm at the end of the turn instead of drawing)
-                    this.added = true;
                     // get the second tile slot to check if it is empty
                     GameObject secondTileSlot = null;
                     // if the last card in the set is not in the last column
@@ -206,88 +203,107 @@ public class Computer : Player
                         // get the second tile slot
                         secondTileSlot = this.gameBoard.transform.GetChild(set.GetLastCard().Position.GetTileSlot() + 2).gameObject;
                          // 1,2,3, _, this
-                    }
+                    
                     // if the second tile slot is empty then add the card to the set
-                    if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
+                    if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot||card.Position.Column==Constants.MaxBoardColumns-2)
                     {
                         // update the card position to the next tile slot 
-                        card.Position = new CardPosition(set.GetLastCard().Position.GetTileSlot() + 1);
+                        card.OldPosition = card.Position;
+                        card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
                         // add the card to the set
                         await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
                         // mark the the card is already in a set
                         cardsToRemove.Add(card);
-                        found = true;
-                    } // rearrange the set to add the card
-                    else
-                    {
-                        // need to move the whole set to a free spot
-                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
-                        //<
-                        foreach (Card cardInSet in set.set)
-                        {
-                            //give the cards their new positions
-                            cardInSet.Position = new CardPosition(tileslot);
-                            // move them visualy to the new spots
-                            uiManager.MoveCardToBoard(cardInSet, tileslot);
-                            tileslot++;
-                        } //>
-                        // update the card position to be the last tile slot
-                        card.Position = new CardPosition(tileslot);
-                        // update the keys in the dictionary to suit the new location
-                        UpdateKeysAfterAddingCard(set, key);
-                        // move the card to the board also visualy and mark to not delete it inside the function
-                        await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
-                        found = true;
-                        cardsToRemove.Add(card);
-                        // cant modify the dictionary while iterating over it
-                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
-                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
-                    }
+                          this.added = true;
+                          found=true;
+                       
+                    } 
+                    }// rearrange the set to add the card
+                    // else
+                    // {
+                    //     // need to move the whole set to a free spot
+                    //     tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                    //     //<
+                    //     print("1 set.set: " + set.set.Count);
+                    //     foreach (Card cardInSet in set.set)
+                    //     {
+                    //         print("before: "+cardInSet.ToString());
+                    //         //give the cards their new positions
+                    //         cardInSet.OldPosition = cardInSet.Position;
+                    //         cardInSet.Position.SetTileSlot(tileslot);
+                    //         print("after: "+cardInSet.ToString());
+                    //         // move them visualy to the new spots
+                    //         uiManager.MoveCardToBoard(cardInSet, tileslot);
+                    //         print("after after: "+cardInSet.ToString());
+                    //         await gameBoard.MoveCardFromGameBoardToGameBoard(cardInSet);
+                    //         tileslot++;
+                    //     } //>
+                    //     // update the card position to be the last tile slot
+                    //     card.OldPosition = card.Position;
+                    //     card.Position.SetTileSlot(tileslot);
+                    //     // update the keys in the dictionary to suit the new location
+                    //    // UpdateKeysAfterAddingCard(set, key);
+                    //     // move the card to the board also visualy and mark to not delete it inside the function
+                    //     await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
+                    //     found = true;
+                    //     cardsToRemove.Add(card);
+
+                    // }
                 }
-                else if ((set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))&&!found)
+                else if (!found && (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card)))
                 {
-                    this.added = true;
                     GameObject secondTileSlot = null;
                     // if the first card in the set is not in the first column
                     if (set.GetFirstCard().Position.Column != 0)
                     {
                         // get the second tile slot
                         secondTileSlot = this.gameBoard.transform.GetChild(set.GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
-                    }
-                    // if the second tile slot is empty then add the card to the set
-                    if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot)
-                    {
-                        card.Position = new CardPosition(set.GetFirstCard().Position.GetTileSlot() - 1);
-                        await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
-                        cardsToRemove.Add(card);
-                        found = true;
-                    } // rearrange the set to add the card
-                    else
-                    {
 
-                        // get the first empty slot in the game board to suit that amount of cards(the set and the new card)
-                        tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
-                        // first give the card that position because he is at the begining
-                        card.Position = new CardPosition(tileslot);
-                        foreach (Card cardInSet in set.set)
+                        // if the second tile slot is empty then add the card to the set
+                        if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot||card.Position.Column==1)
                         {
-                            // update the set position to the new tile slot starting from the second tileslot given before
-                            // the first tileslot is saved for the new card
-                            tileslot++;
-                            cardInSet.Position = new CardPosition(tileslot);
-                            // move the cards visualy to the new spots
-                            uiManager.MoveCardToBoard(cardInSet, tileslot);
+                            card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
+                            await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
+                            cardsToRemove.Add(card);
+                        this.added = true;
+                        found=true;
                         }
-                        // update the keys to suit the new start and end location to point to that set
-                        UpdateKeysAfterAddingCard(set, key);
-                        // move the card to the board also visualy and mark to not delete it inside the function
-                        await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() + 1, false);
-                        cardsToRemove.Add(card);
-                        found = true;
-                        //remove the old once
-                        gameBoard.GetCardsInSetsTable().Remove(rightKey);
-                        gameBoard.GetCardsInSetsTable().Remove(leftKey);
                     }
+                    // rearrange the set to add the card
+                    // else
+                    // {
+
+                    //     // get the first empty slot in the game board to suit that amount of cards(the set and the new card)
+                    //     tileslot = gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength() + 1);
+                    //     print("tileslot: " + tileslot);
+                    //     // first give the card that position because he is at the begining
+                    //     card.OldPosition = card.Position;
+                    //     card.Position.SetTileSlot(tileslot);
+                    //     print("card position: " + card.Position.ToString());
+                    //     print("2 set.set: " + set.set.Count);
+                    //     foreach (Card cardInSet in set.set)
+                    //     {
+                    //         // update the set position to the new tile slot starting from the second tileslot given before
+                    //         // the first tileslot is saved for the new card
+                    //         tileslot++;
+                    //         print("before: "+cardInSet.ToString());
+                    //         cardInSet.OldPosition = cardInSet.Position;
+                    //         cardInSet.Position.SetTileSlot(tileslot);
+                    //         print("after: "+cardInSet.ToString());
+                    //         // move the cards visualy to the new spots
+                    //         uiManager.MoveCardToBoard(cardInSet, tileslot);
+                    //         print("after after: "+cardInSet.ToString());
+                    //         await gameBoard.MoveCardFromGameBoardToGameBoard(cardInSet);
+                    //     }
+                    //     // update the keys to suit the new start and end location to point to that set
+                    //    // UpdateKeysAfterAddingCard(set, key);
+                    //     // move the card to the board also visualy and mark to not delete it inside the function
+                    //     await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() -1, false);
+                    //     cardsToRemove.Add(card);
+                    //     found = true;
+                    //     //remove the old once
+
+                    // }
 
                 }
             }

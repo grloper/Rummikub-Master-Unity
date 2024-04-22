@@ -149,6 +149,7 @@ public class UImanager : MonoBehaviour
                 gameController.ChangeTurn();
                 UpdateTurnText();
                 board.GetMovesStack().Clear();
+                board.PrintGameBoardValidSets();
             } // we have handler to print error when not valid
         }
     }
@@ -271,6 +272,7 @@ public class UImanager : MonoBehaviour
     public void MoveCardToBoard(Card card, int tileslot)
     {
         // get the tileslot location from board
+        print("this.board: " + this.board);
         GameObject tileSlot = this.board.transform.GetChild(tileslot).gameObject;
         //update value for proper undo function
         card.CameFromPlayerHand = true;

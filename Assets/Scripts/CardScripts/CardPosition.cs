@@ -19,6 +19,11 @@ public class CardPosition
     {
         return this.Row * Constants.MaxBoardColumns + this.Column;
     }
+    public void SetTileSlot(int tileSlot)
+    {
+        this.Row = tileSlot / Constants.MaxBoardColumns;
+        this.Column = tileSlot % Constants.MaxBoardColumns;
+    }
 
 
     // constructor for row and column
@@ -32,6 +37,13 @@ public class CardPosition
     public int Row { get; set; }
     public int Column { get; set; }
 
+ // to string for row and col
+    public override string ToString()
+    {
+        return "Row: " + Row + " Column: " + Column;
+    }
 
+    // Equals method
+  
 
 }

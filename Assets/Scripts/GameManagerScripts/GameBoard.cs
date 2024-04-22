@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 
@@ -53,14 +54,15 @@ public class GameBoard : MonoBehaviour
         while (movesStack.Count > Constants.EmptyStack)
         {
             Card card = movesStack.Pop();
+           
             UndoMoveForCard(card);
         }
         PrintGameBoardValidSets();
     }
     public void SaveGameState()
     {
-        cardsInSetsBackUp = new Dictionary<int, SetPosition>(cardsInSets);
-        gameBoardValidSetsBackUp = new Dictionary<SetPosition, CardsSet>(gameBoardValidSets);
+        cardsInSetsBackUp = new Dictionary<int, SetPosition>(GetCardsInSetsTable());
+        gameBoardValidSetsBackUp = new Dictionary<SetPosition, CardsSet>(GetGameBoardValidSetsTable());
     }
     public bool IsExistForStack(Card card) => movesStack.Contains(card);
     private void UndoMoveForCard(Card card)
@@ -85,7 +87,7 @@ public class GameBoard : MonoBehaviour
         {
             // working
             Debug.Log("<color=yellow>from board to player undo</color>");
-
+            gameController.GetCurrentPlayer().AddCardToList(card);
             GameObject tileSlot = gameController.GetCurrentPlayer().GetPlayerGrid().transform.GetChild(gameController.GetCurrentPlayer().GetEmptySlotIndex()).gameObject;
             card.transform.SetParent(tileSlot.transform);
             card.transform.localPosition = Vector3.zero;
@@ -114,14 +116,14 @@ public class GameBoard : MonoBehaviour
             Debug.Log("<color=orange> Key:" + key + " Set Pos:" + cardsInSets[key].GetId() +"</color>");
         }
         //print in green board rules passed or in red rules not passed
-        if (IsBoardValidRule())
-        {
-            Debug.Log("<color=green>Board is valid</color>");
-        }
-        else
-        {
-            Debug.Log("<color=red>Board is not valid</color>");
-        }
+        // if (IsBoardValidRule())
+        // {
+        //     Debug.Log("<color=green>Board is valid</color>");
+        // }
+        // else
+        // {
+        //     Debug.Log("<color=red>Board is not valid</color>");
+        // }
 
     }
     public bool IsBoardValidRule()
@@ -164,16 +166,20 @@ public class GameBoard : MonoBehaviour
     // Handle the movement of a card from the game board to the game board
     public async Task MoveCardFromGameBoardToGameBoard(Card card)
     {
+        // Remove the card from its current set
         SetPosition oldSetPos = new SetPosition(-1);
         CardsSet oldSet = new CardsSet();
         int row = card.OldPosition.Row;
         int col = card.OldPosition.Column;
 
         int key = GetKeyFromPosition(card.OldPosition);
+        Debug.Log("got key row and col: "+key+" "+row+" "+col);
+        Debug.Log("cardsInSets.ContainsKey(key) "+cardsInSets.ContainsKey(key));
         if (!cardsInSets.ContainsKey(key))
         {
             bool found = false;
             // Move left
+            //O(n) whee n is the number of cards in the set 
             for (int i = col; i >= 0 && !found; i--)
             {
                 key = row * 100 + i;
@@ -188,13 +194,18 @@ public class GameBoard : MonoBehaviour
         }
         else
         {
+            //O(1)
             oldSetPos = cardsInSets[key];
             oldSet = gameBoardValidSets[oldSetPos];
         }
 
+        // Remove the card from the set O(n) where n is the number of cards in the set
         int cardIndex = oldSet.RemoveCard(card);
         if (oldSet.set.Count == 0)
         {
+            // If the old set is now empty, remove it
+            // Remove the set from the gameBoardValidSets dictionary
+            // O(1)
             cardsInSets.Remove(key);
             gameBoardValidSets.Remove(oldSetPos);
         }
@@ -212,12 +223,33 @@ public class GameBoard : MonoBehaviour
                 print("New set pos "+newSetPos.GetId());
                 print("new set "+newSet.ToString());
                 gameBoardValidSets.Add(newSetPos ,newSet);
+
+                  if(newSet.set.Count > 1 )
+                {
                 //upate the first card and last card to point to that newSetPos
                 cardsInSets[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
                 cardsInSets[GetKeyFromPosition(newSet.GetLastCard().Position)] = newSetPos;
-                // update the last card in the old set to point to the oldSetPos
+                }
+                else    
+                {
+                                        cardsInSets[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
+
+                }
+                if(oldSet.set.Count > 1)
+                {
+                  // update the last card in the old set to point to the oldSetPos
                 cardsInSets[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
                 cardsInSets[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
+                }
+                else
+                {
+                cardsInSets[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
+
+
+                }
+
+                
+
 
                 // Update the cardsInSets dictionary to reflect the split
             }
@@ -248,7 +280,7 @@ public class GameBoard : MonoBehaviour
 
 
         // Add the card to its new position
-        PutInSet(card);
+       await PutInSet(card);
     }
 
     public async Task MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
@@ -351,6 +383,7 @@ public class GameBoard : MonoBehaviour
     public bool IsBoardValid()
     {
 
+        //return true;
           bool humanCheck = true; gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
           if (GetMovesStackSum() >= Constants.MinFirstSet || humanCheck)
           {
@@ -431,13 +464,13 @@ public class GameBoard : MonoBehaviour
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
         foreach (Card card in cardsSet.set)
         {
-            card.Position = new CardPosition(tileslot);
+            card.Position.SetTileSlot(tileslot);
             uiManager.MoveCardToBoard(card, tileslot);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-          await MoveCardFromPlayerHandToGameBoard(card);
+          await MoveCardFromPlayerHandToGameBoard(card,true);
         }
     }
     internal async Task PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
@@ -445,15 +478,7 @@ public class GameBoard : MonoBehaviour
         // assume already check no nehibors to combine my love
         uiManager.MoveCardToBoard(card, tileslot);
         AddCardToMovesStack(card);
-        if(canRemove)
-        {
-        await MoveCardFromPlayerHandToGameBoard(card);
-        }
-        else    
-        {
-        await MoveCardFromPlayerHandToGameBoard(card,false);
-        }
-
+        await MoveCardFromPlayerHandToGameBoard(card,canRemove);
     }
 
 
