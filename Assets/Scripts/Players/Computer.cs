@@ -20,7 +20,7 @@ public class Computer : Player
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
     private List<Card> computerHand;
-    public float computerMoveDelay = 0.9f;
+    public float computerMoveDelay =2f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -63,6 +63,8 @@ public class Computer : Player
     private List<CardsSet> ExtractMaxValidGroupSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
         SortByGroup();
+        print("--------------------ExtractMaxValidGroupSets----------------------");
+        PrintCards();
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
         currentSet.AddCardToEnd(list[0]);
@@ -104,6 +106,7 @@ public class Computer : Player
             foreach (CardsSet set in setsRun)
             {
               await  gameBoard.PlayCardSetOnBoard(set);
+              PrintCards();
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(this.computerHand, Constants.MinInGroup, Constants.MaxInGroup);
@@ -112,14 +115,14 @@ public class Computer : Player
             this.dropped = true;
             foreach (CardsSet set in setsGroup)
             {
-              await  gameBoard.PlayCardSetOnBoard(set);
+                await gameBoard.PlayCardSetOnBoard(set);
+                PrintCards();
             }
         }
 
     }
     public void Initialize(Player player)
     {
-        print("init");
         this.myPlayer = player;
         this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
         this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>();
@@ -140,7 +143,7 @@ public class Computer : Player
         await MaximizeValidDrops();
         //  MaximizePartialDrops();
         added = false;
-        await AssignFreeCardsToExistsSets();
+      //  await AssignFreeCardsToExistsSets();
         if (dropped || added)
         {
             uiManager.ConfirmMove();
@@ -150,24 +153,6 @@ public class Computer : Player
             uiManager.DrawACardFromDeck();
         }
     }
-
-
-        // i want to add a card to a set if it is possible 
-        // i want to check if the card can be added to the end of the set or the beginning of the set
-        // if there is space from the left and from the right we can just use the built in fuction
-        // gameBoard.PlayCardOnBoard(card,False)
-        //else if there are no room left we can re arrange the set to the first available tileslot from him till Set.Count 
-        // we will have enought space for the cards,
-        // we can use gameBoard.GetEmptySlotIndexFromGameBoard(set.GetDeckLength()+1) to get the first empty slot
-        // we can use the function uiManager.MoveCardToBoard(card, tileslot) to move the card to the new position
-        // and logic to update the keys in the dictionary to point to the new location
-        // we can use gameBoard.MoveCardFromGameBoardToGameBoard(card), assuming we didnt delete the card from the hand
-        // we will use it in order to move the exist cards to their new location while keeping the Dictionary updated and correct
-
-        // lets start:
-
-
-        // check if the computer can add a card to an existing set
     private async Task AssignFreeCardsToExistsSets()
     {
         // track the cards that need to be removed from the computer hand because 

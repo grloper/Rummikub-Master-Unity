@@ -64,14 +64,14 @@ public class GameController : MonoBehaviour
     // change the turn to the next player
     public void ChangeTurn()
     {
-
+        CheckWin();
         playersList[currentTurn].SetBoardVisiblity(false);
         currentTurn = (currentTurn + 1) % playersList.Count;
         playersList[currentTurn].SetBoardVisiblity(true);
         CheckIfComputerTurn();
     }
 
-
+ 
     public Player GetCurrentPlayer()
     {
         return playersList[currentTurn];
@@ -81,4 +81,30 @@ public class GameController : MonoBehaviour
     {
         return currentTurn;
     }
+
+    public void CheckWin()
+    {   
+        if(playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
+        {
+            //gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
+            Debug.Log("******************************************************Player "+GetCurrentPlayer().GetPlayerType().ToString()+(GetCurrentPlayerIndex() + 1)+" wins******************************************************");
+            //uiManager.ShowWinScreen(playersList[currentTurn].GetPlayerName());
+        }
+
+    }
+    // public void CheckWin()
+    // {
+    //     if (playersList[currentTurn].CheckWin())
+    //     {
+    //         uiManager.ShowWinScreen(playersList[currentTurn].GetPlayerName());
+    //     }
+    //     else if (playersList.All(player => player.CheckDraw()))
+    //     {
+    //         uiManager.ShowDrawScreen();
+    //     }
+    //     else
+    //     {
+    //         ChangeTurn();
+    //     }
+    // }
 }

@@ -134,9 +134,10 @@ public class Player : MonoBehaviour
         }
     }
 
-    public override string ToString()
+    public bool IsDeckEmpty()
     {
-        return base.ToString();
+        return this.playerHand.Count==Constants.EmptyDeck;
+    
     }
 
     public List<Card> GetPlayerHand()
