@@ -143,7 +143,7 @@ public class Computer : Player
         await MaximizeValidDrops();
         //  MaximizePartialDrops();
         added = false;
-      //  await AssignFreeCardsToExistsSets();
+        await AssignFreeCardsToExistsSets();
         if (dropped || added)
         {
             uiManager.ConfirmMove();
@@ -303,8 +303,8 @@ public class Computer : Player
     {
         int newLeftkey = gameBoard.GetKeyFromPosition(set.GetFirstCard().Position);
         int newRightkey = gameBoard.GetKeyFromPosition(set.GetLastCard().Position);
-        gameBoard.GetCardsInSetsTable()[newLeftkey] = setPosition;
-        gameBoard.GetCardsInSetsTable()[newRightkey] = setPosition;
+        gameBoard.GetCardsToSetsTable()[newLeftkey] = setPosition;
+        gameBoard.GetCardsToSetsTable()[newRightkey] = setPosition;
     }
 
     public void PrintCards()

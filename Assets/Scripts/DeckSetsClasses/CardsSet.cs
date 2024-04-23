@@ -1,12 +1,13 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 
 public class CardsSet : ICardSet
 {
     // a certain set of cards on board
-    public List<Card> set;
+    public LinkedList <Card> set;
     public bool isRun;
     public bool isGroupOfColors;
     // 3-13 cards in a set if it represents a run 
@@ -14,12 +15,12 @@ public class CardsSet : ICardSet
     // Default Constructor
     public CardsSet()
     {
-        set = new List<Card>();
+        set = new LinkedList <Card>();
     }
     // Constructor for a set of cards with a single card in it uses the default constructor
     public CardsSet(Card card) : this()
     {
-        set.Add(card);
+        set.AddFirst(card);
     }
     public int GetDeckLength()
     {
@@ -27,36 +28,27 @@ public class CardsSet : ICardSet
     }
     // Utility methods
     //O(1)
-    public Card GetFirstCard() => set[0];
+    public Card GetFirstCard() => set.First.Value;
 
     // O(1)
-    public Card GetLastCard() => set[set.Count - 1];
+    public Card GetLastCard() => set.Last.Value;
     // O(1)
-    public void SetList(List<Card> newList)
+    public void SetList(LinkedList <Card> newList)
     {
         this.set = newList;
     }
     //add card beggining and end in two function 
-    // O(n)
+    // O(1)
     public void AddCardToBeginning(Card card)
     {
-        if (set.Count == Constants.EmptyCardsSet)
-        {
-            set.Add(card);
-            return;
-        }
-        set.Insert(0, card);
+
+        set.AddFirst(card);
     }
 
-    // O(n)
+    // O(1)
     public void AddCardToEnd(Card card)
     {
-        if (set.Count == Constants.EmptyCardsSet)
-        {
-            set.Add(card);
-            return;
-        }
-        set.Add(card);
+      set.AddLast(card);
     }
     public bool CanAddCard(Card card)
     {
@@ -86,65 +78,94 @@ public class CardsSet : ICardSet
     }
     // Combine two sets of cards and return the new set of cards
     // O(n) when n is the number of cards in the second set
-    public CardsSet Combine(CardsSet set1, CardsSet set2)
+
+     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
-        foreach (Card c in set2.set)
-        {
-            set1.set.Add(c);
-        }
-        set2.set.Clear();
+        set1.set.AddLast(set2.set.First.Value);
         return set1;
     }
+
+
     // Uncombine the set of cards and return the new set of cards,
     // the offset is the number of cards to remove from the set because they are at another list
     // O(n) when n is the number of cards to remove
     public CardsSet UnCombine(int offset)
+{
+    CardsSet newSet = new CardsSet();
+    for (int i = 0; i < offset; i++)
     {
-        CardsSet newSet = new CardsSet();
-        for (int i = 0; i < offset; i++)
-        {
-            newSet.set.Add(set[i]);
-        }
-        set.RemoveRange(0, offset);
-        return newSet;
+        newSet.set.AddLast(set.First.Value);
+        set.RemoveFirst();
     }
+    return newSet;
+}
 
     // Remove a card from the set and return its index in the set
     // O(n) when n is the number of cards in the set
+
     public int RemoveCard(Card card)
+{
+    LinkedListNode<Card> node = set.Find(card);
+    if (node == null)
     {
-        int i = set.FindIndex(c => c == card);
-        set.Remove(card);
-        return i;
+        return -1; // Card not found
     }
-    
+
+    int i = 0;
+    for (LinkedListNode<Card> current = set.First; current != null; current = current.Next, i++)
+    {
+        if (current == node)
+        {
+            set.Remove(node);
+            return i;
+        }
+    }
+
+    return -1; // Should never reach here
+}
 
     // Check if a run is valid
     // O(n) when n is the number of cards in the set
+  
     public bool IsRun()
+{
+    if (set == null || set.Count < Constants.MinInRun || set.Count > Constants.MaxInRun)
     {
-        if (set == null || set.Count < Constants.MinInRun || set.Count > Constants.MaxInRun)
-        {
-            return isRun = false; // A run must have at least 3 cards but no more than 13
-        }
-        int i = GetFirstIndexOfNotJoker();
-
-        CardColor SetColor = set[i].Color;
-        int CurrentNum = set[i].Number;
-        if (set[i].Number < i + 1)
-            return isRun = false;
-
-        for (; i < set.Count; i++)
-        {
-            if (CurrentNum == Constants.MaxRank + 1 || // the number is bigger than 13
-               CurrentNum++ != set[i].Number && !IsJoker(set[i]) || // the number is not in sequence (we also check for jokers = 0xf)
-                !IsSameColor(set[i], SetColor)) // the color is not the same
-            {
-                return isRun = false;
-            }
-        }
-        return isRun = true;
+        return isRun = false; // A run must have at least 3 cards but no more than 13
     }
+
+    LinkedListNode<Card> node = GetFirstNodeOfNotJoker();
+
+    CardColor SetColor = node.Value.Color;
+    int CurrentNum = node.Value.Number;
+    int i = 0;
+    for (LinkedListNode<Card> current = node; current != null; current = current.Next, i++)
+    {
+        if (CurrentNum == Constants.MaxRank + 1 || // the number is bigger than 13
+           CurrentNum++ != current.Value.Number && !IsJoker(current.Value) || // the number is not in sequence (we also check for jokers = 0xf)
+            !IsSameColor(current.Value, SetColor)) // the color is not the same
+        {
+            return isRun = false;
+        }
+    }
+    return isRun = true;
+}
+
+// get the first node of a card that is not a joker
+// O(n) when n is the number of cards in the set
+public LinkedListNode<Card> GetFirstNodeOfNotJoker()
+{
+    LinkedListNode<Card> node = set.First;
+    for (int i = 0; i <= Constants.MaxJoker && node != null; i++, node = node.Next)
+    {
+        if (!IsJoker(node.Value))
+        {
+            return node;
+        }
+    }
+
+    return null; // Default to null if all are jokers
+}
     
     // Check if a set contains a certain color
     // O(n) when n is the number of cards in the set
@@ -159,30 +180,28 @@ public class CardsSet : ICardSet
         }
         return false;
     }
-    // Check if a group of colors is valid
-    // O(n) when n is the number of cards in the set
-    public bool IsGroupOfColors()
+   public bool IsGroupOfColors()
+{
+    if (set == null || (set.Count != Constants.MinInGroup && set.Count != Constants.MaxInGroup))
     {
-        if (set == null || (set.Count != Constants.MinInGroup && set.Count != Constants.MaxInGroup))
-        {
-            return isGroupOfColors = false; // A group must have either 3 or 4 cards
-        }
-
-        int i = GetFirstIndexOfNotJoker();
-        int CurrentNum = set[i].Number;
-        // Use a HashSet to track distinct colors
-        HashSet<int> distinctColors = new HashSet<int>();
-
-        for (; i < set.Count; i++)
-        {
-            if (!IsJoker(set[i]) && (!distinctColors.Add((int)set[i].Color) || CurrentNum != set[i].Number))
-            {
-                return isGroupOfColors = false; // If a color is repeated, the group is invalid
-            }
-        }
-
-        return isGroupOfColors = true;
+        return isGroupOfColors = false; // A group must have either 3 or 4 cards
     }
+
+    LinkedListNode<Card> node = GetFirstNodeOfNotJoker();
+    int CurrentNum = node.Value.Number;
+    // Use a HashSet to track distinct colors
+    HashSet<int> distinctColors = new HashSet<int>();
+
+    for (LinkedListNode<Card> current = node; current != null; current = current.Next)
+    {
+        if (!IsJoker(current.Value) && (!distinctColors.Add((int)current.Value.Color) || CurrentNum != current.Value.Number))
+        {
+            return isGroupOfColors = false; // If a color is repeated, the group is invalid
+        }
+    }
+
+    return isGroupOfColors = true;
+}
     // check if a card is the same color as the given color, if joker return true
     // O(1)
     public bool IsSameColor(Card c1, CardColor color)
@@ -201,20 +220,7 @@ public class CardsSet : ICardSet
     {
         return card.Number == Constants.JokerRank; // the joker is a mask of 1111b
     }
-    // get the first index of a card that is not a joker
-    // O(n) when n is the number of cards in the set
-    public int GetFirstIndexOfNotJoker()
-    {
-        for (int i = 0; i <= Constants.MaxJoker; i++)
-        {
-            if (!IsJoker(set[i]))
-            {
-                return i;
-            }
-        }
 
-        return 2; // Default to the last index if all are jokers
-    }
     public override string ToString()
     {
         string setStr = "";
@@ -230,7 +236,7 @@ public class CardsSet : ICardSet
     {
         AddCardToBeginning(card);
         bool check= this.IsRun();
-        this.set.RemoveAt(0);
+        this.set.RemoveFirst();
         return check;
         
     }
@@ -239,14 +245,14 @@ public class CardsSet : ICardSet
     {
         AddCardToEnd(card);
         bool check = this.IsRun();
-        this.set.RemoveAt(this.set.Count-1);
+        this.set.RemoveLast();
         return check;
     }
     public bool CanAddCardBegginingGroup(Card card)
     {
         AddCardToBeginning(card);
         bool check = this.IsGroupOfColors();
-        this.set.RemoveAt(0);
+        this.set.RemoveFirst();
         return check;
 
     }
@@ -255,16 +261,22 @@ public class CardsSet : ICardSet
     {
         AddCardToEnd(card);
         bool check = this.IsGroupOfColors();
-        this.set.RemoveAt(this.set.Count - 1);
+        this.set.RemoveLast();
         return check;
     }
 
     // Remove a card from the set at a certain index and return the card
     // O(n) when n is the number of cards in the set
-    internal Card RemoveCardAt(int i)
+    public Card RemoveCardAt(int index)
     {
-        Card card = set[i];
-        set.RemoveAt(i);
-        return card;
+        LinkedListNode<Card> node = set.First;
+        for (int i = 0; i < index; i++)
+        {
+            node = node.Next;
+        }
+
+        set.Remove(node);
+        return node.Value;
     }
+
 }
