@@ -504,7 +504,12 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            await MoveCardFromGameBoardToGameBoard(card);
+            
+        }
+        Card[] cards = set.set.ToArray();
+        for(int i = 0; i < cards.Length; i++)
+        {
+            await MoveCardFromGameBoardToGameBoard(cards[i]);
         }
         if (addAtTheEnd)
         {
@@ -516,21 +521,4 @@ public class GameBoard : MonoBehaviour
         await MoveCardFromPlayerHandToGameBoard(givenCard);
     }
 
-    internal async Task AppendCardToExistSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
-    {   
-        CardsSet set = gameBoardValidSets[setPosition];
-        GameObject secondTileSlot = null;
-        // if the first card in the set is not in the first column
-        if (set.GetFirstCard().Position.Column != 0)
-        {
-            // get the second tile slot
-            secondTileSlot = this.transform.GetChild(set.GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
-        }
-        // if the second tile slot is empty then add the card to the set
-        if (secondTileSlot != null && secondTileSlot.transform.childCount == Constants.EmptyTileSlot || givenCard.Position.Column == 1)
-        {
-            givenCard.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
-            await PlayCardOnBoard(givenCard, set.GetFirstCard().Position.GetTileSlot() - 1, false);
-        }
-    }
 }

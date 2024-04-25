@@ -172,25 +172,27 @@ public class Computer : Player
                 // get the current set from the dictionary using the SetPosition key
                 CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
                 // check if the card can be added to the set without needing to move it
-
                 // if we keeping a set valid then we need to update the keys in the dictionary and add the card
-                if (!found&&(set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card)))
+                if (!found && (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card)))
                 {
                     found = true;
                     added = true;
+                    cardsToRemove.Add(card);
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward true means that we need to add the card to the end of the set
                     if (set.IsSpaceForCard(true, gameBoard))
                     {
+                        card.OldPosition = card.Position;
+                        card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
                         await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
-                        cardsToRemove.Add(card);
                     }
                     else
                     {
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
-                      await this.gameBoard.RearrangeCardsSet(key, card, true);
+                        await this.gameBoard.RearrangeCardsSet(key, card, true);
+
                     }
 
                 }
@@ -198,13 +200,15 @@ public class Computer : Player
                 {
                     found = true;
                     added = true;
+                    cardsToRemove.Add(card);
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward false means that we need to add the card to the beginning of the set
                     if (set.IsSpaceForCard(false, gameBoard))
                     {
+                        card.OldPosition = card.Position;
+                        card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
                         await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
-                        cardsToRemove.Add(card);
                     }
                     else
                     {
