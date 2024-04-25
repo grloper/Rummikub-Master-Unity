@@ -40,7 +40,8 @@ public class UImanager : MonoBehaviour
     }
     public void BtnDeckClick()
     {
-        DrawACardFromDeck();
+        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+            DrawACardFromDeck();
     }
     public void DrawACardFromDeck()
     {
@@ -75,21 +76,25 @@ public class UImanager : MonoBehaviour
     {
         try
         {
-            Undo();
+            if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+                Undo();
         }
         catch (EmptyDeckException)
         {
             print("No moves to undo");
         }
     }
+    // Function to instantiate a card to a tile slot
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
         Card card = InstinitanteCard(GivvenCard);
         card.transform.SetParent(tileslot.transform);
         return card;
     }
+    // Function to instantiate a card
     public Card InstinitanteCard(Card GivvenCard)
     {
+        // create by the prefab
         GameObject card = Instantiate(PrefabTile);
         // Set the card's sprite to the correct sprite
         card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(GivvenCard)];
@@ -132,7 +137,8 @@ public class UImanager : MonoBehaviour
     }
     public void BtnConfirmMoveClick()
     {
-        ConfirmMove();
+        if(gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+              ConfirmMove();
     }
     public void ConfirmMove()
     {
