@@ -171,10 +171,7 @@ public class GameBoard : MonoBehaviour
         CardsSet oldSet = new CardsSet();
         int row = card.OldPosition.Row;
         int col = card.OldPosition.Column;
-
         int key = GetKeyFromPosition(card.OldPosition);
-        Debug.Log("got key row and col: " + key + " " + row + " " + col);
-        Debug.Log("cardToSetPos.ContainsKey(key) " + cardToSetPos.ContainsKey(key));
         if (!cardToSetPos.ContainsKey(key))
         {
             bool found = false;
@@ -188,7 +185,6 @@ public class GameBoard : MonoBehaviour
                     oldSetPos = cardToSetPos[key];
                     oldSet = gameBoardValidSets[oldSetPos];
                     found = true;
-                    print("Found pos " + oldSetPos.GetId());
                 }
             }
         }
@@ -212,16 +208,12 @@ public class GameBoard : MonoBehaviour
         // If the card was removed from the middle of the set, split the set into two
         else
         {
-            print("oldset before if >1" + oldSet.ToString());
-            print("inside if, Card index " + cardIndex);
             if (cardIndex > 0 && cardIndex < oldSet.set.Count)
             {
                 // new set = the set from the left 
                 // set from the right is the old set with the card removed, oldSetPos
                 CardsSet newSet = oldSet.UnCombine(cardIndex);
                 SetPosition newSetPos = new SetPosition(SetCount++);
-                print("New set pos " + newSetPos.GetId());
-                print("new set " + newSet.ToString());
                 gameBoardValidSets.Add(newSetPos, newSet);
 
                 if (newSet.set.Count > 1)
@@ -245,11 +237,7 @@ public class GameBoard : MonoBehaviour
                 {
                     cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
 
-
                 }
-
-
-
 
                 // Update the cardToSetPos dictionary to reflect the split
             }
@@ -263,7 +251,6 @@ public class GameBoard : MonoBehaviour
                 // for the end -> 1,2,3,4
                 //1 and 4 point to that set
                 // so we want 3 to point to that set, and remove 4 from the dictionary
-                print("Card index " + cardIndex);
                 if (cardIndex == 0)
                 {
                     cardToSetPos.Remove(GetKeyFromPosition(card.OldPosition));
@@ -277,8 +264,6 @@ public class GameBoard : MonoBehaviour
             }
         }
         // If the old set is now empty, remove it
-
-
         // Add the card to its new position
         await PutInSet(card);
     }
@@ -461,7 +446,8 @@ public class GameBoard : MonoBehaviour
 
     internal async Task PlayCardSetOnBoard(CardsSet cardsSet)
     {
-        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count+1);
+        tileslot++;
         foreach (Card card in cardsSet.set)
         {
             card.OldPosition = card.Position;
@@ -504,13 +490,8 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            
         }
-        Card[] cards = set.set.ToArray();
-        for(int i = 0; i < cards.Length; i++)
-        {
-            await MoveCardFromGameBoardToGameBoard(cards[i]);
-        }
+
         if (addAtTheEnd)
         {
             givenCard.OldPosition = givenCard.Position;
@@ -518,7 +499,6 @@ public class GameBoard : MonoBehaviour
         }
         // move the given card to the free location
         uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot());
-        await MoveCardFromPlayerHandToGameBoard(givenCard);
     }
 
 }

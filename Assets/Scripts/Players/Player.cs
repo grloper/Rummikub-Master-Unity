@@ -94,7 +94,18 @@ public class Player : MonoBehaviour
 
     public void RemoveCardFromList(Card card)
     {
+        print("Before: card: "+card.ToString() );
+        PrintCards();
         playerHand.Remove(card);
+        print("After");
+        PrintCards();
+    }
+    public void PrintCards()
+    {
+        foreach (Card card in playerHand)
+        {
+            print(card.ToString());
+        }
     }
 
     public bool GetInitialMove()

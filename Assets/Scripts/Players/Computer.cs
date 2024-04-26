@@ -20,7 +20,7 @@ public class Computer : Player
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
     private List<Card> computerHand;
-    public float computerMoveDelay = 1f;// 0.9f;
+    public float computerMoveDelay = 2f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -134,14 +134,13 @@ public class Computer : Player
 
     }
 
-    private async void DoComputerMove()
+    private async Task DoComputerMove()
     {
         this.computerHand = myPlayer.GetPlayerHand();
         await MaximizeValidDrops();
         //  MaximizePartialDrops();
         added = false;
         await AssignFreeCardsToExistsSets();
-        PrintCards();
         if (dropped || added)
         {
             uiManager.ConfirmMove();
@@ -156,6 +155,9 @@ public class Computer : Player
         // track the cards that need to be removed from the computer hand because 
         // cant remove them while iterating over the list
         List<Card> cardsToRemove = new List<Card>();
+        List<Card> cardsToUpdateFromPlayer = new List<Card>();
+        List<Card> cardsToUpdateFromBoard = new List<Card>();
+
         // iterate over the computer hand
         foreach (Card card in this.computerHand)
         {
@@ -173,16 +175,19 @@ public class Computer : Player
                 CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
                 // check if the card can be added to the set without needing to move it
                 // if we keeping a set valid then we need to update the keys in the dictionary and add the card
-                if (!found && (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card)))
+                if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                 {
-                    found = true;
-                    added = true;
-                    cardsToRemove.Add(card);
+                    // found = true;
+                    // added = true;
+                    // cardsToRemove.Add(card);
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward true means that we need to add the card to the end of the set
                     if (set.IsSpaceForCard(true, gameBoard))
                     {
+                        found = true;
+                        added = true;
+                        cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
                         await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
@@ -191,34 +196,53 @@ public class Computer : Player
                     {
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
-                        await this.gameBoard.RearrangeCardsSet(key, card, true);
+                        //  await this.gameBoard.RearrangeCardsSet(key, card, true);
+                        //  cardsToUpdateFromPlayer.Add(card);
+                        //  cardsToUpdateFromBoard.AddRange(set.set.ToList());
 
                     }
 
                 }
                 else if (!found && (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card)))
                 {
-                    found = true;
-                    added = true;
-                    cardsToRemove.Add(card);
+                    //  found = true;
+                    // added = true;
+                    //cardsToRemove.Add(card);\
+
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward false means that we need to add the card to the beginning of the set
                     if (set.IsSpaceForCard(false, gameBoard))
                     {
+                        found = true;
+                        added = true;
+                        cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
-                        await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
+                        await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
                     }
                     else
                     {
                         // if there is no space for the card then we need to rearrange the set
                         // forward false means that we need to add the card to the beginning of the set
-                        await this.gameBoard.RearrangeCardsSet(key, card, false);
+                        //   await this.gameBoard.RearrangeCardsSet(key, card, false);
+                        //  cardsToUpdateFromPlayer.Add(card);
+                        // cardsToUpdateFromBoard.AddRange(set.set.ToList());
                     }
                 }
             }
+
         }
+        // play the carsd that were added to the sets
+        foreach (Card cardToUpdate in cardsToUpdateFromPlayer)
+        {
+            await gameBoard.MoveCardFromPlayerHandToGameBoard(cardToUpdate, false);
+        }
+        foreach (Card cardToUpdate in cardsToUpdateFromBoard)
+        {
+            await gameBoard.MoveCardFromGameBoardToGameBoard(cardToUpdate);
+        }
+        // remove the cards that were added to the sets
         foreach (Card card in cardsToRemove)
         {
             print("remove: " + card.ToString());
