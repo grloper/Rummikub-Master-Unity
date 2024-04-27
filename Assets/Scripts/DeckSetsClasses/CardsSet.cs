@@ -340,40 +340,5 @@ public class CardsSet : ICardSet
         }
     }
 
-//equals method
-public override bool Equals(object obj)
-{
-    if (obj == null || GetType() != obj.GetType())
-    {
-        return false;
-    }
-
-    CardsSet otherSet = (CardsSet)obj;
-    if (set.Count != otherSet.set.Count)
-    {
-        return false;
-    }
-
-    LinkedListNode<Card> node1 = set.First;
-    LinkedListNode<Card> node2 = otherSet.set.First;
-
-    while (node1 != null)
-    {
-        if (!node1.Value.Equals(node2.Value))
-        {
-            return false;
-        }
-
-        node1 = node1.Next;
-        node2 = node2.Next;
-    }
-
-    return true;
-}
-//hashcode method
-public override int GetHashCode()
-{
-    return set.GetHashCode();
-}
 // End of CardsSet.cs
 }

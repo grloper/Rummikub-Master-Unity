@@ -97,7 +97,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 card.CameFromPlayerHand = false;
                 // save the parent before drag in case of moving multiple times the same card in the board
                 card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
-                //card.OldPositionBeforeDrag = new CardPosition(card.Position.Row, card.Position.Column);
+                card.OldPositionBeforeDrag = card.Position;
                 // push the card to the moves stack
                 board.AddCardToMovesStack(card);
             }

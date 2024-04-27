@@ -22,7 +22,6 @@ public class GameBoard : MonoBehaviour
     // readonly stack to prevent the stack from being replaced
     private readonly Stack<Card> movesStack = new Stack<Card>();
     private GameController gameController;
-    private static int SetCount;
 
 
     // Return instance of rummikub deck
@@ -31,7 +30,6 @@ public class GameBoard : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        SetCount = 0;
         //get game controller instance
         this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
         // this class is actually the board grid so we send "transform" 
@@ -52,8 +50,8 @@ public class GameBoard : MonoBehaviour
             UndoMoveForCard(card);
         }
 
-         // Undo logic for the stack of moves
-        board =new Board(boardBackup);
+        // Undo logic for the stack of moves
+        board = new Board(boardBackup);
         PrintGameBoardValidSets();
     }
 
@@ -73,6 +71,7 @@ public class GameBoard : MonoBehaviour
                 draggableItem.parentAfterDrag = card.ParentBeforeDrag;
                 card.transform.parent = draggableItem.parentAfterDrag;
                 card.transform.localPosition = Vector3.zero;
+                card.Position = card.OldPositionBeforeDrag;
             }
         }
         else
@@ -80,7 +79,7 @@ public class GameBoard : MonoBehaviour
             // Move the card back to the player's hand
             Debug.Log("<color=yellow>from board to player undo</color>");
             //update the card position to null
-            
+
             gameController.GetCurrentPlayer().AddCardToList(card);
             // Get the empty slot index in the player's hand and save the card in that slot
             GameObject tileSlot = gameController.GetCurrentPlayer().GetPlayerGrid()
@@ -122,7 +121,50 @@ public class GameBoard : MonoBehaviour
     // Handle the movement of a card from the game board to the game board
     public async Task MoveCardFromGameBoardToGameBoard(Card card)
     {
-         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+
+        // Remove the card from its current set
+        SetPosition oldSetPos = board.FindCardSetPosition(card);
+        CardsSet oldSet = board.GetCardsSet(oldSetPos);
+        int key = GetKeyFromPosition(card.OldPosition);
+        // Remove the card from the set O(n) where n is the number of cards in the set
+        int cardIndex = oldSet.RemoveCard(card);
+        if (oldSet.set.Count == 0)
+        {
+            // If the old set is now empty, remove it
+            // Remove the set from the gameBoardValidSets dictionary
+            // O(1)
+            board.RemoveSetFromBothDic(key);
+        }
+        // If the card was removed from the middle of the set, split the set into two
+        else
+        {
+            if (cardIndex > 0 && cardIndex < oldSet.set.Count)
+            {
+                board.HandleMiddleSplit(card, oldSet, oldSetPos, cardIndex);
+            }
+            else
+            {
+                board.HandleBeginningAndEndKeysUpdate(card, oldSet, oldSetPos, cardIndex);
+            }
+        }
+        // If the old set is now empty, remove it
+        // Add the card to its new position
+        await PutInSet(card);
+    }
+
+    public async Task MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
+    {
+        if (canRemove)
+        {
+            gameController.GetCurrentPlayer().RemoveCardFromList(card);
+        }
+        await PutInSet(card);
+    }
+
+
+    public async Task MoveCardFromGameBoardToPlayerHand(Card card)
+    {
+        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
         // Remove the card from its current set
         SetPosition oldSetPos = new SetPosition(-1);
@@ -164,124 +206,8 @@ public class GameBoard : MonoBehaviour
             gameBoardValidSets.Remove(oldSetPos);
         }
         // If the card was removed from the middle of the set, split the set into two
-        else
-        {
-            if (cardIndex > 0 && cardIndex < oldSet.set.Count)
-            {
-                // new set = the set from the left 
-                // set from the right is the old set with the card removed, oldSetPos
-                CardsSet newSet = oldSet.UnCombine(cardIndex);
-                SetPosition newSetPos = new SetPosition(SetCount++);
-                gameBoardValidSets.Add(newSetPos, newSet);
 
-                if (newSet.set.Count > 1)
-                {
-                    //upate the first card and last card to point to that newSetPos
-                    cardToSetPos[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
-                    cardToSetPos[GetKeyFromPosition(newSet.GetLastCard().Position)] = newSetPos;
-                }
-                else
-                {
-                    cardToSetPos[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
-
-                }
-                if (oldSet.set.Count > 1)
-                {
-                    // update the last card in the old set to point to the oldSetPos
-                    cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
-                    cardToSetPos[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
-                }
-                else
-                {
-                    cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
-
-                }
-
-                // Update the cardToSetPos dictionary to reflect the split
-            }
-            else
-            {
-                //handle beginning and end
-                // If the card was removed from the beginning or the end of the set,
-                // for the begining -> 1,2,3,4
-                //1 and 4 point to that set
-                // so we want 2 to point to that set, and remove 1 from the dictionary
-                // for the end -> 1,2,3,4
-                //1 and 4 point to that set
-                // so we want 3 to point to that set, and remove 4 from the dictionary
-                if (cardIndex == 0)
-                {
-                    cardToSetPos.Remove(GetKeyFromPosition(card.OldPosition));
-                    cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
-                }
-                else if (cardIndex == oldSet.set.Count)
-                {
-                    cardToSetPos.Remove(GetKeyFromPosition(card.OldPosition));
-                    cardToSetPos[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
-                }
-            }
-        }
-        // If the old set is now empty, remove it
-        // Add the card to its new position
-        await PutInSet(card);
     }
-
-    public async Task MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
-    {
-        if (canRemove)
-        {
-            gameController.GetCurrentPlayer().RemoveCardFromList(card);
-        }
-        await PutInSet(card);
-    }
-
-
-public async Task MoveCardFromGameBoardToPlayerHand(Card card)
-{
-     Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-        Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-    // Remove the card from its current set
-    SetPosition oldSetPos = new SetPosition(-1);
-    CardsSet oldSet = new CardsSet();
-    int row = card.OldPosition.Row;
-    int col = card.OldPosition.Column;
-    int key = GetKeyFromPosition(card.OldPosition);
-    if (!cardToSetPos.ContainsKey(key))
-    {
-        bool found = false;
-        // Move left
-        //O(n) whee n is the number of cards in the set 
-        for (int i = col; i >= 0 && !found; i--)
-        {
-            key = row * 100 + i;
-            if (cardToSetPos.ContainsKey(key))
-            {
-                oldSetPos = cardToSetPos[key];
-                oldSet = gameBoardValidSets[oldSetPos];
-                found = true;
-            }
-        }
-    }
-    else
-    {
-        //O(1)
-        oldSetPos = cardToSetPos[key];
-        oldSet = gameBoardValidSets[oldSetPos];
-    }
-
-    // Remove the card from the set O(n) where n is the number of cards in the set
-    int cardIndex = oldSet.RemoveCard(card);
-    if (oldSet.set.Count == 0)
-    {
-        // If the old set is now empty, remove it
-        // Remove the set from the gameBoardValidSets dictionary
-        // O(1)
-        cardToSetPos.Remove(key);
-        gameBoardValidSets.Remove(oldSetPos);
-    }
-    // If the card was removed from the middle of the set, split the set into two
-
-}
 
     // hash function 
     public int GetKeyFromPosition(CardPosition cardPosition)
@@ -292,7 +218,7 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
 
     public async Task PutInSet(Card card)
     {
-         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
         int key = GetKeyFromPosition(card.Position);
         int rightKey = key + 1;
@@ -344,7 +270,7 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
         else
         {
             // Create a new set
-            SetPosition newSetPos = new SetPosition(SetCount++);
+            SetPosition newSetPos = new SetPosition(board.GetSetCountAndInc());
             gameBoardValidSets[newSetPos] = new CardsSet(card);
 
             cardToSetPos[key] = newSetPos;
@@ -374,9 +300,9 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
 
     public bool IsBoardValid()
     {
-         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
 
-        bool humanCheck =true; gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
+        bool humanCheck = true; gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
         if (GetMovesStackSum() >= Constants.MinFirstSet || humanCheck)
         {
             foreach (CardsSet cardsSet in gameBoardValidSets.Values)
@@ -453,22 +379,24 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
 
     internal async Task PlayCardSetOnBoard(CardsSet cardsSet)
     {
-        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count+1);
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + 1);
         tileslot++;
         foreach (Card card in cardsSet.set)
         {
-            if(gameController.GetCurrentPlayer().IsCardInList(card))
+            if (gameController.GetCurrentPlayer().IsCardInList(card))
             {
                 //print in green Card in the player hand
-                print("<color=Green>Card in the player hand: "+card.ToString()+"</color>");
-            }else{
+                print("<color=Green>Card in the player hand: " + card.ToString() + "</color>");
+            }
+            else
+            {
                 // print in red
-                print("<color=Red>Card not in the player hand: "+card.ToString()+"</color>");
+                print("<color=Red>Card not in the player hand: " + card.ToString() + "</color>");
 
             }
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
-            uiManager.MoveCardToBoard(card, tileslot,true);
+            uiManager.MoveCardToBoard(card, tileslot, true);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
@@ -476,29 +404,31 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
             await MoveCardFromPlayerHandToGameBoard(card);
         }
         print("*******************************************************After play card set on board*******************************************************");
-            foreach (Card card in cardsSet.set)
+        foreach (Card card in cardsSet.set)
         {
-            if(gameController.GetCurrentPlayer().IsCardInList(card))
+            if (gameController.GetCurrentPlayer().IsCardInList(card))
             {
                 //print in green Card in the player hand
-                print("<color=Red>Card in the player hand: "+card.ToString()+"</color>");
-            }else{
+                print("<color=Red>Card in the player hand: " + card.ToString() + "</color>");
+            }
+            else
+            {
                 // print in green
-                print("<color=Green>Card not in the player hand: "+card.ToString()+"</color>");
+                print("<color=Green>Card not in the player hand: " + card.ToString() + "</color>");
 
             }
         }
-        
-             gameController.GetCurrentPlayer().PrintCards();
+
+        gameController.GetCurrentPlayer().PrintCards();
 
     }
-   
+
     // Play a card on the board at a specific tile slot and remove it from the player's hand, 
     // assume the play is from the player hand
     internal async Task PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
     {
         // assume already check no nehibors to combine my love
-        uiManager.MoveCardToBoard(card, tileslot,true);
+        uiManager.MoveCardToBoard(card, tileslot, true);
         AddCardToMovesStack(card);
         await MoveCardFromPlayerHandToGameBoard(card, canRemove);
     }
@@ -506,14 +436,14 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
     // while keeping the sets valid and the board rules with visual update
     internal async Task RearrangeCardsSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
     {
-         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         CardsSet set = gameBoardValidSets[setPosition];
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
         if (!addAtTheEnd)
         {
-           givenCard.OldPosition= givenCard.Position;
-           givenCard.Position.SetTileSlot(tileslot);
-           tileslot++;
+            givenCard.OldPosition = givenCard.Position;
+            givenCard.Position.SetTileSlot(tileslot);
+            tileslot++;
         }
         // move the cards to free location and put the last card at the end or at the beginning based on the boolean
         foreach (Card card in set.set)
@@ -521,7 +451,7 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
             // update visualy
-            uiManager.MoveCardToBoard(card, tileslot,false);
+            uiManager.MoveCardToBoard(card, tileslot, false);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
@@ -534,7 +464,6 @@ public async Task MoveCardFromGameBoardToPlayerHand(Card card)
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location
-        uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot(),true);
+        uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot(), true);
     }
-
 }
