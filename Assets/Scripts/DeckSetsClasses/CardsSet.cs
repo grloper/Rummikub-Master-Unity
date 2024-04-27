@@ -20,6 +20,7 @@ public class CardsSet : ICardSet
         set = new LinkedList<Card>();
         isRun = false;
         isGroupOfColors = false;
+     
     }
     // Constructor for a set of cards with a single card in it uses the default constructor
     public CardsSet(Card card) : this()
@@ -49,10 +50,7 @@ public class CardsSet : ICardSet
     // O(1)
     public Card GetLastCard() => set.Last.Value;
     // O(1)
-    public void SetList(LinkedList<Card> newList)
-    {
-        this.set = newList;
-    }
+
     //add card beggining and end in two function 
     // O(1)
     public void AddCardToBeginning(Card card)
@@ -97,7 +95,7 @@ public class CardsSet : ICardSet
 
     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
-        //append set2 to set2 while both contain set.set which is LinkedList
+        //append set2 to set2 while both contain set.set which is LinkedList<Card>
         LinkedListNode<Card> node = set2.set.First;
         while (node != null)
         {

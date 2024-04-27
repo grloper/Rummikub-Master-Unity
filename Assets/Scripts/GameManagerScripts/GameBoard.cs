@@ -8,11 +8,11 @@ using UnityEngine.Assertions.Must;
 
 public class GameBoard : MonoBehaviour
 {
-    private RummikubDeck rummikubDeck = new RummikubDeck();
-    [SerializeField] private UImanager uiManager;
-    //private List<CardsSet>[] gameBoardValidSets = new List<CardsSet>[Constants.MaxBoardRows];
 
-    // <int = CardPosition.Row *100+CardPostition.Column - represent the start of an existing set
+    // Reference to the rummikub deck, readonly to prevent the deck from being replaced by another deck
+    private readonly RummikubDeck rummikubDeck = new RummikubDeck();
+    [SerializeField] private UImanager uiManager;
+
     public Board board;
 
     // Backup for the undo functionality
@@ -42,14 +42,11 @@ public class GameBoard : MonoBehaviour
     }
     public void UndoMoves()
     {
-
         while (movesStack.Count > Constants.EmptyStack)
         {
             Card card = movesStack.Pop();
-
             UndoMoveForCard(card);
         }
-
         // Undo logic for the stack of moves
         board = new Board(boardBackup);
         PrintGameBoardValidSets();
@@ -71,6 +68,7 @@ public class GameBoard : MonoBehaviour
                 draggableItem.parentAfterDrag = card.ParentBeforeDrag;
                 card.transform.parent = draggableItem.parentAfterDrag;
                 card.transform.localPosition = Vector3.zero;
+                // update the card posistion to suit the old one
                 card.Position = card.OldPositionBeforeDrag;
             }
         }
@@ -79,7 +77,6 @@ public class GameBoard : MonoBehaviour
             // Move the card back to the player's hand
             Debug.Log("<color=yellow>from board to player undo</color>");
             //update the card position to null
-
             gameController.GetCurrentPlayer().AddCardToList(card);
             // Get the empty slot index in the player's hand and save the card in that slot
             GameObject tileSlot = gameController.GetCurrentPlayer().GetPlayerGrid()
@@ -113,7 +110,6 @@ public class GameBoard : MonoBehaviour
         {
             Debug.Log("<color=orange> Key:" + key + " Set Pos:" + cardToSetPos[key].GetId() + "</color>");
         }
-
     }
 
 
@@ -121,7 +117,6 @@ public class GameBoard : MonoBehaviour
     // Handle the movement of a card from the game board to the game board
     public async Task MoveCardFromGameBoardToGameBoard(Card card)
     {
-
         // Remove the card from its current set
         SetPosition oldSetPos = board.FindCardSetPosition(card);
         CardsSet oldSet = board.GetCardsSet(oldSetPos);
