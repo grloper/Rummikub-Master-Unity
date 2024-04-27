@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -17,12 +18,26 @@ public class CardsSet : ICardSet
     public CardsSet()
     {
         set = new LinkedList<Card>();
+        isRun = false;
+        isGroupOfColors = false;
     }
     // Constructor for a set of cards with a single card in it uses the default constructor
     public CardsSet(Card card) : this()
     {
         set.AddFirst(card);
+
     }
+    public CardsSet(CardsSet cardsSet) 
+    {
+        set = new LinkedList<Card>();
+        foreach (Card card in cardsSet.set)
+        {
+            set.AddLast(card);
+        }
+        isRun = cardsSet.isRun;
+        isGroupOfColors = cardsSet.isGroupOfColors;
+    }
+    
     public int GetDeckLength()
     {
         return set.Count;
@@ -324,5 +339,41 @@ public class CardsSet : ICardSet
             return false;
         }
     }
+
+//equals method
+public override bool Equals(object obj)
+{
+    if (obj == null || GetType() != obj.GetType())
+    {
+        return false;
+    }
+
+    CardsSet otherSet = (CardsSet)obj;
+    if (set.Count != otherSet.set.Count)
+    {
+        return false;
+    }
+
+    LinkedListNode<Card> node1 = set.First;
+    LinkedListNode<Card> node2 = otherSet.set.First;
+
+    while (node1 != null)
+    {
+        if (!node1.Value.Equals(node2.Value))
+        {
+            return false;
+        }
+
+        node1 = node1.Next;
+        node2 = node2.Next;
+    }
+
+    return true;
+}
+//hashcode method
+public override int GetHashCode()
+{
+    return set.GetHashCode();
 }
 // End of CardsSet.cs
+}

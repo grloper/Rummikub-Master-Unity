@@ -19,8 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    private List<Card> computerHand;
-    public float computerMoveDelay = 1f;// 0.9f;
+    public float computerMoveDelay = 2f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -63,7 +62,6 @@ public class Computer : Player
     private List<CardsSet> ExtractMaxValidGroupSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
         SortByGroup();
-
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
         currentSet.AddCardToEnd(list[0]);
@@ -98,7 +96,7 @@ public class Computer : Player
     public async Task MaximizeValidDrops()
     {
         this.dropped = false;
-        List<CardsSet> setsRun = ExtractMaxValidRunSets(this.computerHand, Constants.MinInRun, Constants.MaxInRun);
+        List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand(), Constants.MinInRun, Constants.MaxInRun);
         if (setsRun.Count > 0)
         {
             this.dropped = true;
@@ -107,7 +105,7 @@ public class Computer : Player
                 await gameBoard.PlayCardSetOnBoard(set);
             }
         }
-        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(this.computerHand, Constants.MinInGroup, Constants.MaxInGroup);
+        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand(), Constants.MinInGroup, Constants.MaxInGroup);
         if (setsGroup.Count > 0)
         {
             this.dropped = true;
@@ -136,12 +134,10 @@ public class Computer : Player
 
     private async Task DoComputerMove()
     {
-        this.computerHand = myPlayer.GetPlayerHand();
         await MaximizeValidDrops();
-        this.computerHand = myPlayer.GetPlayerHand();
         //  MaximizePartialDrops();
         added = false;
-        await AssignFreeCardsToExistsSets();
+      //  await AssignFreeCardsToExistsSets();
         if (dropped || added)
         {
             uiManager.ConfirmMove();
@@ -160,12 +156,12 @@ public class Computer : Player
         List<Card> cardsToUpdateFromBoard = new List<Card>();
 
         // iterate over the computer hand
-        foreach (Card card in this.computerHand)
+        foreach (Card card in myPlayer.GetPlayerHand())
         {
             // if added a card to a set then break the loop
             bool found = false;
             // extract the keys from the dictionary to iterate over them
-            List<SetPosition> keys = gameBoard.GetGameBoardValidSetsTable().Keys.ToList();
+            List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList();
             keys.ToArray();
             // Create a copy of the keys
             for (int i = 0; i < keys.Count && !found; i++) // iterate over the keys (SetPosition objects) until we find a set to add the card to for some card
@@ -173,7 +169,7 @@ public class Computer : Player
                 // get the set from the dictionary
                 SetPosition key = keys[i];
                 // get the current set from the dictionary using the SetPosition key
-                CardsSet set = gameBoard.GetGameBoardValidSetsTable()[key];
+                CardsSet set = gameBoard.board.GetGameBoardValidSetsTable()[key];
                 // check if the card can be added to the set without needing to move it
                 // if we keeping a set valid then we need to update the keys in the dictionary and add the card
                 if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
@@ -258,7 +254,7 @@ public class Computer : Player
     public void PrintCards()
     {
         print("------------------------------------------Set:------------------------------------------");
-        foreach (Card card in computerHand)
+        foreach (Card card in myPlayer.GetPlayerHand())
         {
             print(card.ToString());
         }
@@ -267,7 +263,7 @@ public class Computer : Player
     // Sort the cards by group
     public void SortByGroup()
     {
-        computerHand.Sort((card1, card2) =>
+        myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {
             if (card1.Number == card2.Number)
                 return card1.Color.CompareTo(card2.Color); // group by same number and differnt colors (duplicates beside eachother)

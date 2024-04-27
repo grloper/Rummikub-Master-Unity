@@ -75,6 +75,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
 
     private async void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
     {
+
         card.Position = new CardPosition(GetRowIndexBoard(), GetColumnIndexBoard());
         Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " +card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
 
@@ -85,7 +86,6 @@ public class TileSlot : MonoBehaviour, IDropHandler
             // update the position of the card in the game board
            await board.MoveCardFromPlayerHandToGameBoard(card);
             // push the card to the moves stack
-            // print("Pushed to Player Stack " + card.ToString());
             board.AddCardToMovesStack(card);
         }
         // movement inside board grid
@@ -97,9 +97,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 card.CameFromPlayerHand = false;
                 // save the parent before drag in case of moving multiple times the same card in the board
                 card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
-                print("Entered the if in tileslot without moving visualy");
-                //card.SetPositionBeforeDrag=board.GetCardsInSetsTable()[board.GetKeyFromPosition(card.OldPosition)];
-                //  print("Pushed to Board Stack " + card.ToString());
+                //card.OldPositionBeforeDrag = new CardPosition(card.Position.Row, card.Position.Column);
                 // push the card to the moves stack
                 board.AddCardToMovesStack(card);
             }

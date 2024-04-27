@@ -142,6 +142,7 @@ public class UImanager : MonoBehaviour
     }
     public void ConfirmMove()
     {
+
         if (board.GetMovesStack().Count == Constants.EmptyStack)//check if dropped cards are valid)
         {
             print("You Did not dropped any cards, tip: draw a card to skip this turn");
@@ -150,7 +151,8 @@ public class UImanager : MonoBehaviour
         {
             if (board.IsBoardValid())
             {
-                board.SaveGameState();
+                //save game state
+                board.boardBackup =new Board(board.board);
                 // If the board is valid, change the turn and clear the moves stack
                 gameController.ChangeTurn();
                 UpdateTurnText();
@@ -193,44 +195,7 @@ public class UImanager : MonoBehaviour
         });
     }
 
-    //Function to sort the Player grid by a given comparison
-    //private void SortPlayerGrid(Comparison<Card> comparison)
-    //{
-    //    GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
-    //    // Get all the tile slots
-    //    List<Transform> tileSlots = new List<Transform>();
-    //    foreach (Transform child in playerGrid.transform)
-    //    {
-    //        tileSlots.Add(child);
-    //    }
-    //    // Sort the cards in the tile slots
-    //    List<Card> cardsToSort = new List<Card>();
-    //    foreach (Transform tileSlot in tileSlots)
-    //    {
-    //        if (tileSlot.childCount > Constants.EmptyTileSlot)
-    //        {
-    //            Card card = tileSlot.GetChild(0).GetComponent<Card>();
-    //            cardsToSort.Add(card);
-    //            Destroy(tileSlot.GetChild(0).gameObject);
-    //        }
-    //    }
-    //    // Sort the cards
-    //    cardsToSort.Sort(comparison);
-    //    // Instantiate the cards in the tile slots
-    //    for (int i = 0; i < cardsToSort.Count; i++)
-    //    {
-    //        GameObject cardObject = Instantiate(PrefabTile);
-    //        cardObject.transform.SetParent(tileSlots[i]);
-    //        cardObject.transform.localPosition = Vector3.zero;
-    //        // Set the card's color and number
-    //        Card newCard = cardObject.GetComponent<Card>();
-    //        newCard.Color = cardsToSort[i].Color;
-    //        newCard.Number = cardsToSort[i].Number;
-    //        // Set the card's sprite
-    //        int index = CalculateIndexOfSprite(newCard);
-    //        cardObject.GetComponent<Image>().sprite = cardsUI[index];
-    //    }
-    //}
+  
 
     private void SortPlayerGrid(Comparison<Card> comparison)
     {
@@ -275,16 +240,17 @@ public class UImanager : MonoBehaviour
     }
 
 
-    public void MoveCardToBoard(Card card, int tileslot)
+    // Function to move a card from the player's hand to the board visually to a specific tile slot
+    public void MoveCardToBoard(Card card, int tileslot, bool isFromPlayerHand)
     {
         // get the tileslot location from board
-        print("this.board: " + this.board);
         GameObject tileSlot = this.board.transform.GetChild(tileslot).gameObject;
         //update value for proper undo function
-        card.CameFromPlayerHand = true;
+        card.CameFromPlayerHand = isFromPlayerHand;
         card.ParentBeforeDrag = card.transform.parent;
         // visual the card on the new postion
         card.transform.SetParent(tileSlot.transform);
     }
+
 }
 

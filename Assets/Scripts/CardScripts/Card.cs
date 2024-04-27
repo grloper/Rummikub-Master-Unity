@@ -10,7 +10,7 @@ public class Card : MonoBehaviour
     private CardPosition oldPosition; // Row and Column of the card before it was moved
     private bool cameFromPlayerHand; // True if the card was moved from the player hand to the board false if from board to board
     private Transform parentBeforeDrag; // The parent of the card before it was dragged so we can undo the drag if needed to the first postion and only to the last
-    private SetPosition setPositionBeforeDrag; // The set position of the card before it was dragged so we can undo the drag if needed to the first postion and only to the last
+    private CardPosition oldPositionBeforeDrag; // The set position of the card before it was dragged so we can undo the drag if needed to the first postion and only to the last
     // Gets and Sets
     public int Number { get => number; set => number = value; }
     public CardColor Color { get => color; set => color = value; }
@@ -18,7 +18,7 @@ public class Card : MonoBehaviour
     public CardPosition OldPosition { get => oldPosition; set => oldPosition = value; }
     public bool CameFromPlayerHand { get => cameFromPlayerHand; set => cameFromPlayerHand = value; }
     public Transform ParentBeforeDrag { get => parentBeforeDrag; set => parentBeforeDrag = value; }
-    public SetPosition SetPositionBeforeDrag { get => setPositionBeforeDrag; set => setPositionBeforeDrag = value; }
+    public CardPosition OldPositionBeforeDrag { get => oldPositionBeforeDrag; set => oldPositionBeforeDrag = value; }
     public Card()
     {
         // Default constructor

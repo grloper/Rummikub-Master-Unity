@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] protected GameBoard board;
     private GameObject PlayerGrid;
     [SerializeField] private PlayerType playerType;
-    [SerializeField]  protected List<Card> playerHand;
+    [SerializeField]  private List<Card> playerHand;
     protected bool initialMove;
 
     // act as a constructor for the player because we are using : MonoBehaviour
@@ -36,7 +36,7 @@ public class Player : MonoBehaviour
     }
     public bool IsComputer()
     {
-        return playerType == PlayerType.Computer;
+        return this.playerType == PlayerType.Computer;
     }
     // init board with 14 cards from the rummikub deck
     public void Init()
@@ -49,7 +49,7 @@ public class Player : MonoBehaviour
 
             // Draw a random card from the deck using RummikubDeck
             Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
-            playerHand.Add(randomCard);
+            AddCardToList(randomCard);
             if (randomCard == null)
             {
                 Debug.LogWarning("Unable to draw a card for the player's board.");
@@ -60,6 +60,7 @@ public class Player : MonoBehaviour
 
     }
 
+    // Set the visibility of the player board (true = visible, false = hidden)
     public void SetBoardVisiblity(bool isActive)
     {
         PlayerGrid.SetActive(isActive);
@@ -74,6 +75,7 @@ public class Player : MonoBehaviour
     {
         for (int i = 0; i < PlayerGrid.transform.childCount; i++)
         {
+            // Get the slot at the current index
             GameObject tileSlot = PlayerGrid.transform.GetChild(i).gameObject;
 
             // Check if the slot is empty
@@ -87,18 +89,22 @@ public class Player : MonoBehaviour
         return -1;
     }
 
+    // Add a card to the player's hand
     public void AddCardToList(Card card)
     {
-        playerHand.Add(card);
+        this.playerHand.Add(card);
+    }
+    // Check if the card is in the player's hand
+    public bool IsCardInList(Card card)
+    {
+        return this.playerHand.Contains(card);
     }
 
-    public void RemoveCardFromList(Card card)
+    public bool RemoveCardFromList(Card card)
     {
-        print("Before: card: "+card.ToString() );
-        PrintCards();
-        playerHand.Remove(card);
-        print("After");
-        PrintCards();
+        // Remove the card from the player's hand
+        // Return true if the card is removed successfully
+       return this.playerHand.Remove(card);
     }
     public void PrintCards()
     {
@@ -108,6 +114,9 @@ public class Player : MonoBehaviour
         }
     }
 
+    // Check if the player has an initial move (true = has initial move, false = no initial move)
+    // The initial move is true if the player dropped more than 30 points in the first move
+    // and now the player can drop any card and change the board
     public bool GetInitialMove()
     {
         return initialMove;
@@ -159,5 +168,9 @@ public class Player : MonoBehaviour
     public object GetPlayerType()
     {
         return playerType;
+    }
+    public void RemoveCardFromHand(Card card)
+    {
+        playerHand.Remove(card);
     }
 }
