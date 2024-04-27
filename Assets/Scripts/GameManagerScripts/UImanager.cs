@@ -143,7 +143,7 @@ public class UImanager : MonoBehaviour
     public void ConfirmMove()
     {
 
-        if (board.GetMovesStack().Count == Constants.EmptyStack)//check if dropped cards are valid)
+        if (board.GetMoveStackCountPlayer() == Constants.EmptyStack)//check if dropped cards are valid)
         {
             print("You Did not dropped any cards, tip: draw a card to skip this turn");
         }

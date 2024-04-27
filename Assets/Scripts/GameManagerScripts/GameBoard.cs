@@ -290,6 +290,16 @@ public class GameBoard : MonoBehaviour
         }
         return sum;
     }
+    public int GetMoveStackCountPlayer()
+    {
+        int sum = Constants.EmptyStack;
+                foreach (Card card in GetMovesStack())
+        {
+            if (card.CameFromPlayerHand)
+                sum ++;
+        }
+        return sum;
+    }
 
     // Return instance of rummikub deck
 
@@ -394,7 +404,9 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            await MoveCardFromPlayerHandToGameBoard(card);
+            if(!gameController.GetCurrentPlayer().IsCardInList(card))
+                throw new Exception("Card is not the player hand");
+             MoveCardFromPlayerHandToGameBoard(card);
         }
         print("*******************************************************After play card set on board*******************************************************");
         foreach (Card card in cardsSet.set)

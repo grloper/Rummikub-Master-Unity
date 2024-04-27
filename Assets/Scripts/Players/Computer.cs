@@ -19,7 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 2f;// 0.9f;
+    public float computerMoveDelay = 1f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -139,7 +139,7 @@ public class Computer : Player
         if (myPlayer.GetInitialMove())
         {
             //  MaximizePartialDrops();
-            //  await AssignFreeCardsToExistsSets();
+              //await AssignFreeCardsToExistsSets();
         }
         else
         {
