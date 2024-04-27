@@ -206,9 +206,9 @@ public class Computer : Player
                     {
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
-                        //  await this.gameBoard.RearrangeCardsSet(key, card, true);
-                        //  cardsToUpdateFromPlayer.Add(card);
-                        //  cardsToUpdateFromBoard.AddRange(set.set.ToList());
+                       //  this.gameBoard.RearrangeCardsSet(key, card, true);
+                        // // cardsToUpdateFromPlayer.Add(card);
+                         // cardsToUpdateFromBoard.AddRange(set.set.ToList());
 
                     }
 
@@ -235,9 +235,9 @@ public class Computer : Player
                     {
                         // if there is no space for the card then we need to rearrange the set
                         // forward false means that we need to add   the card to the beginning of the set
-                        //   await this.gameBoard.RearrangeCardsSet(key, card, false);
-                        //  cardsToUpdateFromPlayer.Add(card);
-                        // cardsToUpdateFromBoard.AddRange(set.set.ToList());
+                        // this.gameBoard.RearrangeCardsSet(key, card, false);
+                         //cardsToUpdateFromPlayer.Add(card);
+                         //cardsToUpdateFromBoard.AddRange(set.set.ToList());
                     }
                 }
             }

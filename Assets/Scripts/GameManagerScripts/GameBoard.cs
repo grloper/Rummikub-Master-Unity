@@ -430,7 +430,7 @@ public class GameBoard : MonoBehaviour
 
     // Play a card on the board at a specific tile slot and remove it from the player's hand, 
     // assume the play is from the player hand
-    internal async Task PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
+    public void PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
     {
         // assume already check no nehibors to combine my love
         uiManager.MoveCardToBoard(card, tileslot, true);
@@ -439,7 +439,7 @@ public class GameBoard : MonoBehaviour
     }
     // Rearrange the cards on the board with the given card to the end or the beginning of the set
     // while keeping the sets valid and the board rules with visual update
-    internal async Task RearrangeCardsSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
+    public void RearrangeCardsSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         CardsSet set = gameBoardValidSets[setPosition];

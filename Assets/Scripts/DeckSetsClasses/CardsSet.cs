@@ -300,43 +300,46 @@ public class CardsSet : ICardSet
     }
 
     // check if there is space for a card in the set without creating a combination between two sets
-    public bool IsSpaceForCard(bool isEnd, GameBoard gameBoard)
+       public bool IsSpaceForCard(bool isEnd, GameBoard gameBoard)
     {
         if (isEnd)
         {
-            // get the second tile slot to check if it is empty
             GameObject secondTileSlot = null;
-            // if the last card in the set is not in the last column
-            if (GetLastCard().Position.Column != Constants.MaxBoardColumns - 1 || GetLastCard().Position.Column != Constants.MaxBoardColumns - 2)
+            int lastCardColumn = GetLastCard().Position.Column;
+            if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
             {
-                // get the second tile slot
-                secondTileSlot = gameBoard.transform.GetChild(GetLastCard().Position.GetTileSlot() + 2).gameObject;
-                // 1,2,3, _, this
+                int tileSlotIndex = GetLastCard().Position.GetTileSlot() + 2;
+                if (tileSlotIndex < gameBoard.transform.childCount)
+                {
+                    secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
+                }
             }
-            // if the second tile slot is empty then add the card to the set
-            if (secondTileSlot != null &&
-             secondTileSlot.transform.childCount == Constants.EmptyTileSlot || // if the second tile slot is empty
-             GetLastCard().Position.Column == Constants.MaxBoardColumns - 2) // or if the card is one before the last column
+            if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
+            {
                 return true;
+            }
             return false;
         }
         else
         {
             GameObject secondTileSlot = null;
-            // if the first card in the set is not in the first column
-            if (GetFirstCard().Position.Column != 0 || GetFirstCard().Position.Column != 1)
+            int firstCardColumn = GetFirstCard().Position.Column;
+            if (firstCardColumn != 0 && firstCardColumn != 1)
             {
-                // get the second tile slot
-                secondTileSlot = gameBoard.transform.GetChild(GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3
+                int tileSlotIndex = GetFirstCard().Position.GetTileSlot() - 2;
+                if (tileSlotIndex >= 0)
+                {
+                    secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
+                }
             }
-            // if the second tile slot is empty then add the card to the set
-            if (secondTileSlot != null && 
-            secondTileSlot.transform.childCount == Constants.EmptyTileSlot || // if the second tile slot is empty
-            GetFirstCard().Position.Column == 1) // or if the card is one after the first column
+            if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
+            {
                 return true;
+            }
             return false;
         }
     }
+
 
 // End of CardsSet.cs
 }
