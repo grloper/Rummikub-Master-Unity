@@ -134,11 +134,21 @@ public class Computer : Player
 
     private async Task DoComputerMove()
     {
+        bool allowed = true;
         await MaximizeValidDrops();
-        //  MaximizePartialDrops();
-        added = false;
-      //  await AssignFreeCardsToExistsSets();
-        if (dropped || added)
+        if (myPlayer.GetInitialMove())
+        {
+            //  MaximizePartialDrops();
+            //  await AssignFreeCardsToExistsSets();
+        }
+        else
+        {
+            if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet)
+            {
+                allowed = false;
+            }
+        }
+        if ((dropped || added) && allowed)
         {
             uiManager.ConfirmMove();
         }
@@ -149,6 +159,7 @@ public class Computer : Player
     }
     private async Task AssignFreeCardsToExistsSets()
     {
+        this.added = false;
         // track the cards that need to be removed from the computer hand because 
         // cant remove them while iterating over the list
         List<Card> cardsToRemove = new List<Card>();

@@ -125,14 +125,13 @@ public class GameBoard : MonoBehaviour
         int cardIndex = oldSet.RemoveCard(card);
         if (oldSet.set.Count == 0)
         {
-            // If the old set is now empty, remove it
-            // Remove the set from the gameBoardValidSets dictionary
-            // O(1)
+            // If the old set is now empty, remove it. Remove the set from the gameBoardValidSets dictionary O(1)
             board.RemoveSetFromBothDic(key);
         }
         // If the card was removed from the middle of the set, split the set into two
         else
         {
+            // cardIndex = 0 means the card is the first card in the set, cardIndex = oldSet.set.Count means the card is the last card in the set else the card is in the middle of the set
             if (cardIndex > 0 && cardIndex < oldSet.set.Count)
             {
                 board.HandleMiddleSplit(card, oldSet, oldSetPos, cardIndex);
@@ -286,7 +285,8 @@ public class GameBoard : MonoBehaviour
         int sum = Constants.EmptyStack;
         foreach (Card card in GetMovesStack())
         {
-            sum += card.Number;
+            if (card.CameFromPlayerHand)
+                sum += card.Number;
         }
         return sum;
     }
@@ -297,7 +297,7 @@ public class GameBoard : MonoBehaviour
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
 
-        bool humanCheck = true; gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
+        bool humanCheck = gameController.GetCurrentPlayer().GetInitialMove(); // if the human has made the initial move
         if (GetMovesStackSum() >= Constants.MinFirstSet || humanCheck)
         {
             foreach (CardsSet cardsSet in gameBoardValidSets.Values)
