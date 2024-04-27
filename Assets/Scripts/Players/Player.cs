@@ -104,6 +104,8 @@ public class Player : MonoBehaviour
     {
         // Remove the card from the player's hand
         // Return true if the card is removed successfully
+        print("------------------------------­-Remove card from list------------------------------­-");
+        PrintCards();
        return this.playerHand.Remove(card);
     }
     public void PrintCards()
@@ -169,8 +171,5 @@ public class Player : MonoBehaviour
     {
         return playerType;
     }
-    public void RemoveCardFromHand(Card card)
-    {
-        playerHand.Remove(card);
-    }
+
 }

@@ -19,7 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 1f;// 0.9f;
+    public float computerMoveDelay = 0f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -35,7 +35,8 @@ public class Computer : Player
         {
             // order of sorted list: 1,2,3,3,1,2
             // if the same card appears
-            if (list[i].Equals(list[i - 1]))
+            if (list[i].Number==list[i - 1].Number &&
+                list[i].Color==list[i-1].Color)
             {
                 list.Add(list[i]);
                 list.Remove(list[i]);
@@ -67,7 +68,8 @@ public class Computer : Player
         currentSet.AddCardToEnd(list[0]);
         for (int i = 1; i < list.Count; i++)
         {
-            if (list[i].Equals(list[i - 1]))
+            if (list[i].Number==list[i - 1].Number &&
+                list[i].Color==list[i-1].Color)
             {
                 list.Add(list[i]);
                 list.Remove(list[i]);
@@ -93,7 +95,7 @@ public class Computer : Player
     }
 
 
-    public async Task MaximizeValidDrops()
+    public void MaximizeValidDrops()
     {
         this.dropped = false;
         List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand(), Constants.MinInRun, Constants.MaxInRun);
@@ -102,7 +104,7 @@ public class Computer : Player
             this.dropped = true;
             foreach (CardsSet set in setsRun)
             {
-                await gameBoard.PlayCardSetOnBoard(set);
+                 gameBoard.PlayCardSetOnBoard(set);
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand(), Constants.MinInGroup, Constants.MaxInGroup);
@@ -111,7 +113,7 @@ public class Computer : Player
             this.dropped = true;
             foreach (CardsSet set in setsGroup)
             {
-                await gameBoard.PlayCardSetOnBoard(set);
+                 gameBoard.PlayCardSetOnBoard(set);
             }
         }
 
@@ -132,14 +134,14 @@ public class Computer : Player
 
     }
 
-    private async Task DoComputerMove()
+    private void DoComputerMove()
     {
         bool allowed = true;
-        await MaximizeValidDrops();
+         MaximizeValidDrops();
         if (myPlayer.GetInitialMove())
         {
             //  MaximizePartialDrops();
-              //await AssignFreeCardsToExistsSets();
+             AssignFreeCardsToExistsSets();
         }
         else
         {
@@ -157,7 +159,7 @@ public class Computer : Player
             uiManager.DrawACardFromDeck();
         }
     }
-    private async Task AssignFreeCardsToExistsSets()
+    private void AssignFreeCardsToExistsSets()
     {
         this.added = false;
         // track the cards that need to be removed from the computer hand because 
@@ -198,7 +200,7 @@ public class Computer : Player
                         cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
-                        await gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
+                         gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
                     }
                     else
                     {
@@ -227,7 +229,7 @@ public class Computer : Player
                         cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
-                        await gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
+                         gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
                     }
                     else
                     {
@@ -244,11 +246,11 @@ public class Computer : Player
         // play the carsd that were added to the sets
         foreach (Card cardToUpdate in cardsToUpdateFromPlayer)
         {
-            await gameBoard.MoveCardFromPlayerHandToGameBoard(cardToUpdate, false);
+             gameBoard.MoveCardFromPlayerHandToGameBoard(cardToUpdate, false);
         }
         foreach (Card cardToUpdate in cardsToUpdateFromBoard)
         {
-            await gameBoard.MoveCardFromGameBoardToGameBoard(cardToUpdate);
+             gameBoard.MoveCardFromGameBoardToGameBoard(cardToUpdate);
         }
         // remove the cards that were added to the sets
         foreach (Card card in cardsToRemove)

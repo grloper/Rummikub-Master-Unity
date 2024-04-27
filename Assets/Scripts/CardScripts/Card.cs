@@ -41,16 +41,35 @@ public class Card : MonoBehaviour
         // Return a string representation of the card
         return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color>("+((position.Row*100)+position.Column)+")";// + position.Row + " X:" + position.Column;
     }
-    public override bool Equals(object obj)
+    public override bool Equals(object other)
     {
-        if (obj == null || GetType() != obj.GetType())
+        // Check for reference equality
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        else
         {
             return false;
         }
 
-        Card otherCard = (Card)obj;
-        return number == otherCard.number && color == otherCard.color;
+      
     }
+    //hash code
+    public override int GetHashCode()
+{
+    unchecked // Overflow is fine, just wrap
+    {
+        int hash = 17;
+        hash = hash * 31 + number.GetHashCode();
+        hash = hash * 31 + color.GetHashCode();
+        hash = hash * 31 + Position.GetHashCode();
+        hash = hash * 31 + OldPosition.GetHashCode();
+        return hash;
+    }
+}
+
+
 
 
 }

@@ -307,7 +307,7 @@ public class CardsSet : ICardSet
             // get the second tile slot to check if it is empty
             GameObject secondTileSlot = null;
             // if the last card in the set is not in the last column
-            if (GetLastCard().Position.Column != Constants.MaxBoardColumns - 1)
+            if (GetLastCard().Position.Column != Constants.MaxBoardColumns - 1 || GetLastCard().Position.Column != Constants.MaxBoardColumns - 2)
             {
                 // get the second tile slot
                 secondTileSlot = gameBoard.transform.GetChild(GetLastCard().Position.GetTileSlot() + 2).gameObject;
@@ -324,7 +324,7 @@ public class CardsSet : ICardSet
         {
             GameObject secondTileSlot = null;
             // if the first card in the set is not in the first column
-            if (GetFirstCard().Position.Column != 0)
+            if (GetFirstCard().Position.Column != 0 || GetFirstCard().Position.Column != 1)
             {
                 // get the second tile slot
                 secondTileSlot = gameBoard.transform.GetChild(GetFirstCard().Position.GetTileSlot() - 2).gameObject; // this, _ ,1,2,3

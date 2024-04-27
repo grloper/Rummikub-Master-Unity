@@ -115,7 +115,7 @@ public class GameBoard : MonoBehaviour
 
 
     // Handle the movement of a card from the game board to the game board
-    public async Task MoveCardFromGameBoardToGameBoard(Card card)
+    public void MoveCardFromGameBoardToGameBoard(Card card)
     {
         // Remove the card from its current set
         SetPosition oldSetPos = board.FindCardSetPosition(card);
@@ -143,20 +143,20 @@ public class GameBoard : MonoBehaviour
         }
         // If the old set is now empty, remove it
         // Add the card to its new position
-        await PutInSet(card);
+         PutInSet(card);
     }
 
-    public async Task MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
+    public void MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
     {
         if (canRemove)
         {
             gameController.GetCurrentPlayer().RemoveCardFromList(card);
         }
-        await PutInSet(card);
+         PutInSet(card);
     }
 
 
-    public async Task MoveCardFromGameBoardToPlayerHand(Card card)
+    public void MoveCardFromGameBoardToPlayerHand(Card card)
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
@@ -210,7 +210,7 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    public async Task PutInSet(Card card)
+    public void PutInSet(Card card)
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
@@ -380,23 +380,23 @@ public class GameBoard : MonoBehaviour
         return -1;
     }
 
-    internal async Task PlayCardSetOnBoard(CardsSet cardsSet)
+    public void PlayCardSetOnBoard(CardsSet cardsSet)
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + 1);
         tileslot++;
         foreach (Card card in cardsSet.set)
         {
-            if (gameController.GetCurrentPlayer().IsCardInList(card))
-            {
-                //print in green Card in the player hand
-                print("<color=Green>Card in the player hand: " + card.ToString() + "</color>");
-            }
-            else
-            {
-                // print in red
-                print("<color=Red>Card not in the player hand: " + card.ToString() + "</color>");
+            // if (gameController.GetCurrentPlayer().IsCardInList(card))
+            // {
+            //     //print in green Card in the player hand
+            //     print("<color=Green>Card in the player hand: " + card.ToString() + "</color>");
+            // }
+            // else
+            // {
+            //     // print in red
+            //     print("<color=Red>Card not in the player hand: " + card.ToString() + "</color>");
 
-            }
+            // }
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
             uiManager.MoveCardToBoard(card, tileslot, true);
@@ -408,21 +408,21 @@ public class GameBoard : MonoBehaviour
                 throw new Exception("Card is not the player hand");
              MoveCardFromPlayerHandToGameBoard(card);
         }
-        print("*******************************************************After play card set on board*******************************************************");
-        foreach (Card card in cardsSet.set)
-        {
-            if (gameController.GetCurrentPlayer().IsCardInList(card))
-            {
-                //print in green Card in the player hand
-                print("<color=Red>Card in the player hand: " + card.ToString() + "</color>");
-            }
-            else
-            {
-                // print in green
-                print("<color=Green>Card not in the player hand: " + card.ToString() + "</color>");
+        // // print("*******************************************************After play card set on board*******************************************************");
+        // // foreach (Card card in cardsSet.set)
+        // // {
+        // //     if (gameController.GetCurrentPlayer().IsCardInList(card))
+        // //     {
+        // //         //print in green Card in the player hand
+        // //        //  throw new Exception ("<color=Red>Card in the player hand: " + card.ToString() + "</color>");
+        // //     }
+        // //     else
+        // //     {
+        // //         // print in green
+        // //         print("<color=Green>Card not in the player hand: " + card.ToString() + "</color>");
 
-            }
-        }
+        // //     }
+        // }
 
         gameController.GetCurrentPlayer().PrintCards();
 
@@ -435,7 +435,7 @@ public class GameBoard : MonoBehaviour
         // assume already check no nehibors to combine my love
         uiManager.MoveCardToBoard(card, tileslot, true);
         AddCardToMovesStack(card);
-        await MoveCardFromPlayerHandToGameBoard(card, canRemove);
+        MoveCardFromPlayerHandToGameBoard(card, canRemove);
     }
     // Rearrange the cards on the board with the given card to the end or the beginning of the set
     // while keeping the sets valid and the board rules with visual update
