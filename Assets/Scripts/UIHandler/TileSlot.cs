@@ -69,7 +69,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             // movement inside human grid
             card.Position = new CardPosition(GetRowIndexHuman(), GetColumnIndexHuman());
-             Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
+            Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
         }
     }
 
@@ -97,7 +97,8 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 card.CameFromPlayerHand = false;
                 // save the parent before drag in case of moving multiple times the same card in the board
                 card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
-                card.OldPositionBeforeDrag = card.Position;
+                print("Saved Card Position: " + card.OldPosition.Row + " " + card.OldPosition.Column + " Before Drag");
+                card.OldPositionBeforeDrag = card.OldPosition;
                 // push the card to the moves stack
                 board.AddCardToMovesStack(card);
             }

@@ -319,9 +319,7 @@ public class GameBoard : MonoBehaviour
         // Update the initial move for the player - means he dropped sets with more than 30 points
         if (!gameController.GetCurrentPlayer().GetInitialMove())
             gameController.GetCurrentPlayer().SetInitialMove(true);
-
     }
-
 
     // Check if a set of cards is valid (either run or either group)
     private bool IsSetValid(CardsSet cardsSet)

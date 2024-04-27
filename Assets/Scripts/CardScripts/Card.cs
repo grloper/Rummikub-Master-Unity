@@ -16,6 +16,8 @@ public class Card : MonoBehaviour
     public CardColor Color { get => color; set => color = value; }
     public CardPosition Position { get => position; set => position = value; }
     public CardPosition OldPosition { get => oldPosition; set => oldPosition = value; }
+   
+    // Undo Parameters and for logics.
     public bool CameFromPlayerHand { get => cameFromPlayerHand; set => cameFromPlayerHand = value; }
     public Transform ParentBeforeDrag { get => parentBeforeDrag; set => parentBeforeDrag = value; }
     public CardPosition OldPositionBeforeDrag { get => oldPositionBeforeDrag; set => oldPositionBeforeDrag = value; }
