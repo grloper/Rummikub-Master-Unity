@@ -20,7 +20,7 @@ public class Computer : Player
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
     private List<Card> computerHand;
-    public float computerMoveDelay = 2f;// 0.9f;
+    public float computerMoveDelay = 1f;// 0.9f;
     // Player reference
     private Player myPlayer;
     private bool added;
@@ -138,6 +138,7 @@ public class Computer : Player
     {
         this.computerHand = myPlayer.GetPlayerHand();
         await MaximizeValidDrops();
+        this.computerHand = myPlayer.GetPlayerHand();
         //  MaximizePartialDrops();
         added = false;
         await AssignFreeCardsToExistsSets();
@@ -224,7 +225,7 @@ public class Computer : Player
                     else
                     {
                         // if there is no space for the card then we need to rearrange the set
-                        // forward false means that we need to add the card to the beginning of the set
+                        // forward false means that we need to add   the card to the beginning of the set
                         //   await this.gameBoard.RearrangeCardsSet(key, card, false);
                         //  cardsToUpdateFromPlayer.Add(card);
                         // cardsToUpdateFromBoard.AddRange(set.set.ToList());
@@ -280,7 +281,7 @@ public class Computer : Player
     // Sort the cards by run 
     public void SortByRun()
     {
-        computerHand.Sort((card1, card2) =>
+        myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {
             if (card1.Color == card2.Color)
                 return card1.Number.CompareTo(card2.Number);
