@@ -17,7 +17,7 @@ public class Board
     private int SetCount;
     public Dictionary<int, SetPosition> GetCardsToSetsTable() => this.cardToSetPos;
     public Dictionary<SetPosition, CardsSet> GetGameBoardValidSetsTable() => this.gameBoardValidSets;
-    public int GetSetCountAndInc() 
+    public int GetSetCountAndInc()
     {
         return this.SetCount++;
     }
@@ -113,7 +113,8 @@ public class Board
             this.cardToSetPos.Remove(GetKeyFromPosition(card.OldPosition));
             // add the new set to the cardToSetPos dictionary
             this.cardToSetPos[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
-        }else
+        }
+        else
         {
             throw new Exception("The card is not the first or the last card in the set");
         }

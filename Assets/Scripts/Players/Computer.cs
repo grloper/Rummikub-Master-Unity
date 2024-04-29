@@ -162,7 +162,7 @@ public class Computer : Player
     /// <summary>
     /// Assigns free cards to existing sets on the game board, rearrange visualy if needed.
     /// </summary>
-     private void AssignFreeCardsToExistsSets()
+    private void AssignFreeCardsToExistsSets()
     {
         this.added = false;
         // track the cards that need to be removed from the computer hand because 
@@ -207,7 +207,7 @@ public class Computer : Player
                     }
                     else
                     {
-                        print("No Space for: " + card.ToString()+" in set: "+set.ToString());
+                        print("No Space for: " + card.ToString() + " in set: " + set.ToString());
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
                         // this.gameBoard.RearrangeCardsSet(key, card, true);
@@ -216,7 +216,7 @@ public class Computer : Player
                     }
 
                 }
-                else if ( set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
+                else if (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
                 {
                     // found = true; // break the loop
                     // this.added = true;
@@ -238,7 +238,7 @@ public class Computer : Player
                     }
                     else
                     {
-                        print("No Space for: " + card.ToString()+" in set: "+set.ToString());
+                        print("No Space for: " + card.ToString() + " in set: " + set.ToString());
                         // if there is no space for the card then we need to rearrange the set
                         // forward false means that we need to add   the card to the beginning of the set
                         // this.gameBoard.RearrangeCardsSet(key, card, false);
@@ -246,9 +246,9 @@ public class Computer : Player
                         // cardsToUpdateFromBoard.AddRange(set.set);
                     }
                 }
-                else if(set.CanAddCardMiddleRun(card))
+                else if (set.CanAddCardMiddleRun(card))
                 {
-                    
+                    found = true;
                 }
             }
 
@@ -276,7 +276,7 @@ public class Computer : Player
     /// <summary>
     /// Sorts the player's hand by grouping cards with the same number together and different colors (duplicates beside each other).
     /// </summary>
-     public void SortByGroup()
+    public void SortByGroup()
     {
         myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {
@@ -291,7 +291,7 @@ public class Computer : Player
     /// <summary>
     /// Sorts the player's hand by grouping cards with the same color together and different numbers (duplicates beside each other).
     /// </summary>
-     public void SortByRun()
+    public void SortByRun()
     {
         myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {

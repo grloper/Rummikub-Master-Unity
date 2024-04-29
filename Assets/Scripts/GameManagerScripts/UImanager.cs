@@ -137,8 +137,8 @@ public class UImanager : MonoBehaviour
     }
     public void BtnConfirmMoveClick()
     {
-        if(gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
-              ConfirmMove();
+        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+            ConfirmMove();
     }
     public void ConfirmMove()
     {
@@ -152,7 +152,7 @@ public class UImanager : MonoBehaviour
             if (board.IsBoardValid())
             {
                 //save game state
-                board.boardBackup =new Board(board.board);
+                board.boardBackup = new Board(board.board);
                 // If the board is valid, change the turn and clear the moves stack
                 gameController.ChangeTurn();
                 UpdateTurnText();
@@ -195,7 +195,7 @@ public class UImanager : MonoBehaviour
         });
     }
 
-  
+
 
     private void SortPlayerGrid(Comparison<Card> comparison)
     {

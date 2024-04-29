@@ -144,7 +144,7 @@ public class GameBoard : MonoBehaviour
         }
         // If the old set is now empty, remove it
         // Add the card to its new position
-         PutInSet(card);
+        PutInSet(card);
     }
 
     public void MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
@@ -153,7 +153,7 @@ public class GameBoard : MonoBehaviour
         {
             gameController.GetCurrentPlayer().RemoveCardFromList(card);
         }
-         PutInSet(card);
+        PutInSet(card);
     }
 
 
@@ -294,10 +294,10 @@ public class GameBoard : MonoBehaviour
     public int GetMoveStackCountPlayer()
     {
         int sum = Constants.EmptyStack;
-                foreach (Card card in GetMovesStack())
+        foreach (Card card in GetMovesStack())
         {
             if (card.CameFromPlayerHand)
-                sum ++;
+                sum++;
         }
         return sum;
     }
@@ -398,7 +398,7 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-             MoveCardFromPlayerHandToGameBoard(card);
+            MoveCardFromPlayerHandToGameBoard(card);
         }
 
         gameController.GetCurrentPlayer().PrintCards();

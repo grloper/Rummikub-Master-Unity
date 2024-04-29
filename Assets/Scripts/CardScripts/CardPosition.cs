@@ -37,13 +37,13 @@ public class CardPosition
     public int Row { get; set; }
     public int Column { get; set; }
 
- // to string for row and col
+    // to string for row and col
     public override string ToString()
     {
         return "Row: " + Row + " Column: " + Column;
     }
 
     // Equals method
-  
+
 
 }

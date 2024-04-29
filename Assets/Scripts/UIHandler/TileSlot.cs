@@ -102,7 +102,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 board.AddCardToMovesStack(card);
             }
             //update the position of the card in the game board
-             board.MoveCardFromGameBoardToGameBoard(card);
+            board.MoveCardFromGameBoardToGameBoard(card);
         }
     }
 

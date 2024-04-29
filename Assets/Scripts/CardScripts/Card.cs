@@ -29,7 +29,6 @@ public class Card : MonoBehaviour
     // Constructor that takes two arguments
     public Card(int number, CardColor color)
     {
-
         this.number = number;
         this.color = color;
         OldPosition = new CardPosition();

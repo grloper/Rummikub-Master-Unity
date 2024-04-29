@@ -54,7 +54,8 @@ public class GameController : MonoBehaviour
                 }
                 playersList.Add(player);
                 GameObject playerGrid = uiManager.InstantiatePlayerGrid();
-                player.SetPlayer(playerGrid);}
+                player.SetPlayer(playerGrid);
+            }
             else
             {
                 throw new System.Exception("Player object does not have a Player component!");
@@ -71,7 +72,7 @@ public class GameController : MonoBehaviour
         CheckIfComputerTurn();
     }
 
- 
+
     public Player GetCurrentPlayer()
     {
         return playersList[currentTurn];
@@ -83,11 +84,11 @@ public class GameController : MonoBehaviour
     }
 
     public void CheckWin()
-    {   
-        if(playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
+    {
+        if (playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
         {
             //gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
-            Debug.Log("******************************************************Player "+GetCurrentPlayer().GetPlayerType().ToString()+(GetCurrentPlayerIndex() + 1)+" wins******************************************************");
+            Debug.Log("******************************************************Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins******************************************************");
             //uiManager.ShowWinScreen(playersList[currentTurn].GetPlayerName());
         }
 

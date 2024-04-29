@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] protected GameBoard board;
     private GameObject PlayerGrid;
     [SerializeField] private PlayerType playerType;
-    [SerializeField]  private List<Card> playerHand;
+    [SerializeField] private List<Card> playerHand;
     protected bool initialMove;
 
     // act as a constructor for the player because we are using : MonoBehaviour
@@ -106,7 +106,7 @@ public class Player : MonoBehaviour
         // Return true if the card is removed successfully
         print("------------------------------­-Remove card from list------------------------------­-");
         PrintCards();
-       return this.playerHand.Remove(card);
+        return this.playerHand.Remove(card);
     }
     public void PrintCards()
     {
@@ -122,15 +122,15 @@ public class Player : MonoBehaviour
     public bool GetInitialMove()
     {
         return initialMove;
-    
+
     }
 
     public void SetInitialMove(bool initialMove)
     {
         this.initialMove = initialMove;
     }
- 
-   public void DrawCardFromDeck()
+
+    public void DrawCardFromDeck()
     {
         // Get the index of the first empty slot
         int emptySlotIndex = GetEmptySlotIndex();
@@ -139,7 +139,7 @@ public class Player : MonoBehaviour
         {
             try
             {
-                GameObject tileSlot =PlayerGrid.transform.GetChild(emptySlotIndex).gameObject;
+                GameObject tileSlot = PlayerGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
                 Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
                 playerHand.Add(randomCard);
@@ -158,8 +158,8 @@ public class Player : MonoBehaviour
 
     public bool IsDeckEmpty()
     {
-        return this.playerHand.Count==Constants.EmptyDeck;
-    
+        return this.playerHand.Count == Constants.EmptyDeck;
+
     }
 
     public List<Card> GetPlayerHand()
