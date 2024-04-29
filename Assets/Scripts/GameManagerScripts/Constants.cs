@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Constants 
+public class Constants
 {
 
     // Global constants
@@ -41,5 +41,9 @@ public class Constants
     public const int MaxPartialSet = 2;
     public const int EmptyPartialSet = 0;
     public const int SingleCardInPartialSet = 1;
+    // appending card in the middle constants
+    public const int MinSetLengthForMiddleRun = 5;
+    public const int CardsToCheckForMiddleRun = 4;
+    public const int MiddleRunOffset = -2;
 
 }

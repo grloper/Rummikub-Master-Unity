@@ -20,7 +20,7 @@ public class CardsSet : ICardSet
         set = new LinkedList<Card>();
         isRun = false;
         isGroupOfColors = false;
-     
+
     }
     // Constructor for a set of cards with a single card in it uses the default constructor
     public CardsSet(Card card) : this()
@@ -28,7 +28,7 @@ public class CardsSet : ICardSet
         set.AddFirst(card);
 
     }
-    public CardsSet(CardsSet cardsSet) 
+    public CardsSet(CardsSet cardsSet)
     {
         set = new LinkedList<Card>();
         foreach (Card card in cardsSet.set)
@@ -38,7 +38,7 @@ public class CardsSet : ICardSet
         isRun = cardsSet.isRun;
         isGroupOfColors = cardsSet.isGroupOfColors;
     }
-    
+
     public int GetDeckLength()
     {
         return set.Count;
@@ -261,10 +261,14 @@ public class CardsSet : ICardSet
 
     }
 
+    // check if a card can be added to the end of the set to create a run 
+    // O(n) when n is the number of cards in the set
     public bool CanAddCardEndRun(Card card)
     {
+        //add the card to the set O(1)
         AddCardToEnd(card);
         bool check = this.IsRun();
+        //remove the card from the set O(1)
         this.set.RemoveLast();
         return check;
     }
@@ -285,61 +289,84 @@ public class CardsSet : ICardSet
         return check;
     }
 
-    // Remove a card from the set at a certain index and return the card
-    // O(n) when n is the number of cards in the set
-    public Card RemoveCardAt(int index)
+    public bool CanAddCardMiddleRun(Card card)
     {
-        LinkedListNode<Card> node = set.First;
-        for (int i = 0; i < index; i++)
+        // Check if the set is long enough and the card has the same color O(1)
+        if (set.Count < Constants.MinSetLengthForMiddleRun || card.Color != set.First.Value.Color)
         {
-            node = node.Next;
+            return false;
         }
-
-        set.Remove(node);
-        return node.Value;
+        // Check if the card can be added to the middle of the set O(n) where n is the number of cards in the set - Constants.CardsToCheckForMiddleRun which max could be 13-5=8 O(8) = O(1)
+        LinkedListNode<Card> node = set.Last;
+        for (int i = 0; i < set.Count - Constants.CardsToCheckForMiddleRun; i++)
+        {
+            if (card.Number == node.Value.Number + Constants.MiddleRunOffset)
+            {
+                return true;
+            }
+            node = node.Previous;
+        }
+        return false;
     }
 
-    // check if there is space for a card in the set without creating a combination between two sets
-       public bool IsSpaceForCard(bool isEnd, GameBoard gameBoard)
+
+
+    /// <summary>
+    /// Checks if there is space for a card in the specified position on the game board.
+    /// </summary>
+    /// <param name="isEnd">Indicates whether the card is being placed at the end of the set or at the beginning.</param>
+    /// <param name="gameBoard">The game board object.</param>
+    /// <returns>True if there is space for a card, false otherwise.</returns>
+    public bool IsSpaceForCard(bool isEnd, GameBoard gameBoard)
     {
         if (isEnd)
         {
-            GameObject secondTileSlot = null;
-            int lastCardColumn = GetLastCard().Position.Column;
-            if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
-            {
-                int tileSlotIndex = GetLastCard().Position.GetTileSlot() + 2;
-                if (tileSlotIndex < gameBoard.transform.childCount)
-                {
-                    secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
-                }
-            }
-            if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
-            {
-                return true;
-            }
-            return false;
+            return IsSpaceForCardAtEnd(gameBoard);
         }
         else
         {
-            GameObject secondTileSlot = null;
-            int firstCardColumn = GetFirstCard().Position.Column;
-            if (firstCardColumn != 0 && firstCardColumn != 1)
-            {
-                int tileSlotIndex = GetFirstCard().Position.GetTileSlot() - 2;
-                if (tileSlotIndex >= 0)
-                {
-                    secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
-                }
-            }
-            if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
-            {
-                return true;
-            }
-            return false;
+            return IsSpaceForCardAtBeginning(gameBoard);
         }
     }
 
+    private bool IsSpaceForCardAtEnd(GameBoard gameBoard)
+    {
+        GameObject secondTileSlot = null;
+        int lastCardColumn = GetLastCard().Position.Column;
+        if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
+        {
+            int tileSlotIndex = GetLastCard().Position.GetTileSlot() + 2;
+            if (tileSlotIndex < gameBoard.transform.childCount)
+            {
+                secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
+            }
+        }
+        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
+        {
+            return true;
+        }
+        return false;
+    }
 
-// End of CardsSet.cs
+    private bool IsSpaceForCardAtBeginning(GameBoard gameBoard)
+    {
+        GameObject secondTileSlot = null;
+        int firstCardColumn = GetFirstCard().Position.Column;
+        if (firstCardColumn != 0 && firstCardColumn != 1)
+        {
+            int tileSlotIndex = GetFirstCard().Position.GetTileSlot() - 2;
+            if (tileSlotIndex >= 0)
+            {
+                secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
+            }
+        }
+        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    // End of CardsSet.cs
 }

@@ -114,6 +114,7 @@ public class GameBoard : MonoBehaviour
 
 
 
+    // O(n) where n is the number of cards in the set instead of O(n^2) in the previous implementation where n is the number of sets on the board multiply the sum of the cards in all the sets List<Card>[] sets, iteration only on some row
     // Handle the movement of a card from the game board to the game board
     public void MoveCardFromGameBoardToGameBoard(Card card)
     {
@@ -340,18 +341,20 @@ public class GameBoard : MonoBehaviour
 
     // complexity O(n)
 
+    // Get the index of the first empty slot in the game board that can hold 'amount' cards
     public int GetEmptySlotIndexFromGameBoard(int amount)
     {
-        GameObject BoardGrid = GameObject.FindGameObjectWithTag("BoardGrid");
-
+        GameObject boardGrid = GameObject.FindGameObjectWithTag("BoardGrid");
         int rowCount = Constants.MaxBoardRows;
         int colCount = Constants.MaxBoardColumns;
-        int[] emptySlotsCount = new int[rowCount]; // Array to store the count of consecutive empty slots on each row
+        // Array to keep track of the number of consecutive empty slots on the same row
+        int[] emptySlotsCount = new int[rowCount];
 
-        // Iterate through the board and count consecutive empty slots on each row
-        for (int i = 0; i < BoardGrid.transform.childCount; i++)
+        // Iterate over the slots in the board grid, which is a 2D grid of slots represented as a 1D array max is: 8*29 = 232
+        for (int i = 0; i < boardGrid.transform.childCount; i++)
         {
-            GameObject currentSlot = BoardGrid.transform.GetChild(i).gameObject;
+            GameObject currentSlot = boardGrid.transform.GetChild(i).gameObject;
+            // get the current row
             int row = i / colCount;
 
             // Check if the slot is empty
@@ -359,9 +362,10 @@ public class GameBoard : MonoBehaviour
             {
                 emptySlotsCount[row]++;
                 // Check if we have found 'amount' consecutive empty slots on the same row
-                if (emptySlotsCount[row] == amount + 1 && (i - amount) % Constants.MaxBoardColumns == 0)
+                if (emptySlotsCount[row] == amount + 1 &&
+                 (i - amount) % Constants.MaxBoardColumns == 0) // check if the sequence is not broken by the end of the row
                 {
-                    return i - amount;
+                    return i - amount; // Calculate the index of the first slot in the sequence
                 }
                 else if (emptySlotsCount[row] == amount + 1)
                 {
@@ -386,17 +390,7 @@ public class GameBoard : MonoBehaviour
         tileslot++;
         foreach (Card card in cardsSet.set)
         {
-            // if (gameController.GetCurrentPlayer().IsCardInList(card))
-            // {
-            //     //print in green Card in the player hand
-            //     print("<color=Green>Card in the player hand: " + card.ToString() + "</color>");
-            // }
-            // else
-            // {
-            //     // print in red
-            //     print("<color=Red>Card not in the player hand: " + card.ToString() + "</color>");
 
-            // }
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
             uiManager.MoveCardToBoard(card, tileslot, true);
@@ -404,25 +398,8 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            if(!gameController.GetCurrentPlayer().IsCardInList(card))
-                throw new Exception("Card is not the player hand");
              MoveCardFromPlayerHandToGameBoard(card);
         }
-        // // print("*******************************************************After play card set on board*******************************************************");
-        // // foreach (Card card in cardsSet.set)
-        // // {
-        // //     if (gameController.GetCurrentPlayer().IsCardInList(card))
-        // //     {
-        // //         //print in green Card in the player hand
-        // //        //  throw new Exception ("<color=Red>Card in the player hand: " + card.ToString() + "</color>");
-        // //     }
-        // //     else
-        // //     {
-        // //         // print in green
-        // //         print("<color=Green>Card not in the player hand: " + card.ToString() + "</color>");
-
-        // //     }
-        // }
 
         gameController.GetCurrentPlayer().PrintCards();
 

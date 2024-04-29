@@ -20,8 +20,7 @@ public class RummikubDeck
                 deck.Add(c2);
                 Card c= new Card(i, (CardColor)j);
                 deck.Add(c); // Adding a second set
-                if(c.Equals(c2))
-                    Debug.Log("Equals");
+               
             }
         }
 

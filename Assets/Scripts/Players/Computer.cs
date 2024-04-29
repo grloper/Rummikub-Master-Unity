@@ -35,8 +35,8 @@ public class Computer : Player
         {
             // order of sorted list: 1,2,3,3,1,2
             // if the same card appears
-            if (list[i].Number==list[i - 1].Number &&
-                list[i].Color==list[i-1].Color)
+            if (list[i].Number == list[i - 1].Number &&
+                list[i].Color == list[i - 1].Color)
             {
                 list.Add(list[i]);
                 list.Remove(list[i]);
@@ -68,8 +68,8 @@ public class Computer : Player
         currentSet.AddCardToEnd(list[0]);
         for (int i = 1; i < list.Count; i++)
         {
-            if (list[i].Number==list[i - 1].Number &&
-                list[i].Color==list[i-1].Color)
+            if (list[i].Number == list[i - 1].Number &&
+                list[i].Color == list[i - 1].Color)
             {
                 list.Add(list[i]);
                 list.Remove(list[i]);
@@ -104,7 +104,7 @@ public class Computer : Player
             this.dropped = true;
             foreach (CardsSet set in setsRun)
             {
-                 gameBoard.PlayCardSetOnBoard(set);
+                gameBoard.PlayCardSetOnBoard(set);
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand(), Constants.MinInGroup, Constants.MaxInGroup);
@@ -113,7 +113,7 @@ public class Computer : Player
             this.dropped = true;
             foreach (CardsSet set in setsGroup)
             {
-                 gameBoard.PlayCardSetOnBoard(set);
+                gameBoard.PlayCardSetOnBoard(set);
             }
         }
 
@@ -137,11 +137,11 @@ public class Computer : Player
     private void DoComputerMove()
     {
         bool allowed = true;
-         MaximizeValidDrops();
+        MaximizeValidDrops();
         if (myPlayer.GetInitialMove())
         {
             //  MaximizePartialDrops();
-             AssignFreeCardsToExistsSets();
+            AssignFreeCardsToExistsSets();
         }
         else
         {
@@ -159,7 +159,10 @@ public class Computer : Player
             uiManager.DrawACardFromDeck();
         }
     }
-    private void AssignFreeCardsToExistsSets()
+    /// <summary>
+    /// Assigns free cards to existing sets on the game board, rearrange visualy if needed.
+    /// </summary>
+     private void AssignFreeCardsToExistsSets()
     {
         this.added = false;
         // track the cards that need to be removed from the computer hand because 
@@ -187,37 +190,37 @@ public class Computer : Player
                 // if we keeping a set valid then we need to update the keys in the dictionary and add the card
                 if (set.CanAddCardEndRun(card) || set.CanAddCardEndGroup(card))
                 {
-                    // found = true;
-                    // added = true;
+                    // found = true; // break the loop
+                    // this.added = true;
                     // cardsToRemove.Add(card);
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward true means that we need to add the card to the end of the set
                     if (set.IsSpaceForCard(true, gameBoard))
                     {
-                        found = true;
-                        added = true;
+                        found = true; // break the loop
+                        this.added = true;
                         cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
-                         gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
+                        gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
                     }
                     else
                     {
+                        print("No Space for: " + card.ToString()+" in set: "+set.ToString());
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
-                       //  this.gameBoard.RearrangeCardsSet(key, card, true);
-                        // // cardsToUpdateFromPlayer.Add(card);
-                         // cardsToUpdateFromBoard.AddRange(set.set.ToList());
-
+                        // this.gameBoard.RearrangeCardsSet(key, card, true);
+                        // cardsToUpdateFromPlayer.Add(card);
+                        // cardsToUpdateFromBoard.AddRange(set.set);
                     }
 
                 }
-                else if (!found && (set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card)))
+                else if ( set.CanAddCardBegginingRun(card) || set.CanAddCardBegginingGroup(card))
                 {
-                    //  found = true;
-                    // added = true;
-                    //cardsToRemove.Add(card);\
+                    // found = true; // break the loop
+                    // this.added = true;
+                    // cardsToRemove.Add(card);
 
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
@@ -225,32 +228,40 @@ public class Computer : Player
                     if (set.IsSpaceForCard(false, gameBoard))
                     {
                         found = true;
-                        added = true;
+                        this.added = true;
                         cardsToRemove.Add(card);
+                        //save the old position of the card
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
-                         gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
+                        //play the card on the new position
+                        gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() - 1, false);
                     }
                     else
                     {
+                        print("No Space for: " + card.ToString()+" in set: "+set.ToString());
                         // if there is no space for the card then we need to rearrange the set
                         // forward false means that we need to add   the card to the beginning of the set
                         // this.gameBoard.RearrangeCardsSet(key, card, false);
-                         //cardsToUpdateFromPlayer.Add(card);
-                         //cardsToUpdateFromBoard.AddRange(set.set.ToList());
+                        // cardsToUpdateFromPlayer.Add(card);
+                        // cardsToUpdateFromBoard.AddRange(set.set);
                     }
+                }
+                else if(set.CanAddCardMiddleRun(card))
+                {
+                    
                 }
             }
 
         }
-        // play the carsd that were added to the sets
-        foreach (Card cardToUpdate in cardsToUpdateFromPlayer)
-        {
-             gameBoard.MoveCardFromPlayerHandToGameBoard(cardToUpdate, false);
-        }
+
         foreach (Card cardToUpdate in cardsToUpdateFromBoard)
         {
-             gameBoard.MoveCardFromGameBoardToGameBoard(cardToUpdate);
+            gameBoard.MoveCardFromGameBoardToGameBoard(cardToUpdate);
+        }
+        // play the cards that were added to the sets
+        foreach (Card cardToUpdate in cardsToUpdateFromPlayer)
+        {
+            gameBoard.MoveCardFromPlayerHandToGameBoard(cardToUpdate, false);
         }
         // remove the cards that were added to the sets
         foreach (Card card in cardsToRemove)
@@ -259,36 +270,28 @@ public class Computer : Player
             myPlayer.RemoveCardFromList(card);
         }
 
-
-    }
-
-
-
-    public void PrintCards()
-    {
-        print("------------------------------------------Set:------------------------------------------");
-        foreach (Card card in myPlayer.GetPlayerHand())
-        {
-            print(card.ToString());
-        }
     }
 
     // Sort the cards by group
-    public void SortByGroup()
+    /// <summary>
+    /// Sorts the player's hand by grouping cards with the same number together and different colors (duplicates beside each other).
+    /// </summary>
+     public void SortByGroup()
     {
         myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {
             if (card1.Number == card2.Number)
-                return card1.Color.CompareTo(card2.Color); // group by same number and differnt colors (duplicates beside eachother)
+                return card1.Color.CompareTo(card2.Color);
             else
                 return card1.Number.CompareTo(card2.Number);
         });
-
     }
 
-
     // Sort the cards by run 
-    public void SortByRun()
+    /// <summary>
+    /// Sorts the player's hand by grouping cards with the same color together and different numbers (duplicates beside each other).
+    /// </summary>
+     public void SortByRun()
     {
         myPlayer.GetPlayerHand().Sort((card1, card2) =>
         {
@@ -298,7 +301,4 @@ public class Computer : Player
                 return card1.Color.CompareTo(card2.Color);
         });
     }
-
-
-
 }
