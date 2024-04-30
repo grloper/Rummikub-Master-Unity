@@ -8,10 +8,10 @@ public class Board
     // represent an instance of the visual board logicly
 
     // the cardToSetPos dictionary is used to map between the card position on the board and the set position it belongs to
-    private Dictionary<int, SetPosition> cardToSetPos;
+    private readonly Dictionary<int, SetPosition> cardToSetPos;
 
     // the gameBoardValidSets dictionary is used to map between the set position and the cards set that belongs to it
-    private Dictionary<SetPosition, CardsSet> gameBoardValidSets;
+    private readonly  Dictionary<SetPosition, CardsSet> gameBoardValidSets;
 
     // the SetCount is used to give each set a unique id
     private int SetCount;

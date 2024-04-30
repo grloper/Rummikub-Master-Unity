@@ -165,7 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 1
+  playerType: 0
   playerHand: []
 --- !u!1 &274140812
 GameObject:
@@ -435,9 +435,17 @@ PrefabInstance:
       value: BtnSortByGroup
       objectReference: {fileID: 0}
     - target: {fileID: 7152918397155829166, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_fontSize
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 7152918397155829166, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
       propertyPath: m_fontAsset
       value: 
       objectReference: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 7152918397155829166, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 34
+      objectReference: {fileID: 0}
     - target: {fileID: 7152918397155829166, guid: 689f20350d05d3641b4642245e3bd6aa, type: 3}
       propertyPath: m_sharedMaterial
       value: 
@@ -506,7 +514,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 1
+  playerType: 0
   playerHand: []
 --- !u!1 &519420028
 GameObject:

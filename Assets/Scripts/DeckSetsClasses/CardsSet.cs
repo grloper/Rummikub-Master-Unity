@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -289,24 +290,21 @@ public class CardsSet : ICardSet
         return check;
     }
 
-    public bool CanAddCardMiddleRun(Card card)
+    // return the index where the card should be if can be added. otherside return -1
+    public int CanAddCardMiddleRun(Card card)
     {
         // Check if the set is long enough and the card has the same color O(1)
         if (set.Count < Constants.MinSetLengthForMiddleRun || card.Color != set.First.Value.Color)
-        {
-            return false;
-        }
+            return -1;
         // Check if the card can be added to the middle of the set O(n) where n is the number of cards in the set - Constants.CardsToCheckForMiddleRun which max could be 13-5=8 O(8) = O(1)
         LinkedListNode<Card> node = set.Last;
-        for (int i = 0; i < set.Count - Constants.CardsToCheckForMiddleRun; i++)
+        for (int i = set.Count - 1; i > set.Count - Constants.CardsToCheckForMiddleRun; i--)
         {
-            if (card.Number == node.Value.Number + Constants.MiddleRunOffset)
-            {
-                return true;
-            }
+            if (card.Number == node.Value.Number + Constants.MiddleRunOffset)//return the insert index
+                return i + Constants.MiddleRunOffset;
             node = node.Previous;
         }
-        return false;
+        return -1;
     }
 
 
