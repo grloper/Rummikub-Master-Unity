@@ -54,10 +54,7 @@ public class Player : MonoBehaviour
             {
                 Debug.LogWarning("Unable to draw a card for the player's board.");
             }
-
         }
-
-
     }
 
     // Set the visibility of the player board (true = visible, false = hidden)
@@ -104,9 +101,7 @@ public class Player : MonoBehaviour
     {
         // Remove the card from the player's hand
         // Return true if the card is removed successfully
-        print("------------------------------­-Remove card from list------------------------------­-");
-        PrintCards();
-        return this.playerHand.Remove(card);
+        return this.playerHand.Remove(card);    
     }
     public void PrintCards()
     {

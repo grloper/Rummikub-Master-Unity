@@ -53,6 +53,7 @@ public class GameBoard : MonoBehaviour
     }
 
     public bool IsExistForStack(Card card) => movesStack.Contains(card);
+    // Undo logic for a single card O(1)
     private void UndoMoveForCard(Card card)
     {
         // Undo logic for a single card
@@ -157,53 +158,6 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    public void MoveCardFromGameBoardToPlayerHand(Card card)
-    {
-        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-        Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-        // Remove the card from its current set
-        SetPosition oldSetPos = new SetPosition(-1);
-        CardsSet oldSet = new CardsSet();
-        int row = card.OldPosition.Row;
-        int col = card.OldPosition.Column;
-        int key = GetKeyFromPosition(card.OldPosition);
-        if (!cardToSetPos.ContainsKey(key))
-        {
-            bool found = false;
-            // Move left
-            //O(n) whee n is the number of cards in the set 
-            for (int i = col; i >= 0 && !found; i--)
-            {
-                key = row * 100 + i;
-                if (cardToSetPos.ContainsKey(key))
-                {
-                    oldSetPos = cardToSetPos[key];
-                    oldSet = gameBoardValidSets[oldSetPos];
-                    found = true;
-                }
-            }
-        }
-        else
-        {
-            //O(1)
-            oldSetPos = cardToSetPos[key];
-            oldSet = gameBoardValidSets[oldSetPos];
-        }
-
-        // Remove the card from the set O(n) where n is the number of cards in the set
-        int cardIndex = oldSet.RemoveCard(card);
-        if (oldSet.set.Count == 0)
-        {
-            // If the old set is now empty, remove it
-            // Remove the set from the gameBoardValidSets dictionary
-            // O(1)
-            cardToSetPos.Remove(key);
-            gameBoardValidSets.Remove(oldSetPos);
-        }
-        // If the card was removed from the middle of the set, split the set into two
-
-    }
-
     // hash function 
     public int GetKeyFromPosition(CardPosition cardPosition)
     {
@@ -211,61 +165,62 @@ public class GameBoard : MonoBehaviour
     }
 
 
-public void PutInSet(Card card)
-{
-    // Check if the card has neighbors to combine with
-    int key = GetKeyFromPosition(card.Position);
-    int rightKey = key + 1;
-    int leftKey = key - 1;
-    // Check if the card has neighbors to combine with
-    if (board.CardKeyExistsInSet(rightKey) && board.CardKeyExistsInSet(leftKey))
+    // O(1). add a card to the set on the board
+    public void PutInSet(Card card)
     {
-        CombineSets(card, rightKey, leftKey);
-    }// Check if the card has a neighbor to combine with on the right
-    else if (board.CardKeyExistsInSet(rightKey))
-    {
-        AddCardToBeginningOfSet(card, rightKey);
-    }// Check if the card has a neighbor to combine with on the left
-    else if (board.CardKeyExistsInSet(leftKey))
-    {
-        AddCardToEndOfSet(card, leftKey);
-    }// Create a new set
-    else
-    {
-        CreateNewSet(card, key);
+        // Check if the card has neighbors to combine with
+        int key = GetKeyFromPosition(card.Position);
+        int rightKey = key + 1;
+        int leftKey = key - 1;
+        // Check if the card has neighbors to combine with
+        if (board.CardKeyExistsInSet(rightKey) && board.CardKeyExistsInSet(leftKey))
+        {
+            CombineSets(card, rightKey, leftKey);
+        }// Check if the card has a neighbor to combine with on the right
+        else if (board.CardKeyExistsInSet(rightKey))
+        {
+            AddCardToBeginningOfSet(card, rightKey);
+        }// Check if the card has a neighbor to combine with on the left
+        else if (board.CardKeyExistsInSet(leftKey))
+        {
+            AddCardToEndOfSet(card, leftKey);
+        }// Create a new set
+        else
+        {
+            CreateNewSet(card, key);
+        }
     }
-}
 
-private void CombineSets(Card card, int rightKey, int leftKey)
-{
-// Combine two sets gameBoardValidSets[cardToSetPos[leftKey]].set and gameBoardValidSets[cardToSetPos[rightKey].set]
-            SetPosition leftSetPos = board.GetSetPosition(leftKey);
-            SetPosition rightSetPos = board.GetSetPosition(rightKey);
-            //no we can get the sets from the positions
-            CardsSet leftSet = board.GetCardsSet(leftSetPos);
-            CardsSet rightSet = board.GetCardsSet(rightSetPos);
-            // update the Set position of the right set to the left set
-            board.UpdateSetPosition(rightSet, leftSetPos);
-            // add the card to the end of the left set
-            leftSet.AddCardToEnd(card);
-            // combine the two sets now leftSet will have all the cards
-            leftSet.Combine(leftSet, rightSet);
-            // remove the right set from the gameBoardValidSets
-            board.RemoveValidSet(rightSetPos);
-            // remove the right set from the cardToSetPos
-            if (rightKey != GetKeyFromPosition(leftSet.GetLastCard().Position))
-            {
-                board.RemoveSetPosition(rightKey);
-            }
-            // remove the left set from the cardToSetPos
-            if (leftKey != GetKeyFromPosition(leftSet.GetFirstCard().Position))
-            {
-                 board.RemoveSetPosition(leftKey);
-            }
-}
+    private void CombineSets(Card card, int rightKey, int leftKey)
+    {
+        // Combine two sets gameBoardValidSets[cardToSetPos[leftKey]].set and gameBoardValidSets[cardToSetPos[rightKey].set]
+        SetPosition leftSetPos = board.GetSetPosition(leftKey);
+        SetPosition rightSetPos = board.GetSetPosition(rightKey);
+        //no we can get the sets from the positions
+        CardsSet leftSet = board.GetCardsSet(leftSetPos);
+        CardsSet rightSet = board.GetCardsSet(rightSetPos);
+        // update the Set position of the right set to the left set
+        board.UpdateSetPosition(rightSet, leftSetPos);
+        // add the card to the end of the left set
+        leftSet.AddCardToEnd(card);
+        // combine the two sets now leftSet will have all the cards
+        leftSet.Combine(leftSet, rightSet);
+        // remove the right set from the gameBoardValidSets
+        board.RemoveValidSet(rightSetPos);
+        // remove the right set from the cardToSetPos
+        if (rightKey != GetKeyFromPosition(leftSet.GetLastCard().Position))
+        {
+            board.RemoveSetPosition(rightKey);
+        }
+        // remove the left set from the cardToSetPos
+        if (leftKey != GetKeyFromPosition(leftSet.GetFirstCard().Position))
+        {
+            board.RemoveSetPosition(leftKey);
+        }
+    }
 
-private void AddCardToBeginningOfSet(Card card, int rightKey)
-{
+    private void AddCardToBeginningOfSet(Card card, int rightKey)
+    {
         // Add card to the beginning of the set
         SetPosition setPos = board.GetSetPosition(rightKey);
         //get teh CardsSet from the set position
@@ -296,7 +251,7 @@ private void AddCardToBeginningOfSet(Card card, int rightKey)
 
     private void CreateNewSet(Card card, int key)
     {
-        board.CreateNewSet(card, key);          
+        board.CreateNewSet(card, key);
     }
     public void ExplainGameRules()
     {
@@ -331,6 +286,7 @@ private void AddCardToBeginningOfSet(Card card, int rightKey)
 
     // Return instance of rummikub deck
 
+    // O(n) where n is the number of sets
     public bool IsBoardValid()
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
@@ -434,6 +390,8 @@ private void AddCardToBeginningOfSet(Card card, int rightKey)
 
     // Play a card on the board at a specific tile slot and remove it from the player's hand, 
     // assume the play is from the player hand
+
+    // O(1)
     public void PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
     {
         // assume already check no nehibors to combine my love
@@ -443,6 +401,7 @@ private void AddCardToBeginningOfSet(Card card, int rightKey)
     }
     // Rearrange the cards on the board with the given card to the end or the beginning of the set
     // while keeping the sets valid and the board rules with visual update
+    // O(n) where n is the number of cards in the set
     public void RearrangeCardsSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
@@ -475,22 +434,20 @@ private void AddCardToBeginningOfSet(Card card, int rightKey)
         // move the given card to the free location
         uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot(), true);
     }
-     /// <summary>
+    /// <summary>
     /// Checks if there is space for a card in the specified position on the game board.
     /// </summary>
     /// <param name="isEnd">Indicates whether the card is being placed at the end of the set or at the beginning.</param>
     /// <param name="gameBoard">The game board object.</param>
     /// <returns>True if there is space for a card, false otherwise.</returns>
+    // O(1)
     public bool IsSpaceForCard(bool isEnd, CardsSet set)
     {
         if (isEnd)
         {
             return IsSpaceForCardAtEnd(set);
         }
-        else
-        {
-            return IsSpaceForCardAtBeginning(set);
-        }
+        return IsSpaceForCardAtBeginning(set);
     }
 
     private bool IsSpaceForCardAtEnd(CardsSet set)

@@ -73,23 +73,23 @@ public class GameController : MonoBehaviour
     }
 
 
+    // function to get the current player
     public Player GetCurrentPlayer()
     {
         return playersList[currentTurn];
     }
-
+    // function to get the current player index
     public int GetCurrentPlayerIndex()
     {
         return currentTurn;
     }
 
+    // a function to check if the current player has won
     public void CheckWin()
     {
         if (playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
         {
-            //gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
             Debug.Log("******************************************************Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins******************************************************");
-            //uiManager.ShowWinScreen(playersList[currentTurn].GetPlayerName());
         }
 
     }

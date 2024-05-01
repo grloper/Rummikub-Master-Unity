@@ -29,6 +29,7 @@ public class Board
         this.SetCount = 0;
 
     }
+    // deep copy constructor to work with the undo feature
     public Board(Board board)
     {
         // deep copy the cardToSetPos and gameBoardValidSets
@@ -98,6 +99,7 @@ public class Board
         this.gameBoardValidSets.Add(setPosition, cardsSet);
     }
 
+    //O(1)
     public void HandleBeginningAndEndKeysUpdate(Card card, CardsSet oldSet, SetPosition oldSetPos, int cardIndex)
     {
         // if the card is the first card in the set
@@ -114,12 +116,9 @@ public class Board
             // add the new set to the cardToSetPos dictionary
             this.cardToSetPos[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
         }
-        else
-        {
-            throw new Exception("The card is not the first or the last card in the set");
-        }
     }
 
+    
     public void HandleMiddleSplit(Card card, CardsSet oldSet, SetPosition oldSetPos, int cardIndex)
     {
         // new set = the set from the left 

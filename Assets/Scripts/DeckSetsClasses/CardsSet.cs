@@ -65,25 +65,6 @@ public class CardsSet : ICardSet
     {
         set.AddLast(card);
     }
-    public bool CanAddCard(Card card)
-    {
-        return this.CanAddCardEnd(card) || this.CanAddCardBeggining(card);
-    }
-
-    // can add at the begginging of the set of List<Card> return bool true it check if the postion of the card colum + 1 is equal to the first card postion colum
-    // O(1)
-    public bool CanAddCardBeggining(Card card)
-    {
-        return GetFirstCard().Position.Column == card.Position.Column + 1;
-    }
-    // can add at the end of the set of List<Card> return bool true it check if the postion of the card colum - 1 is equal to the last card postion colum
-    // O(1)
-    public bool CanAddCardEnd(Card card)
-    {
-        return GetLastCard().Position.Column == card.Position.Column - 1;
-    }
-
-
 
     // check if the set contains a certain card
     // O(n)
@@ -124,26 +105,20 @@ public class CardsSet : ICardSet
     // Remove a card from the set and return its index in the set
     // O(n) when n is the number of cards in the set
 
-    public int RemoveCard(Card card)
+public int RemoveCard(Card card)
+{
+    int i = 0;
+    for (LinkedListNode<Card> current = set.First; current != null; current = current.Next, i++)
     {
-        LinkedListNode<Card> node = set.Find(card);
-        if (node == null)
+        if (current.Value.Equals(card))
         {
-            return -1; // Card not found
+            // Remove takes O(1)
+            set.Remove(current);
+            return i;
         }
-
-        int i = 0;
-        for (LinkedListNode<Card> current = set.First; current != null; current = current.Next, i++)
-        {
-            if (current == node)
-            {
-                set.Remove(node);
-                return i;
-            }
-        }
-
-        return -1; // Should never reach here
     }
+    return -1; // Card not found
+}
 
     // Check if a run is valid
     // O(n) when n is the number of cards in the set
