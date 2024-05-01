@@ -43,7 +43,7 @@ public class Constants
     public const int SingleCardInPartialSet = 1;
     // appending card in the middle constants
     public const int MinSetLengthForMiddleRun = 5;
-    public const int CardsToCheckForMiddleRun = 4;
-    public const int MiddleRunOffset = -2;
+    public const int MiddleRunOffset = 2;
+    
 
 }

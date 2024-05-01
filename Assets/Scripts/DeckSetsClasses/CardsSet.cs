@@ -290,81 +290,22 @@ public class CardsSet : ICardSet
         return check;
     }
 
+    // O(1)
     // return the index where the card should be if can be added. otherside return -1
     public int CanAddCardMiddleRun(Card card)
     {
         // Check if the set is long enough and the card has the same color O(1)
         if (set.Count < Constants.MinSetLengthForMiddleRun || card.Color != set.First.Value.Color)
             return -1;
-        // Check if the card can be added to the middle of the set O(n) where n is the number of cards in the set - Constants.CardsToCheckForMiddleRun which max could be 13-5=8 O(8) = O(1)
-        LinkedListNode<Card> node = set.Last;
-        for (int i = set.Count - 1; i > set.Count - Constants.CardsToCheckForMiddleRun; i--)
+        // Check if the card can be added in the middle O(1)
+        if(card.Number<= set.First.Value.Number + Constants.MiddleRunOffset
+         || card.Number >= set.Last.Value.Number- Constants.MiddleRunOffset)
         {
-            if (card.Number == node.Value.Number + Constants.MiddleRunOffset)//return the insert index
-                return i + Constants.MiddleRunOffset;
-            node = node.Previous;
+            // if the card can be added in the middle, return the index of the card
+            return card.Number - set.First.Value.Number; //because the set is a run
         }
         return -1;
     }
-
-
-
-    /// <summary>
-    /// Checks if there is space for a card in the specified position on the game board.
-    /// </summary>
-    /// <param name="isEnd">Indicates whether the card is being placed at the end of the set or at the beginning.</param>
-    /// <param name="gameBoard">The game board object.</param>
-    /// <returns>True if there is space for a card, false otherwise.</returns>
-    public bool IsSpaceForCard(bool isEnd, GameBoard gameBoard)
-    {
-        if (isEnd)
-        {
-            return IsSpaceForCardAtEnd(gameBoard);
-        }
-        else
-        {
-            return IsSpaceForCardAtBeginning(gameBoard);
-        }
-    }
-
-    private bool IsSpaceForCardAtEnd(GameBoard gameBoard)
-    {
-        GameObject secondTileSlot = null;
-        int lastCardColumn = GetLastCard().Position.Column;
-        if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
-        {
-            int tileSlotIndex = GetLastCard().Position.GetTileSlot() + 2;
-            if (tileSlotIndex < gameBoard.transform.childCount)
-            {
-                secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
-            }
-        }
-        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
-        {
-            return true;
-        }
-        return false;
-    }
-
-    private bool IsSpaceForCardAtBeginning(GameBoard gameBoard)
-    {
-        GameObject secondTileSlot = null;
-        int firstCardColumn = GetFirstCard().Position.Column;
-        if (firstCardColumn != 0 && firstCardColumn != 1)
-        {
-            int tileSlotIndex = GetFirstCard().Position.GetTileSlot() - 2;
-            if (tileSlotIndex >= 0)
-            {
-                secondTileSlot = gameBoard.transform.GetChild(tileSlotIndex).gameObject;
-            }
-        }
-        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
-        {
-            return true;
-        }
-        return false;
-    }
-
 
     // End of CardsSet.cs
 }

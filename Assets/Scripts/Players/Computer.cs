@@ -136,8 +136,8 @@ public class Computer : Player
 
     private void DoComputerMove()
     {
-        bool allowed = true;
         MaximizeValidDrops();
+
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
         {
             //MaximizePartialDrops();
@@ -147,10 +147,11 @@ public class Computer : Player
         {
             if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet) //he must drop more than 30 in sets
             {
-                allowed = false;
+            uiManager.DrawACardFromDeck();
+            return;
             }
         }
-        if ((dropped || added) && allowed) //if the computer has made a move, or have sets to drop.
+        if (dropped || added) //if the computer has made a move, or have sets to drop.
         {
             // if allowed = false => the computer might have valid sets to drop but the sum of the cards in the board is less than 30 and he has not dropped any cards yet.
             uiManager.ConfirmMove();
@@ -201,7 +202,7 @@ public class Computer : Player
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward true means that we need to add the card to the end of the set
-                    if (set.IsSpaceForCard(true, gameBoard))
+                    if (gameBoard.IsSpaceForCard(true, set))
                     {
                   
                         card.OldPosition = card.Position;
@@ -228,7 +229,7 @@ public class Computer : Player
                     // if there is space for the card then add it to the set
                     // if there is no space for the card then we need to rearrange the set
                     // forward false means that we need to add the card to the beginning of the set
-                    if (set.IsSpaceForCard(false, gameBoard))
+                    if (gameBoard.IsSpaceForCard(false, set))
                     {
                         //save the old position of the card
                         card.OldPosition = card.Position;

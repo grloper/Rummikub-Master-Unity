@@ -211,65 +211,92 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    public void PutInSet(Card card)
+public void PutInSet(Card card)
+{
+    // Check if the card has neighbors to combine with
+    int key = GetKeyFromPosition(card.Position);
+    int rightKey = key + 1;
+    int leftKey = key - 1;
+    // Check if the card has neighbors to combine with
+    if (board.CardKeyExistsInSet(rightKey) && board.CardKeyExistsInSet(leftKey))
     {
-        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-        Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-        int key = GetKeyFromPosition(card.Position);
-        int rightKey = key + 1;
-        int leftKey = key - 1;
-        if (cardToSetPos.ContainsKey(rightKey) && cardToSetPos.ContainsKey(leftKey))
-        {
-            // Combine two sets gameBoardValidSets[cardToSetPos[leftKey]].set and gameBoardValidSets[cardToSetPos[rightKey].set]
-            SetPosition leftSetPos = cardToSetPos[leftKey];
-            SetPosition rightSetPos = cardToSetPos[rightKey];
-            CardsSet leftSet = gameBoardValidSets[leftSetPos];
-            CardsSet rightSet = gameBoardValidSets[rightSetPos];
-            cardToSetPos[GetKeyFromPosition(rightSet.GetLastCard().Position)] = leftSetPos;
+        CombineSets(card, rightKey, leftKey);
+    }// Check if the card has a neighbor to combine with on the right
+    else if (board.CardKeyExistsInSet(rightKey))
+    {
+        AddCardToBeginningOfSet(card, rightKey);
+    }// Check if the card has a neighbor to combine with on the left
+    else if (board.CardKeyExistsInSet(leftKey))
+    {
+        AddCardToEndOfSet(card, leftKey);
+    }// Create a new set
+    else
+    {
+        CreateNewSet(card, key);
+    }
+}
+
+private void CombineSets(Card card, int rightKey, int leftKey)
+{
+// Combine two sets gameBoardValidSets[cardToSetPos[leftKey]].set and gameBoardValidSets[cardToSetPos[rightKey].set]
+            SetPosition leftSetPos = board.GetSetPosition(leftKey);
+            SetPosition rightSetPos = board.GetSetPosition(rightKey);
+            //no we can get the sets from the positions
+            CardsSet leftSet = board.GetCardsSet(leftSetPos);
+            CardsSet rightSet = board.GetCardsSet(rightSetPos);
+            // update the Set position of the right set to the left set
+            board.UpdateSetPosition(rightSet, leftSetPos);
+            // add the card to the end of the left set
             leftSet.AddCardToEnd(card);
+            // combine the two sets now leftSet will have all the cards
             leftSet.Combine(leftSet, rightSet);
-            gameBoardValidSets.Remove(rightSetPos);
+            // remove the right set from the gameBoardValidSets
+            board.RemoveValidSet(rightSetPos);
+            // remove the right set from the cardToSetPos
             if (rightKey != GetKeyFromPosition(leftSet.GetLastCard().Position))
             {
-                cardToSetPos.Remove(rightKey);
+                board.RemoveSetPosition(rightKey);
             }
+            // remove the left set from the cardToSetPos
             if (leftKey != GetKeyFromPosition(leftSet.GetFirstCard().Position))
             {
-                cardToSetPos.Remove(leftKey);
+                 board.RemoveSetPosition(leftKey);
             }
-        }
-        else if (cardToSetPos.ContainsKey(rightKey))
-        {
-            // Add card to the beginning of the set
-            SetPosition setPos = cardToSetPos[rightKey];
-            gameBoardValidSets[setPos].AddCardToBeginning(card);
-            if (gameBoardValidSets[setPos].set.Count != 2)
-            {
-                cardToSetPos.Remove(rightKey);
-            }
-            //added worked 
-            cardToSetPos[key] = setPos;
-        }
-        else if (cardToSetPos.ContainsKey(leftKey))
-        {
-            // Add card to the end of the set
-            SetPosition setPos = cardToSetPos[leftKey];
-            gameBoardValidSets[setPos].AddCardToEnd(card);
+}
 
-            if (gameBoardValidSets[setPos].set.Count != 2)
-            {
-                cardToSetPos.Remove(leftKey);
-            }
-            cardToSetPos[key] = setPos;
-        }
-        else
+private void AddCardToBeginningOfSet(Card card, int rightKey)
+{
+        // Add card to the beginning of the set
+        SetPosition setPos = board.GetSetPosition(rightKey);
+        //get teh CardsSet from the set position
+        board.GetCardsSet(setPos).AddCardToBeginning(card);
+        // if the set has more than 2 cards remove the right key
+        if (board.GetCardsSet(setPos).set.Count != 2)
         {
-            // Create a new set
-            SetPosition newSetPos = new SetPosition(board.GetSetCountAndInc());
-            gameBoardValidSets[newSetPos] = new CardsSet(card);
-
-            cardToSetPos[key] = newSetPos;
+            board.RemoveSetPosition(rightKey);
         }
+        // rightKey - 1 = key of the card we inserted somewhere on board
+        board.SetSetPosition(rightKey - 1, setPos); //put the new key in the cardToSetPos
+
+    }
+
+    private void AddCardToEndOfSet(Card card, int leftKey)
+    {
+        // Add card to the end of the set
+        SetPosition setPos = board.GetSetPosition(leftKey);
+        board.GetCardsSet(setPos).AddCardToEnd(card);
+        // if the set has more than 2 cards remove the left key (we have a new one)
+        if (board.GetCardsSet(setPos).set.Count != 2)
+        {
+            board.RemoveSetPosition(leftKey);
+        }
+        // leftKey + 1 = key of the card we inserted somewhere on board
+        board.SetSetPosition(leftKey + 1, setPos); //put the new key in the cardToSetPos
+    }
+
+    private void CreateNewSet(Card card, int key)
+    {
+        board.CreateNewSet(card, key);          
     }
     public void ExplainGameRules()
     {
@@ -448,4 +475,60 @@ public class GameBoard : MonoBehaviour
         // move the given card to the free location
         uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot(), true);
     }
+     /// <summary>
+    /// Checks if there is space for a card in the specified position on the game board.
+    /// </summary>
+    /// <param name="isEnd">Indicates whether the card is being placed at the end of the set or at the beginning.</param>
+    /// <param name="gameBoard">The game board object.</param>
+    /// <returns>True if there is space for a card, false otherwise.</returns>
+    public bool IsSpaceForCard(bool isEnd, CardsSet set)
+    {
+        if (isEnd)
+        {
+            return IsSpaceForCardAtEnd(set);
+        }
+        else
+        {
+            return IsSpaceForCardAtBeginning(set);
+        }
+    }
+
+    private bool IsSpaceForCardAtEnd(CardsSet set)
+    {
+        GameObject secondTileSlot = null;
+        int lastCardColumn = set.GetLastCard().Position.Column;
+        if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
+        {
+            int tileSlotIndex = set.GetLastCard().Position.GetTileSlot() + 2;
+            if (tileSlotIndex < this.transform.childCount)
+            {
+                secondTileSlot = this.transform.GetChild(tileSlotIndex).gameObject;
+            }
+        }
+        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private bool IsSpaceForCardAtBeginning(CardsSet set)
+    {
+        GameObject secondTileSlot = null;
+        int firstCardColumn = set.GetFirstCard().Position.Column;
+        if (firstCardColumn != 0 && firstCardColumn != 1)
+        {
+            int tileSlotIndex = set.GetFirstCard().Position.GetTileSlot() - 2;
+            if (tileSlotIndex >= 0)
+            {
+                secondTileSlot = transform.GetChild(tileSlotIndex).gameObject;
+            }
+        }
+        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
+        {
+            return true;
+        }
+        return false;
+    }
+
 }

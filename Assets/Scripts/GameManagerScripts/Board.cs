@@ -11,7 +11,7 @@ public class Board
     private readonly Dictionary<int, SetPosition> cardToSetPos;
 
     // the gameBoardValidSets dictionary is used to map between the set position and the cards set that belongs to it
-    private readonly  Dictionary<SetPosition, CardsSet> gameBoardValidSets;
+    private readonly Dictionary<SetPosition, CardsSet> gameBoardValidSets;
 
     // the SetCount is used to give each set a unique id
     private int SetCount;
@@ -120,7 +120,7 @@ public class Board
         }
     }
 
-    internal void HandleMiddleSplit(Card card, CardsSet oldSet, SetPosition oldSetPos, int cardIndex)
+    public void HandleMiddleSplit(Card card, CardsSet oldSet, SetPosition oldSetPos, int cardIndex)
     {
         // new set = the set from the left 
         // set from the right is the old set with the card removed, oldSetPos
@@ -150,5 +150,40 @@ public class Board
             cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
 
         }
+    }
+
+    public bool CardKeyExistsInSet(int key)
+    {
+        return cardToSetPos.ContainsKey(key);
+    }
+
+    public SetPosition GetSetPosition(int key)
+    {
+        return cardToSetPos[key];
+    }
+
+    public void UpdateSetPosition(CardsSet set, SetPosition sp_key)
+    {
+        cardToSetPos[GetKeyFromPosition(set.GetLastCard().Position)] = sp_key;
+    }
+
+    public void RemoveValidSet(SetPosition st_key)
+    {
+        gameBoardValidSets.Remove(st_key);
+    }
+    public void RemoveSetPosition(int key)
+    {
+        cardToSetPos.Remove(key);
+    }
+    public void SetSetPosition(int key, SetPosition sp)
+    {
+        cardToSetPos[key] = sp;
+    }
+
+    public void CreateNewSet(Card card, int key)
+    {
+        SetPosition newSetPos = new SetPosition(this.GetSetCountAndInc());
+        AddCardsSet(newSetPos, new CardsSet(card));
+        cardToSetPos[key] = newSetPos;
     }
 }
