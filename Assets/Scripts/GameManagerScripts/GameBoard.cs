@@ -371,17 +371,20 @@ public class GameBoard : MonoBehaviour
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + 1);
         tileslot++;
-        foreach (Card card in cardsSet.set)
+        Node<Card> current = cardsSet.set.GetFirstNode();
+        while(current != null)
         {
-
+            Card card = current.Value;
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
-            uiManager.MoveCardToBoard(card, tileslot, true);
+            // update visualy
+            uiManager.MoveCardToBoard(card, tileslot, false);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
             MoveCardFromPlayerHandToGameBoard(card);
+            current = current.Next;
         }
 
         gameController.GetCurrentPlayer().PrintCards();
@@ -414,17 +417,24 @@ public class GameBoard : MonoBehaviour
             tileslot++;
         }
         // move the cards to free location and put the last card at the end or at the beginning based on the boolean
-        foreach (Card card in set.set)
+        Node<Card> current = set.set.GetFirstNode();
+        while (current != null)
         {
-            card.OldPosition = card.Position;
-            card.Position.SetTileSlot(tileslot);
-            // update visualy
-            uiManager.MoveCardToBoard(card, tileslot, false);
-            tileslot++;
-            // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
-            AddCardToMovesStack(card);
-            // move and remove the card
+            Card card = current.Value;
+            if (card != givenCard)
+            {
+                card.OldPosition = card.Position;
+                card.Position.SetTileSlot(tileslot);
+                // update visualy
+                uiManager.MoveCardToBoard(card, tileslot, false);
+                tileslot++;
+                // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
+                AddCardToMovesStack(card);
+                // move and remove the card
+            }
+            current = current.Next;
         }
+
 
         if (addAtTheEnd)
         {
