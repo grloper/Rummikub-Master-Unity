@@ -28,7 +28,6 @@ public class UImanager : MonoBehaviour
     public GameObject InstantiatePlayerGrid()
     {
         GameObject playerGrid = Instantiate(PrefabPlayerGrid, Canvas.transform);
-        //PreserveRectTransformValues(playerGrid.GetComponent<RectTransform>(), PrefabPlayerGrid.GetComponent<RectTransform>());
         playerGrid.SetActive(false);
         return playerGrid;
     }
@@ -84,7 +83,7 @@ public class UImanager : MonoBehaviour
             print("No moves to undo");
         }
     }
-    // Function to instantiate a card to a tile slot
+    // Function to instantiate a card to a tile slot O(1)
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
         Card card = InstinitanteCard(GivvenCard);

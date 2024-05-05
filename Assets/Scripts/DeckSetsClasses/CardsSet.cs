@@ -91,6 +91,7 @@ public class CardsSet : ICardSet
     // O(n) when n is the number of cards to remove
     public CardsSet UnCombine(int offset)
     {
+        Debug.Log("uncombine: "+ offset );
         CardsSet newSet = new CardsSet();
         for (int i = 0; i < offset; i++)
         {
@@ -234,8 +235,10 @@ public int RemoveCard(Card card)
 
     public bool CanAddCardBegginingRun(Card card)
     {
-        Card cardFromList = set.GetFirstNode().Value;
-        return cardFromList.Number == card.Number + 1 && cardFromList.Color == card.Color;
+        AddCardToBeginning(card);
+        bool check = this.IsRun();
+        this.set.RemoveFirst();
+        return check;
 
     }
 
@@ -243,10 +246,8 @@ public int RemoveCard(Card card)
     // O(n) when n is the number of cards in the set
     public bool CanAddCardEndRun(Card card)
     {
-        //add the card to the set O(1)
-        AddCardToEnd(card);
+       AddCardToEnd(card);
         bool check = this.IsRun();
-        //remove the card from the set O(1)
         this.set.RemoveLast();
         return check;
     }

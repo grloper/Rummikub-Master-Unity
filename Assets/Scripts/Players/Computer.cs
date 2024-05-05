@@ -252,16 +252,16 @@ public class Computer : Player
                         // cardsToUpdateFromBoard.AddRange(set.set);
                     }
                 }
-                offset =set.CanAddCardMiddleRun(card);
-                if(offset!=-1)
-                {
-                    // found = true;
-                    // this.added = true;
-                    // cardsToRemove.Add(card);
-                    // card.OldPosition = card.Position;
-                    // card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() + offset);
-                    // gameBoard.PlayCardOnBoard(card, set.GetFirstCard().Position.GetTileSlot() + offset, false);
-                }
+                // offset =set.CanAddCardMiddleRun(card);
+                // if(offset!=-1)
+                // {
+                //     found = true;
+                //     this.added = true;
+                //     cardsToRemove.Add(card);
+                //     //uncombine the set
+                //    // CardsSet newSet = set.UnCombine(offset);
+                    
+                // }
             }
 
         }

@@ -11,7 +11,7 @@ public class SetPosition
     {
         return this.id;
     }
-    //equals method because when getting the key from the dictionary, we need to compare the card position 
+    //equals method because when getting the key from the dictionary, we need to compare the set position 
     public override bool Equals(object obj)
     {
         if (obj == null || GetType() != obj.GetType())

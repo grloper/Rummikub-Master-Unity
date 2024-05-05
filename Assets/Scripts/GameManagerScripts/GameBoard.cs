@@ -371,20 +371,17 @@ public class GameBoard : MonoBehaviour
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + 1);
         tileslot++;
-        Node<Card> current = cardsSet.set.GetFirstNode();
-        while(current != null)
+        foreach (Card card in cardsSet.set)
         {
-            Card card = current.Value;
+
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
-            // update visualy
-            uiManager.MoveCardToBoard(card, tileslot, false);
+            uiManager.MoveCardToBoard(card, tileslot, true);
             tileslot++;
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
             MoveCardFromPlayerHandToGameBoard(card);
-            current = current.Next;
         }
 
         gameController.GetCurrentPlayer().PrintCards();

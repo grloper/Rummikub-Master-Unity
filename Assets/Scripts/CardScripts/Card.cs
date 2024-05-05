@@ -52,24 +52,14 @@ public class Card : MonoBehaviour
             return false;
         }
 
-      
     }
-    //hash code
+
     public override int GetHashCode()
-{
-    unchecked // Overflow is fine, just wrap
     {
-        int hash = 17;
-        hash = hash * 31 + number.GetHashCode();
-        hash = hash * 31 + color.GetHashCode();
-        hash = hash * 31 + Position.GetHashCode();
-        hash = hash * 31 + OldPosition.GetHashCode();
-        return hash;
+        // Return the hash code of the card
+        return number.GetHashCode() ^ color.GetHashCode();
     }
 }
 
 
-
-
-}
 

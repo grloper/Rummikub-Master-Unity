@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DoublyLinkedList<T>
+public class DoublyLinkedList<T> : IEnumerable<T>
 {
     public Node<T> Head { get; private set; }
     public Node<T> Tail { get; private set; }
     public int Count { get; private set; }
-    private HashSet<T> valueSet; // HashSet for constant time contains checks
-    private Dictionary<T, Node<T>> nodeDictionary; // Dictionary for constant time node retrieval
+    private readonly HashSet<T> valueSet; // HashSet for constant time contains checks
+    private readonly Dictionary<T, Node<T>> nodeDictionary; // Dictionary for constant time node retrieval
     // O(1)
     public DoublyLinkedList()
     {
@@ -211,5 +211,20 @@ public class DoublyLinkedList<T>
     public bool Contains(T value)
     {
         return valueSet.Contains(value); // O(1) time complexity for HashSet contains check
+    }
+
+       public IEnumerator<T> GetEnumerator()
+    {
+        Node<T> current = Head;
+        while (current != null)
+        {
+            yield return current.Value;
+            current = current.Next;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
