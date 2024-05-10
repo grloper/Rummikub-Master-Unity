@@ -25,8 +25,8 @@ public class Computer : Player
     private bool added;
     private bool dropped;
 
-    private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
-    {
+  private List<CardsSet> ExtractMaxValidRunSets(PlayerHand hand, int minRangeInclusive, int maxRangeInclusive)
+{
         SortByRun();
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
