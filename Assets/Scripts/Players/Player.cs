@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] protected GameBoard board;
     private GameObject PlayerGrid;
     [SerializeField] private PlayerType playerType;
-    [SerializeField] private List<Card> playerHand;
+    [SerializeField] private PlayerHand playerHand;
     protected bool initialMove;
 
     // act as a constructor for the player because we are using : MonoBehaviour
@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
     {
         this.initialMove = false;
         this.PlayerGrid = PlayerGrid;
-        playerHand = new List<Card>();
+        playerHand = new PlayerHand();
         Init();
         switch (playerType)
         {
@@ -55,6 +55,7 @@ public class Player : MonoBehaviour
                 Debug.LogWarning("Unable to draw a card for the player's board.");
             }
         }
+        Debug.Log(playerHand.ToString());
     }
 
     // Set the visibility of the player board (true = visible, false = hidden)
@@ -89,26 +90,25 @@ public class Player : MonoBehaviour
     // Add a card to the player's hand
     public void AddCardToList(Card card)
     {
-        this.playerHand.Add(card);
+        this.playerHand.AddCard(card);
     }
     // Check if the card is in the player's hand
     public bool IsCardInList(Card card)
     {
-        return this.playerHand.Contains(card);
+       return this.playerHand.Contains(card);
     }
 
-    public bool RemoveCardFromList(Card card)
+    public void RemoveCardFromList(Card card)
     {
         // Remove the card from the player's hand
         // Return true if the card is removed successfully
-        return this.playerHand.Remove(card);    
+        this.playerHand.RemoveCard(card);
     }
+
+
     public void PrintCards()
     {
-        foreach (Card card in playerHand)
-        {
-            print(card.ToString());
-        }
+        Debug.Log(playerHand.ToString());
     }
 
     // Check if the player has an initial move (true = has initial move, false = no initial move)
@@ -137,7 +137,7 @@ public class Player : MonoBehaviour
                 GameObject tileSlot = PlayerGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
                 Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
-                playerHand.Add(randomCard);
+                playerHand.AddCard(randomCard);
             }
             catch (EmptyDeckException)
             {
@@ -150,14 +150,17 @@ public class Player : MonoBehaviour
             // Handle the case where no empty slots are found, perhaps prompt the user or handle it accordingly.
         }
     }
-
+    // Check if the player's hand is empty O(1)
     public bool IsDeckEmpty()
     {
-        return this.playerHand.Count == Constants.EmptyDeck;
-
+        foreach(Card card in playerHand)
+        {
+            return false;
+        }
+        return true;
     }
 
-    public List<Card> GetPlayerHand()
+    public PlayerHand GetPlayerHand()
     {
         return this.playerHand;
     }

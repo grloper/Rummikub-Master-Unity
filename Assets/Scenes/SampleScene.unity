@@ -166,7 +166,6 @@ MonoBehaviour:
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
   playerType: 1
-  playerHand: []
 --- !u!1 &274140812
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,8 +212,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 0
-  playerHand: []
+  playerType: 1
 --- !u!1 &306871405
 GameObject:
   m_ObjectHideFlags: 0
@@ -514,8 +512,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
-  playerType: 0
-  playerHand: []
+  playerType: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,7 +1014,6 @@ MonoBehaviour:
   uiManager: {fileID: 1707528207}
   board: {fileID: 914871410}
   playerType: 1
-  playerHand: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

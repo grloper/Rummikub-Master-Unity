@@ -53,6 +53,7 @@ public class UImanager : MonoBehaviour
         if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
         {
             gameController.GetCurrentPlayer().DrawCardFromDeck();
+            gameController.GetCurrentPlayer().PrintCards();
             gameController.ChangeTurn();
             UpdateTurnText();
 
@@ -166,10 +167,6 @@ public class UImanager : MonoBehaviour
            turnDisplayText.text = "Turn: " + gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
 );
 
-
-
-
-
     public void BtnSortByRun()
     {
         // Sort the cards by run
@@ -193,8 +190,6 @@ public class UImanager : MonoBehaviour
                 return card1.Number.CompareTo(card2.Number);
         });
     }
-
-
 
     private void SortPlayerGrid(Comparison<Card> comparison)
     {
@@ -237,7 +232,6 @@ public class UImanager : MonoBehaviour
             card.GetComponent<Image>().sprite = cardsUI[index];
         }
     }
-
 
     // Function to move a card from the player's hand to the board visually to a specific tile slot
     public void MoveCardToBoard(Card card, int tileslot, bool isFromPlayerHand)

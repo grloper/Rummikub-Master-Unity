@@ -34,7 +34,6 @@ public class TileSlot : MonoBehaviour, IDropHandler
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
         draggableItem.parentAfterDrag = transform;
 
-
         if (dropped.GetComponent<Card>() != null)
         {
             // save the old position of the card in case of moving multiple times the same card in the board
@@ -52,7 +51,6 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 HandleDropOnBoardGrid(dropped.GetComponent<Card>(), draggableItem);
             }
         }
-
     }
 
     private void HandleDropOnHumanGrid(Card card, DraggableItem draggableItem)

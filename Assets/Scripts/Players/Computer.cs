@@ -25,9 +25,9 @@ public class Computer : Player
     private bool added;
     private bool dropped;
 
-  private List<CardsSet> ExtractMaxValidRunSets(PlayerHand hand, int minRangeInclusive, int maxRangeInclusive)
-{
-        SortByRun();
+
+  private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
+    {
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
         currentSet.AddCardToEnd(list[0]);
@@ -62,7 +62,6 @@ public class Computer : Player
     }
     private List<CardsSet> ExtractMaxValidGroupSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
-        SortByGroup();
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
         currentSet.AddCardToEnd(list[0]);
@@ -97,8 +96,14 @@ public class Computer : Player
 
     public void MaximizeValidDrops()
     {
+        Debug.Log(myPlayer.GetPlayerHand().SortedByRun().ToString());
+        Debug.Log(myPlayer.GetPlayerHand().SortedByGroup().ToString());
         this.dropped = false;
-        List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand(), Constants.MinInRun, Constants.MaxInRun);
+        List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand().SortedByRun(), Constants.MinInRun, Constants.MaxInRun);
+        foreach (CardsSet set in setsRun)
+        {
+            print(set.ToString());
+        }
         if (setsRun.Count > 0)
         {
             this.dropped = true;
@@ -107,7 +112,7 @@ public class Computer : Player
                 gameBoard.PlayCardSetOnBoard(set);
             }
         }
-        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand(), Constants.MinInGroup, Constants.MaxInGroup);
+        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MinInGroup, Constants.MaxInGroup);
         if (setsGroup.Count > 0)
         {
             this.dropped = true;
@@ -140,15 +145,15 @@ public class Computer : Player
 
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
         {
-            //MaximizePartialDrops();
-            AssignFreeCardsToExistsSets();
+             MaximizePartialDrops();
+             AssignFreeCardsToExistsSets();
         }
         else//if the player is not allowed to append cards to the board
         {
             if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet) //he must drop more than 30 in sets
             {
-            uiManager.DrawACardFromDeck();
-            return;
+                uiManager.DrawACardFromDeck();
+                return;
             }
         }
         if (dropped || added) //if the computer has made a move, or have sets to drop.
@@ -162,12 +167,17 @@ public class Computer : Player
         }
     }
 
+    public void MaximizePartialDrops()
+    {
+        //
+    }
+
 
 
     /// <summary>
     /// Assigns free cards to existing sets on the game board, rearrange visualy if needed.
     /// </summary>
-    private void AssignFreeCardsToExistsSets()
+    public void AssignFreeCardsToExistsSets()
     {
         this.added = false;
         // track the cards that need to be removed from the computer hand because 
@@ -181,7 +191,7 @@ public class Computer : Player
         {
             // if added a card to a set then break the loop
             bool found = false;
-            int offset =-1;//the offset of the card if can be added in the middle of some set and split it into two different sets
+            int offset = -1;//the offset of the card if can be added in the middle of some set and split it into two different sets
             // extract the keys from the dictionary to iterate over them
             List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList();
             keys.ToArray();
@@ -204,9 +214,9 @@ public class Computer : Player
                     // forward true means that we need to add the card to the end of the set
                     if (gameBoard.IsSpaceForCard(true, set))
                     {
-                    found = true; // break the loop
-                    this.added = true;
-                    cardsToRemove.Add(card);
+                        found = true; // break the loop
+                        this.added = true;
+                        cardsToRemove.Add(card);
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
                         gameBoard.PlayCardOnBoard(card, set.GetLastCard().Position.GetTileSlot() + 1, false);
@@ -233,9 +243,9 @@ public class Computer : Player
                     // forward false means that we need to add the card to the beginning of the set
                     if (gameBoard.IsSpaceForCard(false, set))
                     {
-                            found = true; // break the loop
-                    this.added = true;
-                    cardsToRemove.Add(card);
+                        found = true; // break the loop
+                        this.added = true;
+                        cardsToRemove.Add(card);
                         //save the old position of the card
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
@@ -260,7 +270,7 @@ public class Computer : Player
                 //     cardsToRemove.Add(card);
                 //     //uncombine the set
                 //    // CardsSet newSet = set.UnCombine(offset);
-                    
+
                 // }
             }
 
@@ -284,33 +294,4 @@ public class Computer : Player
 
     }
 
-    // Sort the cards by group
-    /// <summary>
-    /// Sorts the player's hand by grouping cards with the same number together and different colors (duplicates beside each other).
-    /// </summary>
-    public void SortByGroup()
-    {
-        myPlayer.GetPlayerHand().Sort((card1, card2) =>
-        {
-            if (card1.Number == card2.Number)
-                return card1.Color.CompareTo(card2.Color);
-            else
-                return card1.Number.CompareTo(card2.Number);
-        });
-    }
-
-    // Sort the cards by run 
-    /// <summary>
-    /// Sorts the player's hand by grouping cards with the same color together and different numbers (duplicates beside each other).
-    /// </summary>
-    public void SortByRun()
-    {
-        myPlayer.GetPlayerHand().Sort((card1, card2) =>
-        {
-            if (card1.Color == card2.Color)
-                return card1.Number.CompareTo(card2.Number);
-            else
-                return card1.Color.CompareTo(card2.Color);
-        });
-    }
 }

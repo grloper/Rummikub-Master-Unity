@@ -89,23 +89,9 @@ public class GameController : MonoBehaviour
     {
         if (playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
         {
-            Debug.Log("******************************************************Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins******************************************************");
+            Debug.Log("Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins******************************************************");
         }
 
     }
-    // public void CheckWin()
-    // {
-    //     if (playersList[currentTurn].CheckWin())
-    //     {
-    //         uiManager.ShowWinScreen(playersList[currentTurn].GetPlayerName());
-    //     }
-    //     else if (playersList.All(player => player.CheckDraw()))
-    //     {
-    //         uiManager.ShowDrawScreen();
-    //     }
-    //     else
-    //     {
-    //         ChangeTurn();
-    //     }
-    // }
+
 }

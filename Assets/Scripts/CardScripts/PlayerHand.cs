@@ -1,59 +1,130 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class PlayerHand
+public class PlayerHand : IEnumerable<Card>
 {
-    private readonly int[,] cardMatrix; // Matrix to store card appearances (rows: numbers, columns: colors)
-    private readonly int[] cardAppearances; // Array to store the number of instances for each card
+  private LinkedList<Card>[,] cardMatrix;
 
-    public PlayerHand()
+  public PlayerHand()
+  {
+    cardMatrix = new LinkedList<Card>[Constants.MaxSuit, Constants.MaxRank + 1]; // Increase size for Joker cards
+    for (int i = 0; i < Constants.MaxSuit; i++)
     {
-        // Initialize the matrix and appearances array with appropriate sizes based on your card types
-        cardMatrix = new int[Constants.MaxRank, Constants.MaxSuit];
-        cardAppearances = new int[Constants.MaxRank * Constants.MaxSuit];
+      for (int j = 0; j < Constants.MaxRank + 1; j++) // Increase size for Joker cards
+      {
+        cardMatrix[i, j] = new LinkedList<Card>();
+      }
+    }
+  }
+  public void AddCard(Card card)
+  {
+    int colorIndex = (int)card.Color;
+    int numberIndex = card.Number - 1;
+
+    // Handle Joker cards
+    if (card.Number == Constants.JokerRank)
+    {
+      numberIndex = Constants.MaxRank; // Store Joker cards at the last index
+    }
+    cardMatrix[colorIndex, numberIndex].AddLast(card);
+  }
+
+  public List<Card> SortedByRun()
+  {
+    List<Card> sortedCards = new List<Card>();
+    for (int i = 0; i < Constants.MaxSuit; i++)
+    {
+      for (int j = 0; j < Constants.MaxRank + 1; j++)
+      {
+        foreach (Card card in cardMatrix[i, j])
+        {
+          sortedCards.Add(card);
+        }
+      }
+    }
+    return sortedCards;
+  }
+  public List<Card> SortedByGroup()
+  {
+    List<Card> sortedCards = new List<Card>();
+    for (int j = 0; j < Constants.MaxRank + 1; j++)
+    {
+      for (int i = 0; i < Constants.MaxSuit; i++)
+      {
+        foreach (Card card in cardMatrix[i, j])
+        {
+          sortedCards.Add(card);
+        }
+      }
+    }
+    return sortedCards;
+  }
+
+  public void RemoveCard(Card card)
+  {
+    int colorIndex = (int)card.Color;
+    int numberIndex = card.Number - 1;
+
+    if (cardMatrix[colorIndex, numberIndex].Count == 0)
+    {
+      throw new System.Exception("No such card in hand.");
+    }
+    cardMatrix[colorIndex, numberIndex].Remove(card);
+  }
+
+  public bool Contains(Card card)
+  {
+    int colorIndex = (int)card.Color;
+    int numberIndex = card.Number - 1;
+
+    return cardMatrix[colorIndex, numberIndex].Count > 0;
+  }
+
+
+  public IEnumerator<Card> GetEnumerator()
+  {
+    for (int i = 0; i < Constants.MaxSuit; i++)
+    {
+      for (int j = 0; j < Constants.MaxRank; j++)
+      {
+        foreach (Card card in cardMatrix[i, j])
+        {
+          yield return card;
+        }
+      }
+    }
+  }
+
+  IEnumerator IEnumerable.GetEnumerator()
+  {
+    return GetEnumerator();
+  }
+
+  public override string ToString()
+  {
+    Debug.Log("Print cards:");
+    string txt = "\n";
+    for (int i = 0; i < Constants.MaxSuit; i++)
+    {
+      for (int j = 0; j < Constants.MaxRank + 1; j++)
+      {
+        foreach (Card card in cardMatrix[i, j])
+        {
+          txt += card.ToString() + ", ";
+        }
+      }
+      Debug.Log(txt);
+      txt = "\n";
+    }
+    return txt;
+  }
+
+    public override bool Equals(object obj)
+    {
+        return ReferenceEquals(this, obj);
     }
 
-    public void AddCard(Card card)
-    {
-        int colorIndex = (int)card.Color;
-        int numberIndex = card.Number;
-
-        // Increment the appearance count for this card
-        cardAppearances[GetCardIndex(colorIndex, numberIndex)]++;
-
-        // Update the matrix with the new appearance
-        cardMatrix[numberIndex, colorIndex]++;
-    }
-
-    public void RemoveCard(Card card)
-    {
-        int colorIndex = (int)card.Color;
-        int numberIndex = card.Number;
-
-        // Decrement the appearance count for this card
-        cardAppearances[GetCardIndex(colorIndex, numberIndex)]--;
-
-        // Update the matrix with the reduced appearance
-        cardMatrix[numberIndex, colorIndex]--;
-    }
-
-    private int GetCardIndex(int colorIndex, int numberIndex)
-    {
-        // This function combines the color and number indices into a single index for the cardAppearances array
-        // You can adjust the calculation based on your specific card representation
-        return colorIndex * 13 + numberIndex;
-    }
-
-    // Additional methods (optional):
-
-    public bool ContainsCard(Card card)
-    {
-        return cardAppearances[GetCardIndex((int)card.Color, card.Number)] > 0;
-    }
-
-    public int GetCardCount(Card card)
-    {
-        return cardAppearances[GetCardIndex((int)card.Color, card.Number)];
-    }
 }
