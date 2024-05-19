@@ -88,6 +88,7 @@ public class Board
         return null;
     }
 
+    // work for single card set
     public void RemoveSetFromBothDic(int key)
     {
         this.gameBoardValidSets.Remove(cardToSetPos[key]);
@@ -184,5 +185,14 @@ public class Board
         SetPosition newSetPos = new SetPosition(this.GetSetCountAndInc());
         AddCardsSet(newSetPos, new CardsSet(card));
         cardToSetPos[key] = newSetPos;
+    }
+
+    // assume existing two pointers, remove them.
+    public void RemovePointers(SetPosition setPosition)
+    {
+      int left  = GetKeyFromPosition(gameBoardValidSets[setPosition].GetFirstCard().Position);
+      int right = GetKeyFromPosition(gameBoardValidSets[setPosition].GetLastCard().Position);
+      cardToSetPos.Remove(left);
+      cardToSetPos.Remove(right);
     }
 }

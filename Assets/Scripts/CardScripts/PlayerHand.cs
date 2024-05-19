@@ -67,6 +67,10 @@ public class PlayerHand : IEnumerable<Card>
   {
     int colorIndex = (int)card.Color;
     int numberIndex = card.Number - 1;
+    if (card.Number == Constants.JokerRank)
+    {
+      numberIndex = Constants.MaxRank; // Store Joker cards at the last index
+    }
 
     if (cardMatrix[colorIndex, numberIndex].Count == 0)
     {

@@ -369,8 +369,8 @@ public class GameBoard : MonoBehaviour
 
     public void PlayCardSetOnBoard(CardsSet cardsSet)
     {
-        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + 1);
-        tileslot++;
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
+        //tileslot++;
         foreach (Card card in cardsSet.set)
         {
 
@@ -406,6 +406,12 @@ public class GameBoard : MonoBehaviour
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         CardsSet set = gameBoardValidSets[setPosition];
+        int oldLeft =GetKeyFromPosition(set.GetFirstCard().Position);
+        int oldRight = GetKeyFromPosition(set.GetLastCard().Position);
+        // co pilot print those two keys: 
+        Debug.Log("Key is this is: "+ oldLeft);
+        Debug.Log("Key is this is: "+ oldRight);
+        Debug.Log("Key is this is: "+ setPosition.GetId());
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
         if (!addAtTheEnd)
         {
@@ -417,14 +423,18 @@ public class GameBoard : MonoBehaviour
         Node<Card> current = set.set.GetFirstNode();
         while (current != null)
         {
+
             Card card = current.Value;
             if (card != givenCard)
             {
+                Debug.Log("Moving: " + card.ToString());
                 card.OldPosition = card.Position;
                 card.Position.SetTileSlot(tileslot);
                 // update visualy
+                MoveCardFromGameBoardToGameBoard(card);
                 uiManager.MoveCardToBoard(card, tileslot, false);
                 tileslot++;
+                
                 // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
                 AddCardToMovesStack(card);
                 // move and remove the card
@@ -439,7 +449,13 @@ public class GameBoard : MonoBehaviour
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location
-        uiManager.MoveCardToBoard(givenCard, givenCard.Position.GetTileSlot(), true);
+        PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);
+        board.GetCardsToSetsTable().Remove(oldLeft);
+        board.GetCardsToSetsTable().Remove(oldRight);
+        gameBoardValidSets.Remove(setPosition);
+    
+        
+
     }
     /// <summary>
     /// Checks if there is space for a card in the specified position on the game board.
@@ -461,15 +477,15 @@ public class GameBoard : MonoBehaviour
     {
         GameObject secondTileSlot = null;
         int lastCardColumn = set.GetLastCard().Position.Column;
-        if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2)
+        if (lastCardColumn != Constants.MaxBoardColumns - 1 && lastCardColumn != Constants.MaxBoardColumns - 2) // if the card is not the last\second last most right at some row
         {
             int tileSlotIndex = set.GetLastCard().Position.GetTileSlot() + 2;
-            if (tileSlotIndex < this.transform.childCount)
+            if (tileSlotIndex < this.transform.childCount) // if the tileSlot is not outof bound at the end
             {
                 secondTileSlot = this.transform.GetChild(tileSlotIndex).gameObject;
             }
         }
-        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 2))
+        if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || lastCardColumn == Constants.MaxBoardColumns - 1))
         {
             return true;
         }
@@ -480,12 +496,12 @@ public class GameBoard : MonoBehaviour
     {
         GameObject secondTileSlot = null;
         int firstCardColumn = set.GetFirstCard().Position.Column;
-        if (firstCardColumn != 0 && firstCardColumn != 1)
+        if (firstCardColumn != 0 && firstCardColumn != 1) // if the card is not the first\second most left at some row
         {
             int tileSlotIndex = set.GetFirstCard().Position.GetTileSlot() - 2;
             if (tileSlotIndex >= 0)
             {
-                secondTileSlot = transform.GetChild(tileSlotIndex).gameObject;
+                secondTileSlot = transform.GetChild(tileSlotIndex).gameObject; // get the second tile slot
             }
         }
         if (secondTileSlot != null && (secondTileSlot.transform.childCount == Constants.EmptyTileSlot || firstCardColumn == 1))
