@@ -19,14 +19,14 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 1.5f;
+    public float computerMoveDelay = 0.5f;
     // Player reference
     private Player myPlayer;
     private bool added;
     private bool dropped;
 
 
-  private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
+    private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
         List<CardsSet> cardsSets = new List<CardsSet>();
         CardsSet currentSet = new CardsSet();
@@ -143,8 +143,8 @@ public class Computer : Player
 
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
         {
-             MaximizePartialDrops();
-             AssignFreeCardsToExistsSets();
+            MaximizePartialDrops();
+            AssignFreeCardsToExistsSets();
         }
         else//if the player is not allowed to append cards to the board
         {
@@ -223,7 +223,7 @@ public class Computer : Player
                         print("No Space for: " + card.ToString() + " in set: " + set.ToString());
                         // if there is no space for the card then we need to rearrange the set
                         // forward true means that we need to add the card to the end of the set
-                         gameBoard.RearrangeCardsSet(key, card, true);
+                        gameBoard.RearrangeCardsSet(key, card, true);
                         //  cardsToUpdateFromPlayer.Add(card);
                         //  cardsToUpdateFromBoard.AddRange(set.set);
                     }
@@ -243,7 +243,7 @@ public class Computer : Player
                         // found = true; // break the loop
                         // this.added = true;
                         // cardsToRemove.Add(card);
-                       // save the old position of the card
+                        // save the old position of the card
                         card.OldPosition = card.Position;
                         card.Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
                         //play the card on the new position
@@ -254,21 +254,32 @@ public class Computer : Player
                         // print("No Space for: " + card.ToString() + " in set: " + set.ToString());
                         // // if there is no space for the card then we need to rearrange the set
                         // // forward false means that we need to add   the card to the beginning of the set
-                         this.gameBoard.RearrangeCardsSet(key, card, false);
+                        this.gameBoard.RearrangeCardsSet(key, card, false);
                         // cardsToUpdateFromPlayer.Add(card);
                         // cardsToUpdateFromBoard.AddRange(set.set);
                     }
                 }
-                // offset =set.CanAddCardMiddleRun(card);
-                // if(offset!=-1)
-                // {
-                //     // found = true;
-                //     // this.added = true;
-                //     // cardsToRemove.Add(card);
-                //     //uncombine the set
-                //    // CardsSet newSet = set.UnCombine(offset);
+                else if (set.CanAddCardMiddleRun(card)!= -1)
+                { 
+                    found = true; // break the loop
+                    this.added = true;
+                    cardsToRemove.Add(card);
+                         offset= set.CanAddCardMiddleRun(card);
+                        gameBoard.PrintGameBoardValidSets();
+                        Debug.Log("First set: "+ set.ToString());
+                        CardsSet newSet = set.UnCombine(offset);
+                        SetPosition newSetPos = new SetPosition(gameBoard.GetBoard().GetSetCountAndInc());
+                        gameBoard.GetBoard().AddCardsSet(newSetPos,newSet);
+                        gameBoard.GetBoard().UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
+                        gameBoard.GetBoard().UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
+                        gameBoard.RearrangeCardsSet(newSetPos, card, true);
+                        Debug.Log("New Set: "+newSet.ToString());
+                        Debug.Log("Old Set: "+set.ToString());
+                        gameBoard.PrintGameBoardValidSets();
+                        Debug.Log("wait a second, "+card.ToString()+", Index: "+offset);
 
-                // }
+
+                }
             }
 
         }

@@ -119,7 +119,7 @@ public class Board
         }
     }
 
-    
+
     public void HandleMiddleSplit(Card card, CardsSet oldSet, SetPosition oldSetPos, int cardIndex)
     {
         // new set = the set from the left 
@@ -127,31 +127,24 @@ public class Board
         CardsSet newSet = oldSet.UnCombine(cardIndex);
         SetPosition newSetPos = new SetPosition(SetCount++);
         AddCardsSet(newSetPos, newSet);
-
         if (newSet.set.Count > 1)
-        {
-            //upate the first card and last card to point to that newSetPos
-            cardToSetPos[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
-            cardToSetPos[GetKeyFromPosition(newSet.GetLastCard().Position)] = newSetPos;
-        }
+            UpdateKeyMultiCardsSet(GetKeyFromPosition(newSet.GetFirstCard().Position), GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
         else
-        {
-            cardToSetPos[GetKeyFromPosition(newSet.GetFirstCard().Position)] = newSetPos;
-
-        }
+            UpdateKeySingleCardsSet(GetKeyFromPosition(newSet.GetFirstCard().Position), newSetPos);
         if (oldSet.set.Count > 1)
-        {
-            // update the last card in the old set to point to the oldSetPos
-            cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
-            cardToSetPos[GetKeyFromPosition(oldSet.GetLastCard().Position)] = oldSetPos;
-        }
+            UpdateKeyMultiCardsSet(GetKeyFromPosition(oldSet.GetFirstCard().Position), GetKeyFromPosition(oldSet.GetLastCard().Position), oldSetPos);
         else
-        {
-            cardToSetPos[GetKeyFromPosition(oldSet.GetFirstCard().Position)] = oldSetPos;
-
-        }
+            UpdateKeySingleCardsSet(GetKeyFromPosition(oldSet.GetFirstCard().Position), oldSetPos);
     }
-
+    public void UpdateKeyMultiCardsSet(int keyLeft, int keyRight, SetPosition setPosition)
+    {
+        cardToSetPos[keyLeft] = setPosition;
+        cardToSetPos[keyRight] = setPosition;
+    }
+    public void UpdateKeySingleCardsSet(int key, SetPosition setPosition)
+    {
+        cardToSetPos[key] = setPosition;
+    }
     public bool CardKeyExistsInSet(int key)
     {
         return cardToSetPos.ContainsKey(key);
@@ -187,12 +180,5 @@ public class Board
         cardToSetPos[key] = newSetPos;
     }
 
-    // assume existing two pointers, remove them.
-    public void RemovePointers(SetPosition setPosition)
-    {
-      int left  = GetKeyFromPosition(gameBoardValidSets[setPosition].GetFirstCard().Position);
-      int right = GetKeyFromPosition(gameBoardValidSets[setPosition].GetLastCard().Position);
-      cardToSetPos.Remove(left);
-      cardToSetPos.Remove(right);
-    }
+
 }

@@ -26,6 +26,7 @@ public class GameBoard : MonoBehaviour
 
     // Return instance of rummikub deck
     public RummikubDeck GetRummikubDeckInstance() => rummikubDeck;
+    public Board GetBoard() => board;
 
     // Start is called before the first frame update
     void Start()
@@ -350,10 +351,10 @@ public class GameBoard : MonoBehaviour
                 {
                     return i - amount; // Calculate the index of the first slot in the sequence
                 }
-                else if (emptySlotsCount[row] == amount + 1)
+                else if (emptySlotsCount[row] == amount + 2)
                 {
                     // Calculate the index of the first slot in the sequence
-                    return i - amount + 1;
+                    return i - amount;
                 }
             }
             else
@@ -370,7 +371,6 @@ public class GameBoard : MonoBehaviour
     public void PlayCardSetOnBoard(CardsSet cardsSet)
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
-        //tileslot++;
         foreach (Card card in cardsSet.set)
         {
 
@@ -383,9 +383,6 @@ public class GameBoard : MonoBehaviour
             // move and remove the card
             MoveCardFromPlayerHandToGameBoard(card);
         }
-
-        gameController.GetCurrentPlayer().PrintCards();
-
     }
 
     // Play a card on the board at a specific tile slot and remove it from the player's hand, 
@@ -406,13 +403,14 @@ public class GameBoard : MonoBehaviour
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         CardsSet set = gameBoardValidSets[setPosition];
-        int oldLeft =GetKeyFromPosition(set.GetFirstCard().Position);
+        int oldLeft = GetKeyFromPosition(set.GetFirstCard().Position);
         int oldRight = GetKeyFromPosition(set.GetLastCard().Position);
         // co pilot print those two keys: 
         Debug.Log("Key is this is: "+ oldLeft);
         Debug.Log("Key is this is: "+ oldRight);
         Debug.Log("Key is this is: "+ setPosition.GetId());
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
+        Debug.Log("Found tileslot at: "+tileslot+", For: "+(set.set.Count + 1)+" amount of cards");
         if (!addAtTheEnd)
         {
             givenCard.OldPosition = givenCard.Position;
@@ -431,7 +429,7 @@ public class GameBoard : MonoBehaviour
                 card.OldPosition = card.Position;
                 card.Position.SetTileSlot(tileslot);
                 // update visualy
-                MoveCardFromGameBoardToGameBoard(card);
+                // MoveCardFromGameBoardToGameBoard(card);
                 uiManager.MoveCardToBoard(card, tileslot, false);
                 tileslot++;
                 
@@ -441,7 +439,15 @@ public class GameBoard : MonoBehaviour
             }
             current = current.Next;
         }
-
+        int newRight = GetKeyFromPosition(set.GetLastCard().Position);
+        int newLeft = GetKeyFromPosition(set.GetFirstCard().Position);
+       
+        //remove the old
+        board.RemoveSetPosition(oldLeft);
+        board.RemoveSetPosition(oldRight);
+         //update the two keys to be the new keys
+        board.SetSetPosition(newRight, setPosition);
+        board.SetSetPosition(newLeft, setPosition);
 
         if (addAtTheEnd)
         {
@@ -449,10 +455,10 @@ public class GameBoard : MonoBehaviour
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location
-        PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);
-        board.GetCardsToSetsTable().Remove(oldLeft);
-        board.GetCardsToSetsTable().Remove(oldRight);
-        gameBoardValidSets.Remove(setPosition);
+         PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);
+        // board.GetCardsToSetsTable().Remove(oldLeft);
+        // board.GetCardsToSetsTable().Remove(oldRight);
+        // gameBoardValidSets.Remove(setPosition);
     
         
 

@@ -53,7 +53,6 @@ public class UImanager : MonoBehaviour
         if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
         {
             gameController.GetCurrentPlayer().DrawCardFromDeck();
-            gameController.GetCurrentPlayer().PrintCards();
             gameController.ChangeTurn();
             UpdateTurnText();
 

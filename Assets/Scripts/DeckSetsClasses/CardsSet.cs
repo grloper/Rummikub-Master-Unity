@@ -276,8 +276,8 @@ public int RemoveCard(Card card)
         if (set.Count < Constants.MinSetLengthForMiddleRun || card.Color != set.GetFirstNode().Value.Color)
             return -1;
         // Check if the card can be added in the middle O(1)
-        if(card.Number<= set.GetFirstNode().Value.Number + Constants.MiddleRunOffset
-         || card.Number >= set.GetLastNode().Value.Number- Constants.MiddleRunOffset)
+        if(card.Number >= set.GetFirstNode().Value.Number + Constants.MiddleRunOffset
+         && card.Number <= set.GetLastNode().Value.Number- Constants.MiddleRunOffset)
         {
             // if the card can be added in the middle, return the index of the card
             return card.Number - set.GetFirstNode().Value.Number; //because the set is a run
