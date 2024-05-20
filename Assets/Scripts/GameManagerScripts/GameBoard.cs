@@ -405,12 +405,7 @@ public class GameBoard : MonoBehaviour
         CardsSet set = gameBoardValidSets[setPosition];
         int oldLeft = GetKeyFromPosition(set.GetFirstCard().Position);
         int oldRight = GetKeyFromPosition(set.GetLastCard().Position);
-        // co pilot print those two keys: 
-        Debug.Log("Key is this is: "+ oldLeft);
-        Debug.Log("Key is this is: "+ oldRight);
-        Debug.Log("Key is this is: "+ setPosition.GetId());
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
-        Debug.Log("Found tileslot at: "+tileslot+", For: "+(set.set.Count + 1)+" amount of cards");
         if (!addAtTheEnd)
         {
             givenCard.OldPosition = givenCard.Position;
@@ -425,14 +420,11 @@ public class GameBoard : MonoBehaviour
             Card card = current.Value;
             if (card != givenCard)
             {
-                Debug.Log("Moving: " + card.ToString());
                 card.OldPosition = card.Position;
                 card.Position.SetTileSlot(tileslot);
                 // update visualy
-                // MoveCardFromGameBoardToGameBoard(card);
                 uiManager.MoveCardToBoard(card, tileslot, false);
                 tileslot++;
-                
                 // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
                 AddCardToMovesStack(card);
                 // move and remove the card
@@ -441,7 +433,6 @@ public class GameBoard : MonoBehaviour
         }
         int newRight = GetKeyFromPosition(set.GetLastCard().Position);
         int newLeft = GetKeyFromPosition(set.GetFirstCard().Position);
-       
         //remove the old
         board.RemoveSetPosition(oldLeft);
         board.RemoveSetPosition(oldRight);
@@ -455,13 +446,7 @@ public class GameBoard : MonoBehaviour
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location
-         PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);
-        // board.GetCardsToSetsTable().Remove(oldLeft);
-        // board.GetCardsToSetsTable().Remove(oldRight);
-        // gameBoardValidSets.Remove(setPosition);
-    
-        
-
+         PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);    
     }
     /// <summary>
     /// Checks if there is space for a card in the specified position on the game board.
