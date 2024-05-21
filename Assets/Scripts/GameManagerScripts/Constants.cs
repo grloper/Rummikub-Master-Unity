@@ -44,6 +44,8 @@ public class Constants
     // appending card in the middle constants
     public const int MinSetLengthForMiddleRun = 5;
     public const int MiddleRunOffset = 2;
+    // breaking cards from the middle constants
+    public const int MinSetLengthForMiddleBreak = 6;
     
 
 }

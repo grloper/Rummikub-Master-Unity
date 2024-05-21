@@ -74,7 +74,7 @@ public class PlayerHand : IEnumerable<Card>
 
     if (cardMatrix[colorIndex, numberIndex].Count == 0)
     {
-      throw new System.Exception("No such card in hand.");
+      throw new System.Exception("No such card in hand. "+ card.ToString() + " is not in hand.");
     }
     cardMatrix[colorIndex, numberIndex].Remove(card);
   }

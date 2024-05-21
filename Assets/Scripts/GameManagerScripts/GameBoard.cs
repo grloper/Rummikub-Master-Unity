@@ -148,9 +148,9 @@ public class GameBoard : MonoBehaviour
         PutInSet(card);
     }
 
-    public void MoveCardFromPlayerHandToGameBoard(Card card, bool canRemove = true)
+    public void MoveCardFromPlayerHandToGameBoard(Card card, RemoveOption removeOption)
     {
-        if (canRemove)
+        if (removeOption == RemoveOption.Remove)
         {
             gameController.GetCurrentPlayer().RemoveCardFromList(card);
         }
@@ -380,7 +380,7 @@ public class GameBoard : MonoBehaviour
             // in case of manual undo keep track of the logic for the computer even tho we allow only valid moves
             AddCardToMovesStack(card);
             // move and remove the card
-            MoveCardFromPlayerHandToGameBoard(card);
+            MoveCardFromPlayerHandToGameBoard(card, RemoveOption.Remove);
         }
     }
 
@@ -388,24 +388,24 @@ public class GameBoard : MonoBehaviour
     // assume the play is from the player hand
 
     // O(1)
-    public void PlayCardOnBoard(Card card, int tileslot, bool canRemove = true)
+    public void PlayCardOnBoard(Card card, int tileslot, RemoveOption removeOption)
     {
         // assume already check no nehibors to combine my love
         uiManager.MoveCardToBoard(card, tileslot, true);
         AddCardToMovesStack(card);
-        MoveCardFromPlayerHandToGameBoard(card, canRemove);
+        MoveCardFromPlayerHandToGameBoard(card, removeOption);
     }
     // Rearrange the cards on the board with the given card to the end or the beginning of the set
     // while keeping the sets valid and the board rules with visual update
     // O(n) where n is the number of cards in the set
-    public void RearrangeCardsSet(SetPosition setPosition, Card givenCard, bool addAtTheEnd)
+    public void RearrangeCardsSet(SetPosition setPosition, Card givenCard, AddPosition addPosition)
     {
         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
         CardsSet set = gameBoardValidSets[setPosition];
         int oldLeft = GetKeyFromPosition(set.GetFirstCard().Position);
         int oldRight = GetKeyFromPosition(set.GetLastCard().Position);
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
-        if (!addAtTheEnd)
+        if (addPosition==AddPosition.Beginning)
         {
             givenCard.OldPosition = givenCard.Position;
             givenCard.Position.SetTileSlot(tileslot);
@@ -439,13 +439,13 @@ public class GameBoard : MonoBehaviour
         board.SetSetPosition(newRight, setPosition);
         board.SetSetPosition(newLeft, setPosition);
 
-        if (addAtTheEnd)
+        if (addPosition==AddPosition.End)
         {
             givenCard.OldPosition = givenCard.Position;
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location
-         PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), false);    
+         PlayCardOnBoard(givenCard, givenCard.Position.GetTileSlot(), RemoveOption.DontRemove);    
     }
     /// <summary>
     /// Checks if there is space for a card in the specified position on the game board.

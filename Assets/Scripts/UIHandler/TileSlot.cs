@@ -81,7 +81,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             card.CameFromPlayerHand = true;
             // update the position of the card in the game board
-            board.MoveCardFromPlayerHandToGameBoard(card);
+            board.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.Remove);
             // push the card to the moves stack
             board.AddCardToMovesStack(card);
         }

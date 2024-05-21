@@ -6,14 +6,22 @@ public class CardInfo
 {
     Card card;
     SetPosition setPosition;
-    bool isEnd;
+    AddPosition position;
     int cardIndex;
-    public CardInfo(Card card, SetPosition setPosition, bool isEnd, int cardIndex = -1)
+    public CardInfo(Card card, SetPosition setPosition, AddPosition position, int cardIndex = -1)
     {
         this.card = card;
         this.setPosition = setPosition;
-        this.isEnd = isEnd;
         this.cardIndex = cardIndex;
+         this.position = position;
+    }
+    public AddPosition GetPosition()
+    {
+        return this.position;
+    }
+    public void SetPosition(AddPosition position)
+    {
+        this.position = position;
     }
     public int GetCardIndex()
     {
@@ -31,14 +39,7 @@ public class CardInfo
     {
         return this.setPosition;
     }
-    public bool IsEnd()
-    {
-        return this.isEnd;
-    }
-    public void SetIsEnd(bool isEnd)
-    {
-        this.isEnd = isEnd;
-    }
+
     public void SetSetPosition(SetPosition setPosition)
     {
         this.setPosition = setPosition;
@@ -47,10 +48,7 @@ public class CardInfo
     {
         this.card = card;
     }
-    public override string ToString()
-    {
-        return "Card: " + card.ToString() + " SetPosition: " + setPosition.ToString() + " IsEnd: " + isEnd + " CardIndex: " + cardIndex;
-    }
+
 
 
 

@@ -251,6 +251,14 @@ public int RemoveCard(Card card)
         this.set.RemoveLast();
         return check;
     }
+    public bool CanAddCardFirst(Card card)
+    {
+        return  CanAddCardBegginingRun(card) || CanAddCardBegginingGroup(card);
+    }
+    public bool CanAddCardLast(Card card)
+    {
+        return  CanAddCardEndRun(card) || CanAddCardEndGroup(card);
+    }
     public bool CanAddCardBegginingGroup(Card card)
     {
         AddCardToBeginning(card);
