@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// This class is used to create a node for a doubly linked list. 
 public class Node<T>
 {
-    public T Value { get; set; }
-    public Node<T> Next { get; set; }
-    public Node<T> Prev { get; set; }
+    // simple outline of a node.
+    public T Value { get; set; } // value of the node
+    public Node<T> Next { get; set; } // next node
+    public Node<T> Prev { get; set; } // previous node
 }

@@ -19,7 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 0.2f;
+    public float computerMoveDelay = 0.5f;
     // Player reference
     private Player myPlayer;
     private bool added; // added single cards

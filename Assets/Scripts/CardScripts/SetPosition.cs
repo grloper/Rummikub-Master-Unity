@@ -1,8 +1,10 @@
 
+// SetPosition is a class that represents the position of a set of connected cards in the game board.
 public class SetPosition
 {
-    private readonly int id;
+    private readonly int id; // unique id for the each set of cards
 
+    // Constructor for the set position
     public SetPosition(int id)
     {
         this.id = id;

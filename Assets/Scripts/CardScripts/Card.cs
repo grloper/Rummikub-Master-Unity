@@ -12,15 +12,15 @@ public class Card : MonoBehaviour
     private Transform parentBeforeDrag; // The parent of the card before it was dragged so we can undo the drag if needed to the first postion and only to the last
     private CardPosition oldPositionBeforeDrag; // The set position of the card before it was dragged so we can undo the drag if needed to the first postion and only to the last
     // Gets and Sets
-    public int Number { get => number; set => number = value; }
-    public CardColor Color { get => color; set => color = value; }
-    public CardPosition Position { get => position; set => position = value; }
-    public CardPosition OldPosition { get => oldPosition; set => oldPosition = value; }
+    public int Number { get => number; set => number = value; } // get and set the number of the card
+    public CardColor Color { get => color; set => color = value; } // get and set the color of the card
+    public CardPosition Position { get => position; set => position = value; } // get and set the position of the card
+    public CardPosition OldPosition { get => oldPosition; set => oldPosition = value; } // get and set the old position of the card
    
     // Undo Parameters and for logics.
-    public bool CameFromPlayerHand { get => cameFromPlayerHand; set => cameFromPlayerHand = value; }
-    public Transform ParentBeforeDrag { get => parentBeforeDrag; set => parentBeforeDrag = value; }
-    public CardPosition OldPositionBeforeDrag { get => oldPositionBeforeDrag; set => oldPositionBeforeDrag = value; }
+    public bool CameFromPlayerHand { get => cameFromPlayerHand; set => cameFromPlayerHand = value; } // get and set if the card came from the player hand
+    public Transform ParentBeforeDrag { get => parentBeforeDrag; set => parentBeforeDrag = value; } // get and set the parent of the card before it was dragged
+    public CardPosition OldPositionBeforeDrag { get => oldPositionBeforeDrag; set => oldPositionBeforeDrag = value; } // get and set the old position of the card before it was dragged
     public Card()
     {
         // Default constructor
@@ -34,31 +34,19 @@ public class Card : MonoBehaviour
         OldPosition = new CardPosition();
         Position = new CardPosition();
     }
-
+    // ToString, Equals 
     public override string ToString()
     {
         // Return a string representation of the card
         return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color>("+((position.Row*100)+position.Column)+")";// + position.Row + " X:" + position.Column;
     }
+    // Every card is unique, so we can compare them by reference
     public override bool Equals(object other)
     {
         // Check for reference equality
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-
+        return ReferenceEquals(this, other);
     }
 
-    public override int GetHashCode()
-    {
-        // Return the hash code of the card
-        return number.GetHashCode() ^ color.GetHashCode();
-    }
 }
 
 

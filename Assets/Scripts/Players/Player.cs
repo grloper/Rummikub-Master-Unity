@@ -55,7 +55,6 @@ public class Player : MonoBehaviour
                 Debug.LogWarning("Unable to draw a card for the player's board.");
             }
         }
-        Debug.Log(playerHand.ToString());
     }
 
     // Set the visibility of the player board (true = visible, false = hidden)
