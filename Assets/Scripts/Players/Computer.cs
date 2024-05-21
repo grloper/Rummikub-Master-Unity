@@ -174,8 +174,8 @@ public class Computer : Player
             CardInfo info = FindExtractableCardsFromBoard(set);
             if (info != null)
             {
-                this.partial = true;
-                ExtractCardAndReArrange(info);
+                //this.partial = true;
+                ExtractCardAndReArrange(info, set);
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MaxPartialSet, Constants.MaxPartialSet);
@@ -184,14 +184,15 @@ public class Computer : Player
             CardInfo info = FindExtractableCardsFromBoard(set);
             if (info !=  null)
             {
-                this.partial = true;
-                ExtractCardAndReArrange(info);
+                //this.partial = true;
+                ExtractCardAndReArrange(info,set);
             }
         }
     }
 
-    private void ExtractCardAndReArrange(CardInfo info)
+    private void ExtractCardAndReArrange(CardInfo info, CardsSet set)
     {
+        print("Found for: " +set.ToString()+", the card: "+ info.GetCard().ToString()+"From set: "+gameBoard.board.GetGameBoardValidSetsTable()[info.GetSetPosition()]);
 
     }
 
