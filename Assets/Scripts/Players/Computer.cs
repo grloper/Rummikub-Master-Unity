@@ -19,7 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 0.5f;
+    public float computerMoveDelay = 0.2f;
     // Player reference
     private Player myPlayer;
     private bool added; // added single cards
@@ -165,20 +165,97 @@ public class Computer : Player
     public void MaximizePartialDrops()
     {
         this.partial = false;
+         int combinedValue;
         print("Partial drops");
         List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand().SortedByRun(), Constants.MaxPartialSet, Constants.MaxPartialSet);
-             foreach (CardsSet set in setsRun)
+        foreach (CardsSet set in setsRun)
         {
-            print(set.ToString());
+            
+            CardInfo info = FindExtractableCardsFromBoard(set);
+            if (info != null)
+            {
+                this.partial = true;
+                ExtractCardAndReArrange(info);
+            }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MaxPartialSet, Constants.MaxPartialSet);
         foreach (CardsSet set in setsGroup)
         {
-            print(set.ToString());
+            CardInfo info = FindExtractableCardsFromBoard(set);
+            if (info !=  null)
+            {
+                this.partial = true;
+                ExtractCardAndReArrange(info);
+            }
         }
     }
 
+    private void ExtractCardAndReArrange(CardInfo info)
+    {
 
+    }
+
+    private CardInfo FindExtractableCardsFromBoard(CardsSet partialSet)
+    {
+        foreach (SetPosition sp in gameBoard.board.GetGameBoardValidSetsTable().Keys)
+        {
+            CardsSet setInBoard = gameBoard.board.GetGameBoardValidSetsTable()[sp];
+            if (setInBoard.GetDeckLength() > Constants.MinInRun)
+            {
+                int count = 0;
+                if (setInBoard.GetDeckLength() == 4 && setInBoard.isGroupOfColors)
+                {
+                    foreach (Card card in setInBoard.set)
+                    {
+                        if (partialSet.CanAddCardBegginingGroup(card) || partialSet.CanAddCardBegginingRun(card) || partialSet.CanAddCardEndGroup(card) || partialSet.CanAddCardEndRun(card))
+                        {
+                            return new CardInfo(card, sp, true, count);
+                        }
+                        count++;
+                    }
+                }
+                else if (setInBoard.GetDeckLength() > 3 && setInBoard.isRun)
+                {
+
+                    if (partialSet.CanAddCardEndGroup(setInBoard.GetFirstCard()) || partialSet.CanAddCardEndRun(setInBoard.GetFirstCard()))
+                    {
+                        return new CardInfo(setInBoard.GetFirstCard(), sp, true, 0);
+                    }
+                    else if(partialSet.CanAddCardBegginingGroup(setInBoard.GetFirstCard()) || partialSet.CanAddCardBegginingRun(setInBoard.GetFirstCard()))
+                    {
+                        return new CardInfo(setInBoard.GetFirstCard(), sp, false, 0);
+                    }
+                    else if (partialSet.CanAddCardEndGroup(setInBoard.GetLastCard()) || partialSet.CanAddCardEndRun(setInBoard.GetLastCard()))
+                    {
+                        return new CardInfo(setInBoard.GetLastCard(), sp,true,setInBoard.GetDeckLength() - 1);
+                    }
+                    else if(partialSet.CanAddCardBegginingGroup(setInBoard.GetLastCard()) || partialSet.CanAddCardBegginingRun(setInBoard.GetLastCard()))
+                    {
+                        return new CardInfo(setInBoard.GetLastCard(), sp, false, setInBoard.GetDeckLength() - 1);
+                    }
+                    else if (setInBoard.GetDeckLength() > 6)
+                    {
+                        foreach (Card card in setInBoard.GetMiddleCards())
+                        {
+                            if (partialSet.CanAddCardEndGroup(card) || partialSet.CanAddCardEndRun(card))
+                            {
+                               
+                                return new CardInfo(card, sp, true, card.Number - setInBoard.GetFirstCard().Number);
+                            }
+                            else if(partialSet.CanAddCardBegginingGroup(card) || partialSet.CanAddCardBegginingRun(card))
+                            {
+                             return new CardInfo(card, sp, false, card.Number - setInBoard.GetFirstCard().Number);
+  
+                            }
+                        }
+
+                    }
+
+                }
+            }
+        }
+        return null;
+    }
 
     // Assigns free cards to existing sets on the game board, rearrange visualy if needed.
     public void AssignFreeCardsToExistsSets()
@@ -193,7 +270,7 @@ public class Computer : Player
             // if added a card to a set then break the loop
             bool found = false;
             int offset = -1;//the offset of the card if can be added in the middle of some set and split it into two different sets
-            // extract the keys from the dictionary to iterate over them
+                            // extract the keys from the dictionary to iterate over them
             List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList();
             keys.ToArray();
             // Create a copy of the keys
@@ -251,20 +328,20 @@ public class Computer : Player
                         this.gameBoard.RearrangeCardsSet(key, card, false);
                     }
                 }
-                else if (set.CanAddCardMiddleRun(card)!= -1)
-                { 
+                else if (set.CanAddCardMiddleRun(card) != -1)
+                {
                     found = true; // break the loop
                     this.added = true;
                     cardsToRemove.Add(card);
-                         offset= set.CanAddCardMiddleRun(card);
-                        gameBoard.PrintGameBoardValidSets();
-                        CardsSet newSet = set.UnCombine(offset);
-                        SetPosition newSetPos = new SetPosition(gameBoard.board.GetSetCountAndInc());
-                        gameBoard.board.AddCardsSet(newSetPos,newSet);
-                        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
-                        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
-                        gameBoard.RearrangeCardsSet(newSetPos, card, true);
-                        gameBoard.PrintGameBoardValidSets();
+                    offset = set.CanAddCardMiddleRun(card);
+                    gameBoard.PrintGameBoardValidSets();
+                    CardsSet newSet = set.UnCombine(offset);
+                    SetPosition newSetPos = new SetPosition(gameBoard.board.GetSetCountAndInc());
+                    gameBoard.board.AddCardsSet(newSetPos, newSet);
+                    gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
+                    gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
+                    gameBoard.RearrangeCardsSet(newSetPos, card, true);
+                    gameBoard.PrintGameBoardValidSets();
 
 
                 }

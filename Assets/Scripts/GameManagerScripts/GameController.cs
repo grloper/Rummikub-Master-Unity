@@ -89,7 +89,7 @@ public class GameController : MonoBehaviour
     {
         if (playersList[GetCurrentPlayerIndex()].IsDeckEmpty())
         {
-            Debug.Log("Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins******************************************************");
+            throw new WinException("Player " + GetCurrentPlayer().GetPlayerType().ToString() + (GetCurrentPlayerIndex() + 1) + " wins");
         }
 
     }

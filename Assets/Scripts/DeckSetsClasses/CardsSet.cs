@@ -285,5 +285,11 @@ public int RemoveCard(Card card)
         return -1;
     }
 
+    internal IEnumerable<Card> GetMiddleCards()
+    {
+        int getAmount = set.Count - 6;
+        return set.Skip(3).Take(getAmount);
+    }
+
     // End of CardsSet.cs
 }
