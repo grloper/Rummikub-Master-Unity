@@ -22,8 +22,9 @@ public class Computer : Player
     public float computerMoveDelay = 0.5f;
     // Player reference
     private Player myPlayer;
-    private bool added;
-    private bool dropped;
+    private bool added; // added single cards
+    private bool dropped; // dropped valid sets
+    private bool partial; // dropped partial sets with free cards
 
     // O(n) where n is the number of cards in hand
     private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
@@ -99,10 +100,6 @@ public class Computer : Player
     {
         this.dropped = false;
         List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand().SortedByRun(), Constants.MinInRun, Constants.MaxInRun);
-        foreach (CardsSet set in setsRun)
-        {
-            print(set.ToString());
-        }
         if (setsRun.Count > 0)
         {
             this.dropped = true;
@@ -124,10 +121,10 @@ public class Computer : Player
     }
     public void Initialize(Player player)
     {
-        this.myPlayer = player;
-        this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
-        this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>();
-        this.gameBoard = GameObject.FindGameObjectWithTag("BoardGrid").GetComponent<GameBoard>();
+        this.myPlayer = player; // set the player reference
+        this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>(); // get the game controller reference, to call the methods
+        this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>(); // get the ui manager reference, to call the methods 
+        this.gameBoard = GameObject.FindGameObjectWithTag("BoardGrid").GetComponent<GameBoard>(); // get the game board reference, to call the methods
     }
 
     public IEnumerator ComputerMove()
@@ -155,26 +152,35 @@ public class Computer : Player
                 return;
             }
         }
-        if (dropped || added) //if the computer has made a move, or have sets to drop.
+        if (dropped || added || partial) //if the computer has made a move, or have sets to drop.
         {
-            uiManager.ConfirmMove();
+            uiManager.ConfirmMove(); // confirm the move 
         }
         else
         {
-            uiManager.DrawACardFromDeck();
+            uiManager.DrawACardFromDeck(); // draw a card if the computer has no moves to make
         }
     }
 
     public void MaximizePartialDrops()
     {
-        //
+        this.partial = false;
+        print("Partial drops");
+        List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand().SortedByRun(), Constants.MaxPartialSet, Constants.MaxPartialSet);
+             foreach (CardsSet set in setsRun)
+        {
+            print(set.ToString());
+        }
+        List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MaxPartialSet, Constants.MaxPartialSet);
+        foreach (CardsSet set in setsGroup)
+        {
+            print(set.ToString());
+        }
     }
 
 
 
-    /// <summary>
-    /// Assigns free cards to existing sets on the game board, rearrange visualy if needed.
-    /// </summary>
+    // Assigns free cards to existing sets on the game board, rearrange visualy if needed.
     public void AssignFreeCardsToExistsSets()
     {
         this.added = false;
@@ -253,10 +259,10 @@ public class Computer : Player
                          offset= set.CanAddCardMiddleRun(card);
                         gameBoard.PrintGameBoardValidSets();
                         CardsSet newSet = set.UnCombine(offset);
-                        SetPosition newSetPos = new SetPosition(gameBoard.GetBoard().GetSetCountAndInc());
-                        gameBoard.GetBoard().AddCardsSet(newSetPos,newSet);
-                        gameBoard.GetBoard().UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
-                        gameBoard.GetBoard().UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
+                        SetPosition newSetPos = new SetPosition(gameBoard.board.GetSetCountAndInc());
+                        gameBoard.board.AddCardsSet(newSetPos,newSet);
+                        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
+                        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
                         gameBoard.RearrangeCardsSet(newSetPos, card, true);
                         gameBoard.PrintGameBoardValidSets();
 

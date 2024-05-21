@@ -26,7 +26,6 @@ public class GameBoard : MonoBehaviour
 
     // Return instance of rummikub deck
     public RummikubDeck GetRummikubDeckInstance() => rummikubDeck;
-    public Board GetBoard() => board;
 
     // Start is called before the first frame update
     void Start()
