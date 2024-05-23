@@ -182,7 +182,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &274140813
 Transform:
   m_ObjectHideFlags: 0
@@ -786,6 +786,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e06c251e7f2624cb0328974b222cfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PrefabTile: {fileID: 8922378899630301520, guid: df558ee1241ed4a478cdb2e47d6999b9, type: 3}
+  PrefabTileSlot: {fileID: 2894873449019977871, guid: 0598a9fc9c75e0844a48ac9ac0165ccd, type: 3}
+  PrefabTileSlotPlayer: {fileID: 2894873449019977871, guid: 4c3a0b5fd0030934191135c6218ce27d, type: 3}
+  PrefabPlayerGrid: {fileID: 2818766243601629669, guid: c8387cf4ab5e32c47977da2abe689a6b, type: 3}
+  Canvas: {fileID: 306871405}
+  turnDisplayText: {fileID: 1187755894}
+  btnDeckText: {fileID: 805861678}
+  board: {fileID: 914871410}
+  gameController: {fileID: 1707528208}
   cardsUI:
   - {fileID: -6955850772684049140, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: 9108500884100146404, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
@@ -842,15 +851,6 @@ MonoBehaviour:
   - {fileID: 6883390163418833107, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: 2465421807293234824, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
   - {fileID: -7474432792787283001, guid: 496413347af088f4f9306a22e1e9e07e, type: 3}
-  PrefabTile: {fileID: 8922378899630301520, guid: df558ee1241ed4a478cdb2e47d6999b9, type: 3}
-  PrefabTileSlot: {fileID: 2894873449019977871, guid: 0598a9fc9c75e0844a48ac9ac0165ccd, type: 3}
-  PrefabTileSlotPlayer: {fileID: 2894873449019977871, guid: 4c3a0b5fd0030934191135c6218ce27d, type: 3}
-  gameController: {fileID: 1707528208}
-  PrefabPlayerGrid: {fileID: 2818766243601629669, guid: c8387cf4ab5e32c47977da2abe689a6b, type: 3}
-  Canvas: {fileID: 306871405}
-  turnDisplayText: {fileID: 1187755894}
-  board: {fileID: 914871410}
-  btnDeckText: {fileID: 805861678}
 --- !u!114 &1707528208
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -983,7 +983,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2134636682
 Transform:
   m_ObjectHideFlags: 0

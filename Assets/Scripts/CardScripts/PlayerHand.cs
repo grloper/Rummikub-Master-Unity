@@ -65,7 +65,22 @@ public class PlayerHand : IEnumerable<Card>
     }
     cardMatrix[colorIndex, numberIndex].Remove(card); // Remove the card from the 2D array, O(1)
   }
-
+  //function O(1) get joker else null either black or either red
+  public Card GetJoker()
+  {
+    int colorIndex = (int)CardColor.Black; // Get the color index for black
+    int numberIndex = Constants.MaxRank; // Get the number index for Joker
+    if (cardMatrix[colorIndex, numberIndex].Count > 0) // Check if the black Joker is in the 2D array
+    {
+      return cardMatrix[colorIndex, numberIndex].First.Value; // Return the black Joker
+    }
+    colorIndex = (int)CardColor.Red; // Get the color index for red
+    if (cardMatrix[colorIndex, numberIndex].Count > 0) // Check if the red Joker is in the 2D array
+    {
+      return cardMatrix[colorIndex, numberIndex].First.Value; // Return the red Joker
+    }
+    return null; // Return null if no Joker is found
+  }
   // if the hand contains the card, O(1)
   public bool Contains(Card card)
   {

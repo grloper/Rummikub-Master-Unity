@@ -367,12 +367,15 @@ public class GameBoard : MonoBehaviour
         return -1;
     }
 
-    public void PlayCardSetOnBoard(CardsSet cardsSet)
+    public void PlayCardSetOnBoard(CardsSet cardsSet, int add = 0, AddPosition p = AddPosition.End)
     {
-        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count);
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + add);
+        if (p == AddPosition.Beginning) // Indicate if we want the first slot to be empty
+        {
+            tileslot++;
+        }
         foreach (Card card in cardsSet.set)
         {
-
             card.OldPosition = card.Position;
             card.Position.SetTileSlot(tileslot);
             uiManager.MoveCardToBoard(card, tileslot, true);
@@ -390,7 +393,7 @@ public class GameBoard : MonoBehaviour
     // O(1)
     public void PlayCardOnBoard(Card card, int tileslot, RemoveOption removeOption)
     {
-        // assume already check no nehibors to combine my love
+        // assume already check no nehibours to combine my love
         uiManager.MoveCardToBoard(card, tileslot, true);
         AddCardToMovesStack(card);
         MoveCardFromPlayerHandToGameBoard(card, removeOption);

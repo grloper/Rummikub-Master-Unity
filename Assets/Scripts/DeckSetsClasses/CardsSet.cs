@@ -168,7 +168,7 @@ public class CardsSet : ICardSet
     {
         return card.Number == Constants.JokerRank; // the joker is a mask of 1111b
     }
-
+    // simple override for the ToString method
     public override string ToString()
     {
         Node<Card> current = set.GetFirstNode();
@@ -185,7 +185,7 @@ public class CardsSet : ICardSet
 
 
 
-    // minimize adding at first or end
+    // minimize adding calling at first or end
     public bool CanAddCardFirst(Card card)
     {
         return CanAddCardBeginningRun(card) || CanAddCardBeginningGroup(card);
@@ -196,24 +196,40 @@ public class CardsSet : ICardSet
     }
  
     // check if a card can add to the beginning of the set to create a group of colors
-    public bool CanAddCardBeginningGroup(Card card)
+     public bool CanAddCardBeginningGroup(Card card)
     {
-        return isGroupOfColors&&!IsContainThisColor(card.Color)&&card.Number==GetFirstCard().Number;
+        AddCardToBeginning(card);
+        bool check = this.IsGroupOfColors();
+        this.set.RemoveFirst();
+        return check;
+
     }
-    // check if a card can add to the beginning of the set to create a run
-    public bool CanAddCardBeginningRun(Card card)
+    // check if a card can add to the beginning of the set to create a run, O(1)
+      public bool CanAddCardBeginningRun(Card card)
     {
-        return isRun&&IsConsicutive(GetFirstCard(),card)&&card.Color==GetFirstCard().Color;
+        AddCardToBeginning(card);
+        bool check= this.IsRun();
+        set.RemoveFirst();
+        return check;
+        
     }
     // check if a card can add to the end of the set to create a group of colors
-    public bool CanAddCardEndGroup(Card card)
+      public bool CanAddCardEndGroup(Card card)
     {
-        return isGroupOfColors&&!IsContainThisColor(card.Color)&&card.Number==GetLastCard().Number;
+        AddCardToEnd(card);
+        bool check = this.IsGroupOfColors();
+        this.set.RemoveLast();
+        return check;
     }
-    // check if a card can be added to the end of the set to create a run 
+    // check if a card can be added to the end of the set to create a run, O(1)
     public bool CanAddCardEndRun(Card card)
     {
-        return isRun&&IsConsicutive(card, GetLastCard())&&card.Color==GetLastCard().Color;
+        //add the card to the set O(1)
+        AddCardToEnd(card);
+        bool check = this.IsRun();
+        //remove the card from the set O(1)
+        this.set.RemoveLast();
+        return check;
     }
 
     // O(1)

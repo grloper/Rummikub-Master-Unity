@@ -21,6 +21,10 @@ public class Board
     {
         return this.SetCount++;
     }
+    public int GetSetCount()
+    {
+        return this.SetCount;
+    }
 
     public Board()
     {

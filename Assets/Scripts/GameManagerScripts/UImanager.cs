@@ -9,19 +9,21 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 public class UImanager : MonoBehaviour
 {
-    public List<Sprite> cardsUI = new List<Sprite>();
-    //Game Tiles, TileSlots prefabs
-    [SerializeField] private GameObject PrefabTile;
-    [SerializeField] private GameObject PrefabTileSlot;
-    [SerializeField] private GameObject PrefabTileSlotPlayer;
-    [SerializeField] private GameController gameController;
-    [SerializeField] private GameObject PrefabPlayerGrid;
-    [SerializeField] private GameObject Canvas;
-    [SerializeField] private TextMeshProUGUI turnDisplayText;
-    [SerializeField] private GameBoard board;
-    // Reference to the deck button so we can change the text
-    [SerializeField] TextMeshProUGUI btnDeckText;
+   
+    //Unity Editor References
+    [SerializeField] private GameObject PrefabTile; // Card prefab
+    [SerializeField] private GameObject PrefabTileSlot; // Tile slot prefab (on the board)
+    [SerializeField] private GameObject PrefabTileSlotPlayer; // Tile slot prefab for player (on the player grid)
+    [SerializeField] private GameObject PrefabPlayerGrid; // Player grid prefab (on the canvas, unique for each player)
+    [SerializeField] private GameObject Canvas; // Reference to the main canvas
+    [SerializeField] private TextMeshProUGUI turnDisplayText; // Reference to the turn display text
+    [SerializeField] TextMeshProUGUI btnDeckText; // Reference to the deck button so we can change the text
 
+    // References to the game board and game controller
+    [SerializeField] private GameBoard board; // Reference to the game board
+    [SerializeField] private GameController gameController; // Reference to the game controller
+    // Array of card sprites
+    public List<Sprite> cardsUI = new List<Sprite>(); // List of card sprites (the images of the cards)
 
 
     //institnate player grid in the canvas
@@ -31,8 +33,7 @@ public class UImanager : MonoBehaviour
         playerGrid.SetActive(false);
         return playerGrid;
     }
-
-
+    
     private void Start()
     {
         this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
@@ -67,7 +68,7 @@ public class UImanager : MonoBehaviour
     {
         // If the stack is empty, print an error
         if (board.GetMovesStack().Count == Constants.EmptyStack)
-            throw new EmptyDeckException();
+            throw new UndoException();
         else
             board.UndoMoves();
     }
@@ -78,7 +79,7 @@ public class UImanager : MonoBehaviour
             if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
                 Undo();
         }
-        catch (EmptyDeckException)
+        catch (UndoException)
         {
             print("No moves to undo");
         }

@@ -6,6 +6,5 @@ using UnityEngine;
 public enum AddPosition
 {
     Beginning, //0
-    Middle, //1
-    End //2
+    End //1
 }
