@@ -102,6 +102,10 @@ public class CardsSet : ICardSet
         Node<Card> node = GetFirstNodeOfNotJoker(); // get the first node of a card that is not a joker
         CardColor SetColor = node.Value.Color; // get the color of the set
         int CurrentNum = node.Value.Number; // get the number of the first card
+        if(IsJoker(GetFirstCard())&& set.Head.Next.Value.Number == Constants.MinRank)
+        {
+            return isRun = false;
+        }
         for (Node<Card> current = node; current != null; current = current.Next)
         {
             if (CurrentNum == Constants.MaxRank + 1 || // the number is bigger than 13
@@ -111,6 +115,8 @@ public class CardsSet : ICardSet
         }
         return isRun = true;
     }
+
+
 
     // get the first node of a card that is not a joker
     // O(1) when n is max number of jokers in a row which is 2

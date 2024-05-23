@@ -19,25 +19,25 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 0.2f;
+    public float computerMoveDelay = 3.2f;
     // Player reference
     private Player myPlayer;
     private bool added; // added single cards
     private bool dropped; // dropped valid sets
     private bool partial; // dropped partial sets with free cards
 
-    // O(n) where n is the number of cards in hand
+    // O(n) where n is the number of cards in hand, returns the maximum valid run sets
     private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
-        List<CardsSet> cardsSets = new List<CardsSet>();
-        CardsSet currentSet = new CardsSet();
-        if (list.Count == 0)
+        List<CardsSet> cardsSets = new List<CardsSet>(); // returned list of cards sets that are valid
+        CardsSet currentSet = new CardsSet(); // current set of cards
+        if (list.Count == 0) // if the list is empty return an empty list
             return cardsSets;
-        currentSet.AddCardToEnd(list[0]);
-        for (int i = 1; i < list.Count; i++)
+        currentSet.AddCardToEnd(list[0]); // add the first card to the current set - Step A
+        for (int i = 1; i < list.Count; i++) // iterate over the remaining cards
         {
             // order of sorted list: 1,2,3,3,1,2
-            // if the same card appears
+            // if the same card appears 
             if (list[i].Number == list[i - 1].Number &&
                 list[i].Color == list[i - 1].Color)
             {
@@ -45,20 +45,20 @@ public class Computer : Player
                 list.Remove(list[i]);
                 // remove the card and add it at the end
             }
-            if (list[i].Number == list[i - 1].Number + 1
+            if (list[i].Number == list[i - 1].Number + 1 // on going run logic check
              && list[i].Color == list[i - 1].Color
              && currentSet.set.Count <= maxRangeInclusive)
             {
-                currentSet.AddCardToEnd(list[i]);
+                currentSet.AddCardToEnd(list[i]); // keep track of the longest run
             }
-            else
+            else // break happened
             {
-                if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
+                if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive) // if the longest run we found so far, meets the requirements 
                 {
-                    cardsSets.Add(currentSet);
+                    cardsSets.Add(currentSet); // add the current set to the list of valid sets
                 }
-                currentSet = new CardsSet();
-                currentSet.AddCardToEnd(list[i]);
+                currentSet = new CardsSet(); // otherwise either way reset the count
+                currentSet.AddCardToEnd(list[i]); // repeat step A
             }
         }
         return cardsSets;
@@ -66,59 +66,96 @@ public class Computer : Player
     // O(n) where n is the number of cards in hand
     private List<CardsSet> ExtractMaxValidGroupSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
     {
-        List<CardsSet> cardsSets = new List<CardsSet>();
-        CardsSet currentSet = new CardsSet();
-        if (list.Count == 0)
+        List<CardsSet> cardsSets = new List<CardsSet>(); // list of valid sets
+        CardsSet currentSet = new CardsSet(); // current set
+        if (list.Count == 0) // if the list is empty return an empty list
             return cardsSets;
-        currentSet.AddCardToEnd(list[0]);
-        for (int i = 1; i < list.Count; i++)
+        currentSet.AddCardToEnd(list[0]); // add the first card to the current set, Step A
+        for (int i = 1; i < list.Count; i++) // iterate over the remaining cards
         {
-            if (list[i].Number == list[i - 1].Number &&
+            if (list[i].Number == list[i - 1].Number && // if the same card appears
                 list[i].Color == list[i - 1].Color)
             {
-                list.Add(list[i]);
+                list.Add(list[i]); // remove the card and add it at the end (move to last)
                 list.Remove(list[i]);
             }
-            if (list[i].Number == list[i - 1].Number
+            if (list[i].Number == list[i - 1].Number // on going group logic check
                 && !currentSet.IsContainThisColor(list[i].Color)
                  && currentSet.set.Count <= maxRangeInclusive)
             {
-                currentSet.AddCardToEnd(list[i]);
+                currentSet.AddCardToEnd(list[i]); // keep track of the longest group
             }
-
-            else
+            else // break happened (by the way it sorted for max = 4 cards it breaks.)
             {
-                if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
+                if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive) // if the longest group we found so far, meets the requirements
                 {
-                    cardsSets.Add(currentSet);
+                    cardsSets.Add(currentSet); // add the current set to the list of valid sets
                 }
-                currentSet = new CardsSet();
+                currentSet = new CardsSet(); // otherwise either way reset the count
                 currentSet.AddCardToEnd(list[i]);
             }
         }
-        return cardsSets;
+        return cardsSets; // return the list of valid sets
     }
 
+    //     private List<CardsSet> ExtractMaxPartial(List<Card> list)
+    //     {
+    //    List<CardsSet> cardsSets = new List<CardsSet>();
+    //         CardsSet currentSet = new CardsSet();
+    //         if (list.Count == 0)
+    //             return cardsSets;
+    //         currentSet.AddCardToEnd(list[0]);
+    //         for (int i = 1; i < list.Count; i++)
+    //         {
+    //             // order of sorted list: 1,2,3,3,1,2
+    //             // if the same card appears
+    //             if (list[i].Number == list[i - 1].Number &&
+    //                 list[i].Color == list[i - 1].Color)
+    //             {
+    //                 list.Add(list[i]);
+    //                 list.Remove(list[i]);
+    //                 // remove the card and add it at the end
+    //             }
+    //             if (list[i].Number == list[i - 1].Number + 2
+    //              && list[i].Color == list[i - 1].Color
+    //              && currentSet.set.Count <= Constants.MaxPartialSet)
+    //             {
+    //                 currentSet.AddCardToEnd(list[i]);
+    //             }
+    //             else
+    //             {
+    //                 if (currentSet.set.Count >= Constants.MaxPartialSet && currentSet.set.Count <= Constants.MaxPartialSet)
+    //                 {
+    //                     cardsSets.Add(currentSet);
+    //                 }
+    //                 currentSet = new CardsSet();
+    //                 currentSet.AddCardToEnd(list[i]);
+    //             }
+    //         }
+    //         return cardsSets;
+    //     }
 
+    // O(n) where n is the number of cards in the player hand, 
+    // we want to play all the valids sets that are in hand
     public void MaximizeValidDrops()
     {
-        this.dropped = false;
+        this.dropped = false; // indicate that we haven't dropped a set yet
         List<CardsSet> setsRun = ExtractMaxValidRunSets(myPlayer.GetPlayerHand().SortedByRun(), Constants.MinInRun, Constants.MaxInRun);
-        if (setsRun.Count > 0)
+        if (setsRun.Count > 0) // if we have valid run sets
         {
-            this.dropped = true;
+            this.dropped = true; // indicate that we dropped a set (for confirmation)
             foreach (CardsSet set in setsRun)
             {
-                gameBoard.PlayCardSetOnBoard(set);
+                gameBoard.PlayCardSetOnBoard(set); // play the set on the game board (this method update the data structers and the visuals)
             }
         }
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MinInGroup, Constants.MaxInGroup);
         if (setsGroup.Count > 0)
         {
-            this.dropped = true;
+            this.dropped = true; // indicate that we dropped a set (for confirmation)
             foreach (CardsSet set in setsGroup)
             {
-                gameBoard.PlayCardSetOnBoard(set);
+                gameBoard.PlayCardSetOnBoard(set); // play the set on the game board (this method update the data structers and the visuals)
             }
         }
 
@@ -139,10 +176,12 @@ public class Computer : Player
 
     }
 
+    // O(n*logm) where n is the number of cards in the player hand, and m is the number of sets on the game board
+    // Main method for the computer move
     private void DoComputerMove()
     {
-        MaximizeValidDrops();
-        bool append = false;
+        MaximizeValidDrops(); // maximize the valid drops. Step 1, O(n)
+        bool append = false; // flag to indicate if we appended a card to the board (either mamximize partial or assigned free cards to existing sets)
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
         {
             // perform the following actions until the computer has no moves to make
@@ -150,18 +189,16 @@ public class Computer : Player
             {
                 if (partial || added)
                     append = true;
-                MaximizePartialDrops();
-                AssignFreeCardsToExistsSets();
+                MaximizePartialDrops(); // maximize the partial drops. Step 2 O(n*logm)
+                AssignFreeCardsToExistsSets(); // assign free cards to existing sets. Step 3 (O(n*logm)
             }
-            while (partial || added);
+            while (partial || added); // do it on repeat till the computer has no moves to make
         }
-        else//if the player is not allowed to append cards to the board
+        else if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet)
         {
-            if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet) //he must drop more than 30 in sets
-            {
-                uiManager.DrawACardFromDeck();
-                return;
-            }
+            //if the player is not allowed to append cards to the board and the computer has less than 30 points of cards to drop
+            uiManager.DrawACardFromDeck();
+            return;
         }
         if (dropped || append) //if the computer has made a move, or have sets to drop.
         {
@@ -172,6 +209,14 @@ public class Computer : Player
             uiManager.DrawACardFromDeck(); // draw a card if the computer has no moves to make
         }
     }
+
+
+    // This method is used to maximize the partial drops
+    // it extracts the maximum valid run sets and group sets with the length of 2, (after dropping all valids one)
+    // and then it tries to extract cards from the board without breaking the validity of the sets
+    // and then drop the set with the extracted card + update the visuals and data structures
+    // if it can't extract cards from the board, it will drop the set with a joker if exist in hand
+    // O(n*logm) where n is the number of cards in the player hand and m is the number of partial sets
 
     public void MaximizePartialDrops()
     {
@@ -205,6 +250,25 @@ public class Computer : Player
                 dropWithJoker.Add(set);
             }
         }
+        // in order for this to work
+        //1. add Middle posistiom
+        //2. in cardSet class add a method that returns true\false for adding a card to the middle
+        //3. in the extract method add a check for the middle
+        // 4. this is lot of code only when finish handle it
+        // List<CardsSet> partial = ExtractMaxPartial(myPlayer.GetPlayerHand().SortedByRun());
+        // foreach (CardsSet set in partial)
+        // {
+        //     set.isGroupOfColors = true;
+        //     CardInfo info = FindExtractableCardsFromBoard(set);
+        //     if (info != null)
+        //     {
+        //         ExtractCardAndReArrange(info, set);
+        //     }
+        //     else
+        //     {
+        //         dropWithJoker.Add(set);
+        //     }
+        // }
         Card card1 = myPlayer.GetPlayerHand().GetJoker();
         if (card1 != null)
         {
@@ -238,13 +302,14 @@ public class Computer : Player
         CardsSet setInBoard = gameBoard.board.GetCardsSet(info.GetSetPosition());
         // if the index is 0 or last card print hi
         if (info.GetCardIndex() == 0 || info.GetCardIndex() == setInBoard.GetDeckLength() - 1)
-        {this.partial = true;
+        {
+            this.partial = true;
             // drop two cards from the player hand
             // update visually to the correct spot
             gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition());
             if (info.GetPosition() == AddPosition.Beginning)
             {
-                uiManager.MoveCardToBoard(info.GetCard(), set.GetFirstCard().Position.GetTileSlot()-1,false);
+                uiManager.MoveCardToBoard(info.GetCard(), set.GetFirstCard().Position.GetTileSlot() - 1, false);
                 //remove last key and add new key
                 gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position));
                 if (info.GetCardIndex() == 0)
@@ -269,7 +334,8 @@ public class Computer : Player
 
             }
             else
-            {this.partial = true;
+            {
+                this.partial = true;
                 uiManager.MoveCardToBoard(info.GetCard(), set.GetLastCard().Position.GetTileSlot() + 1, false);
 
                 //remove last key and add new key
@@ -289,7 +355,7 @@ public class Computer : Player
                 }
                 info.GetCard().Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
                 SetPosition setPosition = new SetPosition(gameBoard.board.GetSetCount() - 1);
-                gameBoard.board.SetSetPosition(gameBoard.GetKeyFromPosition(set.GetLastCard().Position)+1, setPosition);
+                gameBoard.board.SetSetPosition(gameBoard.GetKeyFromPosition(set.GetLastCard().Position) + 1, setPosition);
                 gameBoard.board.GetGameBoardValidSetsTable()[setPosition].AddCardToEnd(info.GetCard());
                 Debug.Log("Played Card: " + info.GetCard() + " now the set is: " + set.ToString() + " add position: " + info.GetPosition() + " index: " + info.GetCardIndex() + " was in " + setInBoard.ToString());
             }
@@ -334,7 +400,7 @@ public class Computer : Player
         int index = 0; // index of the card in the set
         foreach (Card card in setInBoard.set)
         {
-            if (partialSet.CanAddCardFirst(card) || partialSet.CanAddCardLast(card))
+            if (partialSet.CanAddCardFirst(card) || partialSet.CanAddCardLast(card) || card.Number == Constants.JokerRank)
                 return new CardInfo(card, sp, partialSet.CanAddCardLast(card) ? AddPosition.End : AddPosition.Beginning, index); // return the card info
             index++; // increment the index per iteration
         }
@@ -347,23 +413,22 @@ public class Computer : Player
     {
         Card firstCard = setInBoard.GetFirstCard(); // get the first card in the set
         Card lastCard = setInBoard.GetLastCard(); // get the last card in the set
-
-        if (partialSet.CanAddCardLast(firstCard) || partialSet.CanAddCardFirst(firstCard)) // if the card can be added to the first card in the run
+        if (partialSet.CanAddCardLast(firstCard) || partialSet.CanAddCardFirst(firstCard) || firstCard.Number == Constants.JokerRank) // if the card can be added to the first card in the run
             return new CardInfo(firstCard, sp, partialSet.CanAddCardLast(firstCard) ? AddPosition.End : AddPosition.Beginning, 0); // Return the first card if it can be added to the beginning or end of the partial set.
 
-        if (partialSet.CanAddCardLast(lastCard) || partialSet.CanAddCardFirst(lastCard)) // if the card can be added to the last card in the run
+        if (partialSet.CanAddCardLast(lastCard) || partialSet.CanAddCardFirst(lastCard) || lastCard.Number == Constants.JokerRank) // if the card can be added to the last card in the run
             return new CardInfo(lastCard, sp, partialSet.CanAddCardLast(lastCard) ? AddPosition.End : AddPosition.Beginning, setInBoard.GetDeckLength() - 1); // Return the last card if it can be added to the beginning or end of the partial set.
 
         if (setInBoard.GetDeckLength() > Constants.MinSetLengthForMiddleBreak) // if the run is long enough to break
             foreach (Card card in setInBoard.GetMiddleCards())
-                if (partialSet.CanAddCardFirst(card) || partialSet.CanAddCardLast(card))
+                if (partialSet.CanAddCardFirst(card) || partialSet.CanAddCardLast(card) || card.Number == Constants.JokerRank)
                     return new CardInfo(card, sp, partialSet.CanAddCardLast(card) ? AddPosition.End : AddPosition.Beginning, card.Number - firstCard.Number); // Return the middle card if it can be added to the beginning or end of the partial set.
         return null;
     }
 
 
     // Assigns free cards to existing sets on the game board, rearrange visualy if needed.
-    // O(n*m) where n is the number of cards in the player hand and m is the number of sets on the game board
+    // O(n*logm) where n is the number of cards in the player hand and m is the number of sets on the game board
     public void AssignFreeCardsToExistsSets()
     {
         this.added = false; // reset the added flag, for the confirmation
@@ -374,7 +439,7 @@ public class Computer : Player
             int offset = -1; // offset for the middle run
             List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList(); // get the keys of the sets on the game board
             keys.ToArray(); // convert the keys to an array
-            for (int i = 0; i < keys.Count && !found; i++) // iterate over the keys
+            for (int i = 0; i < keys.Count && !found; i++) // iterate over the keys such way that we break the loop if we found a set to add the card to
             {
                 SetPosition key = keys[i]; // get the key for the current iteration
                 CardsSet set = gameBoard.board.GetGameBoardValidSetsTable()[key]; // get the current set from the game board
@@ -384,13 +449,9 @@ public class Computer : Player
                     this.added = true; // indicate that we added a card for the confirmation
                     cardsToRemove.Add(card); // add the card to the list of cards to remove
                     if (gameBoard.IsSpaceForCard(true, set)) // if there is space for the card in the game board play with O(1)
-                    {
                         MoveCardToNextSlot(card, set.GetLastCard().Position.GetTileSlot() + 1); // move the card to the next slot, given true - play without removing the card from the player hand (we handle that at the end of the method), O(1)
-                    }
                     else
-                    {
                         RearrangeCardsSet(key, card, AddPosition.End); // rearrange the cards in the set, 
-                    }
                 }
                 else if (set.CanAddCardFirst(card)) // if the card can be added to the beginning of the set
                 {
@@ -398,13 +459,9 @@ public class Computer : Player
                     this.added = true; // indicate that we added a card for the confirmation
                     cardsToRemove.Add(card); // add the card to the list of cards to remove
                     if (gameBoard.IsSpaceForCard(false, set)) // if there is space for the card in the game board play with O(1)
-                    {
                         MoveCardToPreviousSlot(card, set.GetFirstCard().Position.GetTileSlot() - 1); // move the card to the previous slot, given false - play without removing the card from the player hand (we handle that at the end of the method), O(1)
-                    }
                     else
-                    {
                         RearrangeCardsSet(key, card, AddPosition.Beginning);
-                    }
                 }
                 else if ((offset = set.CanAddCardMiddleRun(card)) != -1) // if the card can be added to the middle of the run
                 {
@@ -465,6 +522,7 @@ public class Computer : Player
     }
 
     // Removes the cards from the player hand after assigning them to the game board
+    // in a separate list (and method) to avoid concurrent modification exception
     private void RemoveCardsFromPlayerHand(List<Card> cardsToRemove)
     {
         foreach (Card card in cardsToRemove) // iterate over the cards to remove

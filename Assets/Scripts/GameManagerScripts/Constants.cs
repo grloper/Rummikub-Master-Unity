@@ -23,6 +23,8 @@ public class Constants
     // RummikubDeck constants
     public const int MaxRank = 13;
     public const int MaxSuit = 4;
+    public const int MaxDeckSize = 106;
+    public const int MinRank = 1;
     public const int EmptyDeck = 0;
     public const int JokerRank = 0xf;
     public const int MaxJoker = 2;
