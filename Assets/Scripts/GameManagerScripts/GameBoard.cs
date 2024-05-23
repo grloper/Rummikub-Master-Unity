@@ -104,7 +104,7 @@ public class GameBoard : MonoBehaviour
         //print the keys and their values from gameboard
         foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
         {
-            Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + "</color>");
+            Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + ", IsRun: "+entry.Value.isRun+", IsGroup: "+entry.Value.isGroupOfColors+"</color>");
         }
         Debug.Log("<color=red>Print keys of Sets</color>");
         foreach (int key in cardToSetPos.Keys)
