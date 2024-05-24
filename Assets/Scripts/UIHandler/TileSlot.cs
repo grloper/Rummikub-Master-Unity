@@ -71,7 +71,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
         }
     }
 
-    private async void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
+    private void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
     {
         card.Position = new CardPosition(GetRowIndexBoard(), GetColumnIndexBoard());
         Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);

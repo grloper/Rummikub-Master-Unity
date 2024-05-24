@@ -102,7 +102,7 @@ public class CardsSet : ICardSet
         Node<Card> node = GetFirstNodeOfNotJoker(); // get the first node of a card that is not a joker
         CardColor SetColor = node.Value.Color; // get the color of the set
         int CurrentNum = node.Value.Number; // get the number of the first card
-        if(IsJoker(GetFirstCard())&& CurrentNum == Constants.MinRank)
+        if(IsJoker(GetFirstCard())&& CurrentNum == Constants.MinRank) // if found Joker, 1, 2
         {
             return isRun = false;
         }
