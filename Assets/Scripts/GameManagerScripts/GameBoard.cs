@@ -107,10 +107,9 @@ public class GameBoard : MonoBehaviour
             Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + ", IsRun: "+entry.Value.isRun+", IsGroup: "+entry.Value.isGroupOfColors+"</color>");
         }
         Debug.Log("<color=red>Print keys of Sets</color>");
-        foreach (int key in cardToSetPos.Keys)
-        {
-            Debug.Log("<color=orange> Key:" + key + " Set Pos:" + cardToSetPos[key].GetId() + "</color>");
-        }
+string output = string.Join(" |||", cardToSetPos.Keys.Select(key => $"<color=orange>Key:{key} Set Pos:{cardToSetPos[key].GetId()}</color>"));
+Debug.Log(output);
+
     }
 
 
@@ -369,7 +368,7 @@ public class GameBoard : MonoBehaviour
 
     public void PlayCardSetOnBoard(CardsSet cardsSet, int add = 0, AddPosition p = AddPosition.End)
     {
-        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + add);
+        int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + add); // if we want more than one empty slot (for partial length 2, with another 1)
         if (p == AddPosition.Beginning) // Indicate if we want the first slot to be empty
         {
             tileslot++;
