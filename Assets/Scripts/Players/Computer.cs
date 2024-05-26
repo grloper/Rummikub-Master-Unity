@@ -206,7 +206,7 @@ public class Computer : Player
                 dropWithJoker.Add(set);
         }
 
-        TryToDropSetsWithJoker(dropWithJoker);
+        //TryToDropSetsWithJoker(dropWithJoker);
     }
 
 private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
@@ -255,11 +255,11 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
     private void ExtractCardAndReArrange(CardInfo info, CardsSet set)
     {
         CardsSet setInBoard = gameBoard.board.GetCardsSet(info.GetSetPosition());
-         
+         this.partial = true;
+         gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition()); // Drop two cards from the player's hand
         if (info.GetCardIndex() == 0 || info.GetCardIndex() == setInBoard.GetDeckLength() - 1)
         {
-            this.partial = true;
-         gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition()); // Drop two cards from the player's hand
+
             if (info.GetPosition() == AddPosition.Beginning)
                 HandleBeginningPosition(info, set, setInBoard);
             else
@@ -269,12 +269,11 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
         {
             if (setInBoard.isGroupOfColors)
             {
-                this.partial = true;
-         gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition()); // Drop two cards from the player's hand
+                
                HandleRearrangeGroup(info, set, setInBoard); // error
             }
-           // else
-                //HandleRearrangeGroupRun(info, set, setInBoard); 
+            else
+                HandleRearrangeGroupRun(info, set, setInBoard); 
         }
     }
 
@@ -352,7 +351,7 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
         {
             //squeeze the set to the right
             gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(setInBoard.GetFirstCard().Position)); // remove the most left pointer
-            uiManager.MoveCardToBoard(setInBoard.GetLastCard(), setInBoard.GetFirstCard().Position.GetTileSlot() + 1, false);
+            uiManager.MoveCardToBoard(setInBoard.GetFirstCard(), setInBoard.GetFirstCard().Position.GetTileSlot() + 1, false);
             setInBoard.RemoveCard(info.GetCard());
             setInBoard.GetFirstCard().Position.Column =  setInBoard.GetFirstCard().Position.Column+1; // get a new position to point to that set
             gameBoard.board.UpdateKeySingleCardsSet(gameBoard.GetKeyFromPosition(setInBoard.GetFirstCard().Position), info.GetSetPosition());
