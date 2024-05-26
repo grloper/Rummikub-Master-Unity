@@ -69,6 +69,7 @@ public class CardsSet : ICardSet
         CardsSet newSet = new CardsSet(); // create a new set of cards (returned set)
         for (int i = 0; i < offset; i++)
         {
+            Debug.Log(" UnCombine " + set.GetFirstNode().Value.ToString());
             newSet.set.AddLast(set.GetFirstNode().Value); // add the card to the new set
             set.RemoveFirst();
         }

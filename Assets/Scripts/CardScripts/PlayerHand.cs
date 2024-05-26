@@ -23,9 +23,7 @@ public class PlayerHand : IEnumerable<Card>
     int numberIndex = card.Number - 1; // Get the number index
     // Handle Joker cards
     if (card.Number == Constants.JokerRank) 
-    {
       numberIndex = Constants.MaxRank; // Store Joker cards at the last index
-    }
     cardMatrix[colorIndex, numberIndex].AddLast(card); // Add the card to the 2D array
   }
 
@@ -56,13 +54,9 @@ public class PlayerHand : IEnumerable<Card>
     int colorIndex = (int)card.Color; // Get the color index
     int numberIndex = card.Number - 1; // Get the number index
     if (card.Number == Constants.JokerRank) // Handle Joker cards
-    {
       numberIndex = Constants.MaxRank; // Store Joker cards at the last index
-    }
     if (cardMatrix[colorIndex, numberIndex].Count == 0) //invalid moment remoce later
-    {
       throw new System.Exception("No such card in hand. "+ card.ToString() + " is not in hand.");
-    }
     cardMatrix[colorIndex, numberIndex].Remove(card); // Remove the card from the 2D array, O(1)
   }
   //function O(1) get joker else null either black or either red
@@ -71,14 +65,10 @@ public class PlayerHand : IEnumerable<Card>
     int colorIndex = (int)CardColor.Black; // Get the color index for black
     int numberIndex = Constants.MaxRank; // Get the number index for Joker
     if (cardMatrix[colorIndex, numberIndex].Count > 0) // Check if the black Joker is in the 2D array
-    {
       return cardMatrix[colorIndex, numberIndex].First.Value; // Return the black Joker
-    }
     colorIndex = (int)CardColor.Red; // Get the color index for red
     if (cardMatrix[colorIndex, numberIndex].Count > 0) // Check if the red Joker is in the 2D array
-    {
       return cardMatrix[colorIndex, numberIndex].First.Value; // Return the red Joker
-    }
     return null; // Return null if no Joker is found
   }
   // if the hand contains the card, O(1)
@@ -109,17 +99,11 @@ public class PlayerHand : IEnumerable<Card>
     Debug.Log("Print cards:");
     string txt = "\n";
     for (int i = 0; i < Constants.MaxSuit; i++) // Iterate over the colors
-    {
       for (int j = 0; j < Constants.MaxRank + 1; j++) // Iterate over the ranks
-      {
         foreach (Card card in cardMatrix[i, j]) // Iterate over the cards in the 2D array
-        {
           txt += card.ToString() + ", "; // Print the card separated by a comma
-        }
-      }
       Debug.Log(txt);
       txt = "\n"; // Move to the next line for the next color
-    }
     return txt;
   }
   // Equals method, O(1)

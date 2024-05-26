@@ -19,7 +19,7 @@ public class Computer : Player
     // Reference to the game controller
     [HideInInspector] private GameController gameController;
     // The delay for the computer move
-    public float computerMoveDelay = 0.5f;
+    public float computerMoveDelay = 0.1f;
     // Player reference
     private Player myPlayer;
     private bool added; // added single cards
@@ -98,7 +98,7 @@ public class Computer : Player
         return cardsSets; // return the list of valid sets
     }
 
-  
+
     // we want to play all the valids sets that are in hand
     public void MaximizeValidDrops()
     {
@@ -195,6 +195,8 @@ public class Computer : Player
             else
                 dropWithJoker.Add(set);
         }
+        TryToDropSetsWithJoker(dropWithJoker);
+        dropWithJoker = new List<CardsSet>();
         List<CardsSet> setsGroup = ExtractMaxValidGroupSets(myPlayer.GetPlayerHand().SortedByGroup(), Constants.MaxPartialSet, Constants.MaxPartialSet);
         foreach (CardsSet set in setsGroup)
         {
@@ -205,58 +207,57 @@ public class Computer : Player
             else
                 dropWithJoker.Add(set);
         }
-
-        //TryToDropSetsWithJoker(dropWithJoker);
+        TryToDropSetsWithJoker(dropWithJoker);
     }
 
-private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
-{
-    Card jokerCard = myPlayer.GetPlayerHand().GetJoker();
-    
-    if (jokerCard != null && dropWithJoker.Count > Constants.EmptyCardsSet)
+    private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
     {
-        // Remove the joker card from the player's hand
+        Card jokerCard = myPlayer.GetPlayerHand().GetJoker();
 
-        // Method to add joker to set
-        Action<CardsSet, Card> addJokerToSet = (set, card) =>
+        if (jokerCard != null && dropWithJoker.Count > Constants.EmptyCardsSet)
         {
-            if (set.CanAddCardFirst(card))
+            // Remove the joker card from the player's hand
+
+            // Method to add joker to set
+            Action<CardsSet, Card> addJokerToSet = (set, card) =>
             {
-                set.AddCardToBeginning(card);
-            }
-            else if (set.CanAddCardLast(card))
+                if (set.CanAddCardFirst(card))
+                {
+                    set.AddCardToBeginning(card);
+                }
+                else if (set.CanAddCardLast(card))
+                {
+                    set.AddCardToEnd(card);
+                }
+            };
+
+            // Try to add the joker to the first set
+            addJokerToSet(dropWithJoker[0], jokerCard);
+
+            // Play the first set on the board
+            gameBoard.PlayCardSetOnBoard(dropWithJoker[0]);
+
+            // Check if there's a second set and try to add another joker
+            if (dropWithJoker.Count > 1)
             {
-                set.AddCardToEnd(card);
-            }
-        };
+                jokerCard = myPlayer.GetPlayerHand().GetJoker(); // Get another joker card from the player's hand
+                if (jokerCard != null)
+                {
+                    // Try to add the joker to the second set
+                    addJokerToSet(dropWithJoker[1], jokerCard);
 
-        // Try to add the joker to the first set
-        addJokerToSet(dropWithJoker[0], jokerCard);
-
-        // Play the first set on the board
-        gameBoard.PlayCardSetOnBoard(dropWithJoker[0]);
-
-        // Check if there's a second set and try to add another joker
-        if (dropWithJoker.Count > 1)
-        {
-            jokerCard = myPlayer.GetPlayerHand().GetJoker(); // Get another joker card from the player's hand
-            if (jokerCard != null)
-            {
-                // Try to add the joker to the second set
-                addJokerToSet(dropWithJoker[1], jokerCard);
-
-                // Play the second set on the board
-                gameBoard.PlayCardSetOnBoard(dropWithJoker[1]);
+                    // Play the second set on the board
+                    gameBoard.PlayCardSetOnBoard(dropWithJoker[1]);
+                }
             }
         }
     }
-}
 
     private void ExtractCardAndReArrange(CardInfo info, CardsSet set)
     {
         CardsSet setInBoard = gameBoard.board.GetCardsSet(info.GetSetPosition());
-         this.partial = true;
-         gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition()); // Drop two cards from the player's hand
+        this.partial = true;
+        gameBoard.PlayCardSetOnBoard(set, 1, info.GetPosition()); // Drop two cards from the player's hand
         if (info.GetCardIndex() == 0 || info.GetCardIndex() == setInBoard.GetDeckLength() - 1)
         {
 
@@ -268,12 +269,9 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
         else // extract card from a middle position => split the set or squeeze it
         {
             if (setInBoard.isGroupOfColors)
-            {
-                
-               HandleRearrangeGroup(info, set, setInBoard); // error
-            }
+                HandleRearrangeGroup(info, set, setInBoard); // error
             else
-                HandleRearrangeGroupRun(info, set, setInBoard); 
+                HandleRearrangeRun(info, set);
         }
     }
 
@@ -286,24 +284,34 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
             HandleEndPosition(info, set, setInBoard);
     }
     // handle the re-arrangement of the run - split the set
-    private void HandleRearrangeGroupRun(CardInfo info, CardsSet set, CardsSet setInBoard)
+    private void HandleRearrangeRun(CardInfo info, CardsSet set)
     {
-        print("set before: " + setInBoard.ToString());
-        CardsSet newSet = setInBoard.UnCombine(info.GetCardIndex());
-        print("set after: " + setInBoard.ToString());
-        print("new set: " + newSet.ToString());
-        throw new Exception("weit");
+        CardsSet setInBoard = gameBoard.board.GetCardsSet(info.GetSetPosition());
+        print(setInBoard.ToString());
+        SplitSet(info.GetSetPosition(), info.GetCardIndex(), RemoveOption.Remove);
 
-       // SplitSet(info.GetSetPosition(), info.GetCardIndex(),RemoveOption.Remove);
-        //if (info.GetPosition() == AddPosition.Beginning)
-       // {
-       //     HandleBeginningPosition(info, set, setInBoard);
-      //  }
-      //  else
-      //  {
-      //      HandleEndPosition(info, set, setInBoard);
-       // }
-
+        if (info.GetPosition() == AddPosition.Beginning)
+        {
+            uiManager.MoveCardToBoard(info.GetCard(), set.GetFirstCard().Position.GetTileSlot() - 1, false);
+            // Remove last key and add new key
+            gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position));
+            // Update the card position
+            info.GetCard().Position.SetTileSlot(set.GetFirstCard().Position.GetTileSlot() - 1);
+            SetPosition setPosition = new SetPosition(gameBoard.board.GetSetCount() - 2);
+            gameBoard.board.SetSetPosition(gameBoard.GetKeyFromPosition(info.GetCard().Position), setPosition);
+            gameBoard.board.GetGameBoardValidSetsTable()[setPosition].AddCardToBeginning(info.GetCard());
+        }
+        else
+        {
+            uiManager.MoveCardToBoard(info.GetCard(), set.GetLastCard().Position.GetTileSlot() + 1, false);
+            // Remove last key and add new key
+            gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(set.GetLastCard().Position));
+            // Update the card position
+            info.GetCard().Position.SetTileSlot(set.GetLastCard().Position.GetTileSlot() + 1);
+            SetPosition setPosition = new SetPosition(gameBoard.board.GetSetCount() - 2);
+            gameBoard.board.SetSetPosition(gameBoard.GetKeyFromPosition(info.GetCard().Position), setPosition);
+            gameBoard.board.GetGameBoardValidSetsTable()[setPosition].AddCardToEnd(info.GetCard());
+        }
     }
 
     private void HandleBeginningPosition(CardInfo info, CardsSet set, CardsSet setInBoard)
@@ -353,17 +361,17 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
             gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(setInBoard.GetFirstCard().Position)); // remove the most left pointer
             uiManager.MoveCardToBoard(setInBoard.GetFirstCard(), setInBoard.GetFirstCard().Position.GetTileSlot() + 1, false);
             setInBoard.RemoveCard(info.GetCard());
-            setInBoard.GetFirstCard().Position.Column =  setInBoard.GetFirstCard().Position.Column+1; // get a new position to point to that set
+            setInBoard.GetFirstCard().Position.Column = setInBoard.GetFirstCard().Position.Column + 1; // get a new position to point to that set
             gameBoard.board.UpdateKeySingleCardsSet(gameBoard.GetKeyFromPosition(setInBoard.GetFirstCard().Position), info.GetSetPosition());
         }
-        else if(info.GetCardIndex() == 2)
+        else if (info.GetCardIndex() == 2)
         {
             //squeeze the set to the left
             gameBoard.board.RemoveSetPosition(gameBoard.GetKeyFromPosition(setInBoard.GetLastCard().Position)); // remove the most right pointer
             uiManager.MoveCardToBoard(setInBoard.GetLastCard(), setInBoard.GetLastCard().Position.GetTileSlot() - 1, false);
             setInBoard.RemoveCard(info.GetCard());
             setInBoard.GetLastCard().Position.Column = setInBoard.GetLastCard().Position.Column - 1;
-             // get a new position to point to that set
+            // get a new position to point to that set
             gameBoard.board.UpdateKeySingleCardsSet(gameBoard.GetKeyFromPosition(setInBoard.GetLastCard().Position), info.GetSetPosition());
         }
     }
@@ -503,27 +511,27 @@ private void TryToDropSetsWithJoker(List<CardsSet> dropWithJoker)
     }
 
     // Splits the set and rearranges the cards in the game board, O(n) where n is the number of cards in the set
-   
-   private SetPosition SplitSet(SetPosition key, int offset, RemoveOption removeOption = RemoveOption.DontRemove)
-   {
-       // Get the set from the game board 
-        CardsSet set = gameBoard.board.GetGameBoardValidSetsTable()[key];
+
+    private SetPosition SplitSet(SetPosition key, int offset, RemoveOption removeOption = RemoveOption.DontRemove)
+    {
+        // Get the set from the game board 
+        CardsSet Oldset = gameBoard.board.GetGameBoardValidSetsTable()[key];
         // Uncombine the set into two sets, the first one with the offset (appending at the end the remaining card), the second one with the rest of the cards
-        CardsSet newSet = set.UnCombine(offset);
+        CardsSet newSet = Oldset.UnCombine(offset);
         // Create a new set position with new id
         if (removeOption == RemoveOption.Remove) // if we split the set in order to take the offset card (for partial) else = default for re-arrangement middle placement
         {
-            set.set.RemoveFirst();
+            Oldset.set.RemoveFirst();
         }
         SetPosition newSetPos = new SetPosition(gameBoard.board.GetSetCountAndInc());
         // Add the new set to the game board
         gameBoard.board.AddCardsSet(newSetPos, newSet);
         // Update the keys of the cards in the set
         gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
-        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(set.GetFirstCard().Position), gameBoard.GetKeyFromPosition(set.GetLastCard().Position), key);
+        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(Oldset.GetFirstCard().Position), gameBoard.GetKeyFromPosition(Oldset.GetLastCard().Position), key);
         return newSetPos;
-   }
-    private void SplitAndRearrangeCardsSet(SetPosition key, Card card , int offset)
+    }
+    private void SplitAndRearrangeCardsSet(SetPosition key, Card card, int offset)
     {
         SetPosition newSetPos = SplitSet(key, offset);
         // Rearrange the set with the new card     
