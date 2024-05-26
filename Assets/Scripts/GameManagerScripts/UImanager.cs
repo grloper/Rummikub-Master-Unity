@@ -62,6 +62,8 @@ public class UImanager : MonoBehaviour
         else
         { // if the deck is empty - update the deck text
             btnDeckText.text = "Deck:\nEmpty";
+            gameController.ChangeTurn();
+            UpdateTurnText();
         }
     }
     public void Undo()

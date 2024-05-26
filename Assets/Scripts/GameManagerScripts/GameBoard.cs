@@ -95,22 +95,52 @@ public class GameBoard : MonoBehaviour
     // Move Card from GameBoard to GameBoard
 
     // Print all items in gameBoardValidSets
-    public void PrintGameBoardValidSets()
-    {
-        // create these two hashes
-        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-        Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-        Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
-        //print the keys and their values from gameboard
-        foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
-        {
-            Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + ", IsRun: "+entry.Value.isRun+", IsGroup: "+entry.Value.isGroupOfColors+"</color>");
-        }
-        Debug.Log("<color=red>Print keys of Sets</color>");
-string output = string.Join(" |||", cardToSetPos.Keys.Select(key => $"<color=orange>Key:{key} Set Pos:{cardToSetPos[key].GetId()}</color>"));
-Debug.Log(output);
+//     public void PrintGameBoardValidSets()
+//     {
+//         // create these two hashes
+//         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+//         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
+//         Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
+//         //print the keys and their values from gameboard
+//         foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
+//         {
+//             Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + ", IsRun: "+entry.Value.isRun+", IsGroup: "+entry.Value.isGroupOfColors+"</color>");
+//         }
+//         Debug.Log("<color=red>Print keys of Sets</color>");
+// string output = string.Join(" |||", cardToSetPos.Keys.Select(key => $"<color=orange>Key:{key} Set Pos:{cardToSetPos[key].GetId()}</color>"));
+// Debug.Log(output);
 
+//     }
+public void PrintGameBoardValidSets()
+{
+    // Create these two dictionaries
+    Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+    Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
+
+    Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
+
+    // For each set position in the game board valid sets
+    foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
+    {
+        // Get the set position ID and the cards set details
+        string setPosId = entry.Key.GetId().ToString();
+        CardsSet cardsSet = entry.Value;
+
+        // Find all card keys that map to the current set position
+        var cardKeys = cardToSetPos
+            .Where(kvp => kvp.Value.Equals(entry.Key))
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        // Create a string representation of card keys
+        string cardKeysString = string.Join(", ", cardKeys);
+
+        // Print the set position, cards set, and associated card keys
+        Debug.Log($"<color=green> SetPosition: {setPosId} -> CardsSet: {cardsSet.ToString()}, IsRun: {cardsSet.isRun}, IsGroup: {cardsSet.isGroupOfColors}, Keys: {cardKeysString} -> SetPosition: {setPosId}</color>");
     }
+
+    Debug.Log("<color=red>---------------------------------------End of Print---------------------------------------</color>");
+}
 
 
 
