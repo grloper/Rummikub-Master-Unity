@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Constants 
+public class Constants
 {
 
     // Global constants
@@ -23,6 +23,8 @@ public class Constants
     // RummikubDeck constants
     public const int MaxRank = 13;
     public const int MaxSuit = 4;
+    public const int MaxDeckSize = 106;
+    public const int MinRank = 1;
     public const int EmptyDeck = 0;
     public const int JokerRank = 0xf;
     public const int MaxJoker = 2;
@@ -41,5 +43,11 @@ public class Constants
     public const int MaxPartialSet = 2;
     public const int EmptyPartialSet = 0;
     public const int SingleCardInPartialSet = 1;
+    // appending card in the middle constants
+    public const int MinSetLengthForMiddleRun = 5;
+    public const int MiddleRunOffset = 2;
+    // breaking cards from the middle constants
+    public const int MinSetLengthForMiddleBreak = 6;
+    
 
 }

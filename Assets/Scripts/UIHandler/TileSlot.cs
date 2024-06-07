@@ -16,7 +16,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
     // triggered when a card is dropped on the tile slot 
     public void OnDrop(PointerEventData eventData)
     {
-        if (transform.childCount == Constants.EmptyTileSlot)
+        if (transform.childCount == Constants.EmptyTileSlot && gameManager.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
         {
             HandleValidDrop(eventData);
         }
@@ -33,7 +33,6 @@ public class TileSlot : MonoBehaviour, IDropHandler
         GameObject dropped = eventData.pointerDrag;
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
         draggableItem.parentAfterDrag = transform;
-
 
         if (dropped.GetComponent<Card>() != null)
         {
@@ -52,7 +51,6 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 HandleDropOnBoardGrid(dropped.GetComponent<Card>(), draggableItem);
             }
         }
-
     }
 
     private void HandleDropOnHumanGrid(Card card, DraggableItem draggableItem)
@@ -69,23 +67,22 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             // movement inside human grid
             card.Position = new CardPosition(GetRowIndexHuman(), GetColumnIndexHuman());
-             Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
+            Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
         }
     }
 
     private void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
     {
         card.Position = new CardPosition(GetRowIndexBoard(), GetColumnIndexBoard());
-        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " +card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
+        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
 
         // movement from human hand to board grid
         if (draggableItem.parentBeforeDrag.transform.parent.tag == "PlayerGrid")
         {
             card.CameFromPlayerHand = true;
             // update the position of the card in the game board
-            board.MoveCardFromPlayerHandToGameBoard(card);
+            board.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.Remove);
             // push the card to the moves stack
-            // print("Pushed to Player Stack " + card.ToString());
             board.AddCardToMovesStack(card);
         }
         // movement inside board grid
@@ -97,7 +94,8 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 card.CameFromPlayerHand = false;
                 // save the parent before drag in case of moving multiple times the same card in the board
                 card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
-                //  print("Pushed to Board Stack " + card.ToString());
+                print("Saved Card Position: " + card.OldPosition.Row + " " + card.OldPosition.Column + " Before Drag");
+                card.OldPositionBeforeDrag = card.OldPosition;
                 // push the card to the moves stack
                 board.AddCardToMovesStack(card);
             }

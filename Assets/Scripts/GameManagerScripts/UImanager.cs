@@ -9,38 +9,39 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 public class UImanager : MonoBehaviour
 {
-    public List<Sprite> cardsUI = new List<Sprite>();
-    //Game Tiles, TileSlots prefabs
-    [SerializeField] private GameObject PrefabTile;
-    [SerializeField] private GameObject PrefabTileSlot;
-    [SerializeField] private GameObject PrefabTileSlotPlayer;
-    [SerializeField] private GameController gameController;
-    [SerializeField] private GameObject PrefabPlayerGrid;
-    [SerializeField] private GameObject Canvas;
-    [SerializeField] private TextMeshProUGUI turnDisplayText;
-    [SerializeField] private GameBoard board;
-    // Reference to the deck button so we can change the text
-    [SerializeField] TextMeshProUGUI btnDeckText;
+   
+    //Unity Editor References
+    [SerializeField] private GameObject PrefabTile; // Card prefab
+    [SerializeField] private GameObject PrefabTileSlot; // Tile slot prefab (on the board)
+    [SerializeField] private GameObject PrefabTileSlotPlayer; // Tile slot prefab for player (on the player grid)
+    [SerializeField] private GameObject PrefabPlayerGrid; // Player grid prefab (on the canvas, unique for each player)
+    [SerializeField] private GameObject Canvas; // Reference to the main canvas
+    [SerializeField] private TextMeshProUGUI turnDisplayText; // Reference to the turn display text
+    [SerializeField] TextMeshProUGUI btnDeckText; // Reference to the deck button so we can change the text
 
+    // References to the game board and game controller
+    [SerializeField] private GameBoard board; // Reference to the game board
+    [SerializeField] private GameController gameController; // Reference to the game controller
+    // Array of card sprites
+    public List<Sprite> cardsUI = new List<Sprite>(); // List of card sprites (the images of the cards)
 
 
     //institnate player grid in the canvas
     public GameObject InstantiatePlayerGrid()
     {
         GameObject playerGrid = Instantiate(PrefabPlayerGrid, Canvas.transform);
-        //PreserveRectTransformValues(playerGrid.GetComponent<RectTransform>(), PrefabPlayerGrid.GetComponent<RectTransform>());
         playerGrid.SetActive(false);
         return playerGrid;
     }
-
-
+    
     private void Start()
     {
         this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
     }
     public void BtnDeckClick()
     {
-        DrawACardFromDeck();
+        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+            DrawACardFromDeck();
     }
     public void DrawACardFromDeck()
     {
@@ -61,13 +62,15 @@ public class UImanager : MonoBehaviour
         else
         { // if the deck is empty - update the deck text
             btnDeckText.text = "Deck:\nEmpty";
+            gameController.ChangeTurn();
+            UpdateTurnText();
         }
     }
     public void Undo()
     {
         // If the stack is empty, print an error
         if (board.GetMovesStack().Count == Constants.EmptyStack)
-            throw new EmptyDeckException();
+            throw new UndoException();
         else
             board.UndoMoves();
     }
@@ -75,21 +78,25 @@ public class UImanager : MonoBehaviour
     {
         try
         {
-            Undo();
+            if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+                Undo();
         }
-        catch (EmptyDeckException)
+        catch (UndoException)
         {
             print("No moves to undo");
         }
     }
+    // Function to instantiate a card to a tile slot O(1)
     public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
     {
         Card card = InstinitanteCard(GivvenCard);
         card.transform.SetParent(tileslot.transform);
         return card;
     }
+    // Function to instantiate a card
     public Card InstinitanteCard(Card GivvenCard)
     {
+        // create by the prefab
         GameObject card = Instantiate(PrefabTile);
         // Set the card's sprite to the correct sprite
         card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(GivvenCard)];
@@ -132,11 +139,13 @@ public class UImanager : MonoBehaviour
     }
     public void BtnConfirmMoveClick()
     {
-        ConfirmMove();
+        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+            ConfirmMove();
     }
     public void ConfirmMove()
     {
-        if (board.GetMovesStack().Count == Constants.EmptyStack)//check if dropped cards are valid)
+
+        if (board.GetMoveStackCountPlayer() == Constants.EmptyStack)//check if dropped cards are valid)
         {
             print("You Did not dropped any cards, tip: draw a card to skip this turn");
         }
@@ -144,10 +153,13 @@ public class UImanager : MonoBehaviour
         {
             if (board.IsBoardValid())
             {
+                //save game state
+                board.boardBackup = new Board(board.board);
                 // If the board is valid, change the turn and clear the moves stack
                 gameController.ChangeTurn();
                 UpdateTurnText();
                 board.GetMovesStack().Clear();
+                board.PrintGameBoardValidSets();
             } // we have handler to print error when not valid
         }
     }
@@ -156,10 +168,6 @@ public class UImanager : MonoBehaviour
     public void UpdateTurnText() =>
            turnDisplayText.text = "Turn: " + gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
 );
-
-
-
-
 
     public void BtnSortByRun()
     {
@@ -184,45 +192,6 @@ public class UImanager : MonoBehaviour
                 return card1.Number.CompareTo(card2.Number);
         });
     }
-
-    //Function to sort the Player grid by a given comparison
-    //private void SortPlayerGrid(Comparison<Card> comparison)
-    //{
-    //    GameObject playerGrid = gameController.GetCurrentPlayer().GetPlayerGrid();
-    //    // Get all the tile slots
-    //    List<Transform> tileSlots = new List<Transform>();
-    //    foreach (Transform child in playerGrid.transform)
-    //    {
-    //        tileSlots.Add(child);
-    //    }
-    //    // Sort the cards in the tile slots
-    //    List<Card> cardsToSort = new List<Card>();
-    //    foreach (Transform tileSlot in tileSlots)
-    //    {
-    //        if (tileSlot.childCount > Constants.EmptyTileSlot)
-    //        {
-    //            Card card = tileSlot.GetChild(0).GetComponent<Card>();
-    //            cardsToSort.Add(card);
-    //            Destroy(tileSlot.GetChild(0).gameObject);
-    //        }
-    //    }
-    //    // Sort the cards
-    //    cardsToSort.Sort(comparison);
-    //    // Instantiate the cards in the tile slots
-    //    for (int i = 0; i < cardsToSort.Count; i++)
-    //    {
-    //        GameObject cardObject = Instantiate(PrefabTile);
-    //        cardObject.transform.SetParent(tileSlots[i]);
-    //        cardObject.transform.localPosition = Vector3.zero;
-    //        // Set the card's color and number
-    //        Card newCard = cardObject.GetComponent<Card>();
-    //        newCard.Color = cardsToSort[i].Color;
-    //        newCard.Number = cardsToSort[i].Number;
-    //        // Set the card's sprite
-    //        int index = CalculateIndexOfSprite(newCard);
-    //        cardObject.GetComponent<Image>().sprite = cardsUI[index];
-    //    }
-    //}
 
     private void SortPlayerGrid(Comparison<Card> comparison)
     {
@@ -266,16 +235,17 @@ public class UImanager : MonoBehaviour
         }
     }
 
-
-    public void MoveCardToBoard(Card card, int tileslot)
+    // Function to move a card from the player's hand to the board visually to a specific tile slot
+    public void MoveCardToBoard(Card card, int tileslot, bool isFromPlayerHand)
     {
         // get the tileslot location from board
         GameObject tileSlot = this.board.transform.GetChild(tileslot).gameObject;
         //update value for proper undo function
-        card.CameFromPlayerHand = true;
+        card.CameFromPlayerHand = isFromPlayerHand;
         card.ParentBeforeDrag = card.transform.parent;
         // visual the card on the new postion
         card.transform.SetParent(tileSlot.transform);
     }
+
 }
 

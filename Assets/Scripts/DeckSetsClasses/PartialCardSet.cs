@@ -105,7 +105,7 @@ public class PartialCardSet : ICardSet
         return partialSet[1];
     }
 
-    public void AddCardToBeggining(Card card)
+    public void AddCardToBeginning(Card card)
     {
         partialSet.Insert(0, card);
     }

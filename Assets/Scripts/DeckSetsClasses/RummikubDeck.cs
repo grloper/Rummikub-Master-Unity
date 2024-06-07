@@ -16,10 +16,11 @@ public class RummikubDeck
         {
             for (int j = 0; j < Constants.MaxSuit; j++)
             {
-                CardColor color = (CardColor)j;
-                Card card = new Card(i, color);
-                deck.Add(card);
-                deck.Add(card); // Adding a second set
+                //Card c2 = new Card(i, (CardColor)j);
+                deck.Add(new Card(i, (CardColor)j));
+                //Card c = new Card(i, (CardColor)j);
+                deck.Add(new Card(i, (CardColor)j)); // Adding a second set
+
             }
         }
 
