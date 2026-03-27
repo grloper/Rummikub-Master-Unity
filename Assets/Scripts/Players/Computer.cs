@@ -25,6 +25,10 @@ public class Computer : Player
     private bool added; // added single cards
     private bool dropped; // dropped valid sets
     private bool partial; // dropped partial sets with free cards
+    private bool chainExtracted; // dropped sets via chain extraction
+    
+    // Chain extractor for advanced AI moves
+    private ChainExtractor chainExtractor;
 
     // O(n) where n is the number of cards in hand, returns the maximum valid run sets
     private List<CardsSet> ExtractMaxValidRunSets(List<Card> list, int minRangeInclusive, int maxRangeInclusive)
@@ -33,23 +37,38 @@ public class Computer : Player
         CardsSet currentSet = new CardsSet(); // current set of cards
         if (list.Count == 0) // if the list is empty return an empty list
             return cardsSets;
-        currentSet.AddCardToEnd(list[0]); // add the first card to the current set - Step A
-        for (int i = 1; i < list.Count; i++) // iterate over the remaining cards
+        
+        // FIX: Create a copy to avoid mutation during iteration
+        List<Card> workingList = new List<Card>(list);
+        
+        // FIX: Move duplicates to end before iterating
+        List<Card> duplicates = new List<Card>();
+        List<Card> unique = new List<Card>();
+        for (int i = 0; i < workingList.Count; i++)
         {
-            // order of sorted list: 1,2,3,3,1,2
-            // if the same card appears 
-            if (list[i].Number == list[i - 1].Number &&
-                list[i].Color == list[i - 1].Color)
+            if (i > 0 && workingList[i].Number == workingList[i - 1].Number &&
+                workingList[i].Color == workingList[i - 1].Color)
             {
-                list.Add(list[i]);
-                list.Remove(list[i]);
-                // remove the card and add it at the end
+                duplicates.Add(workingList[i]);
             }
-            if (list[i].Number == list[i - 1].Number + 1 // on going run logic check
-             && list[i].Color == list[i - 1].Color
+            else
+            {
+                unique.Add(workingList[i]);
+            }
+        }
+        workingList = unique;
+        workingList.AddRange(duplicates);
+        
+        if (workingList.Count == 0) return cardsSets;
+        
+        currentSet.AddCardToEnd(workingList[0]); // add the first card to the current set - Step A
+        for (int i = 1; i < workingList.Count; i++) // iterate over the remaining cards
+        {
+            if (workingList[i].Number == workingList[i - 1].Number + 1 // on going run logic check
+             && workingList[i].Color == workingList[i - 1].Color
              && currentSet.set.Count <= maxRangeInclusive)
             {
-                currentSet.AddCardToEnd(list[i]); // keep track of the longest run
+                currentSet.AddCardToEnd(workingList[i]); // keep track of the longest run
             }
             else // break happened
             {
@@ -58,8 +77,13 @@ public class Computer : Player
                     cardsSets.Add(currentSet); // add the current set to the list of valid sets
                 }
                 currentSet = new CardsSet(); // otherwise either way reset the count
-                currentSet.AddCardToEnd(list[i]); // repeat step A
+                currentSet.AddCardToEnd(workingList[i]); // repeat step A
             }
+        }
+        // FIX: Don't forget to check the last set!
+        if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
+        {
+            cardsSets.Add(currentSet);
         }
         return cardsSets;
     }
@@ -70,20 +94,38 @@ public class Computer : Player
         CardsSet currentSet = new CardsSet(); // current set
         if (list.Count == 0) // if the list is empty return an empty list
             return cardsSets;
-        currentSet.AddCardToEnd(list[0]); // add the first card to the current set, Step A
-        for (int i = 1; i < list.Count; i++) // iterate over the remaining cards
+        
+        // FIX: Create a copy to avoid mutation during iteration
+        List<Card> workingList = new List<Card>(list);
+        
+        // FIX: Move duplicates to end before iterating
+        List<Card> duplicates = new List<Card>();
+        List<Card> unique = new List<Card>();
+        for (int i = 0; i < workingList.Count; i++)
         {
-            if (list[i].Number == list[i - 1].Number && // if the same card appears
-                list[i].Color == list[i - 1].Color)
+            if (i > 0 && workingList[i].Number == workingList[i - 1].Number &&
+                workingList[i].Color == workingList[i - 1].Color)
             {
-                list.Add(list[i]); // remove the card and add it at the end (move to last)
-                list.Remove(list[i]);
+                duplicates.Add(workingList[i]);
             }
-            if (list[i].Number == list[i - 1].Number // on going group logic check
-                && !currentSet.IsContainThisColor(list[i].Color)
+            else
+            {
+                unique.Add(workingList[i]);
+            }
+        }
+        workingList = unique;
+        workingList.AddRange(duplicates);
+        
+        if (workingList.Count == 0) return cardsSets;
+        
+        currentSet.AddCardToEnd(workingList[0]); // add the first card to the current set, Step A
+        for (int i = 1; i < workingList.Count; i++) // iterate over the remaining cards
+        {
+            if (workingList[i].Number == workingList[i - 1].Number // on going group logic check
+                && !currentSet.IsContainThisColor(workingList[i].Color)
                  && currentSet.set.Count <= maxRangeInclusive)
             {
-                currentSet.AddCardToEnd(list[i]); // keep track of the longest group
+                currentSet.AddCardToEnd(workingList[i]); // keep track of the longest group
             }
             else // break happened (by the way it sorted for max = 4 cards it breaks.)
             {
@@ -92,8 +134,13 @@ public class Computer : Player
                     cardsSets.Add(currentSet); // add the current set to the list of valid sets
                 }
                 currentSet = new CardsSet(); // otherwise either way reset the count
-                currentSet.AddCardToEnd(list[i]);
+                currentSet.AddCardToEnd(workingList[i]);
             }
+        }
+        // FIX: Don't forget to check the last set!
+        if (currentSet.set.Count >= minRangeInclusive && currentSet.set.Count <= maxRangeInclusive)
+        {
+            cardsSets.Add(currentSet);
         }
         return cardsSets; // return the list of valid sets
     }
@@ -129,6 +176,7 @@ public class Computer : Player
         this.gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>(); // get the game controller reference, to call the methods
         this.uiManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<UImanager>(); // get the ui manager reference, to call the methods 
         this.gameBoard = GameObject.FindGameObjectWithTag("BoardGrid").GetComponent<GameBoard>(); // get the game board reference, to call the methods
+        this.chainExtractor = new ChainExtractor(gameBoard, player, uiManager); // initialize the chain extractor
     }
 
     public IEnumerator ComputerMove()
@@ -143,34 +191,444 @@ public class Computer : Player
     // Main method for the computer move
     private void DoComputerMove()
     {
+        Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
+        Debug.Log($"<color=cyan>COMPUTER TURN START - Hand: {myPlayer.GetPlayerHand().SortedByRun().Count} cards</color>");
+        Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
+        
         MaximizeValidDrops(); // maximize the valid drops. Step 1, O(n)
         bool append = false; // flag to indicate if we appended a card to the board (either mamximize partial or assigned free cards to existing sets)
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
         {
+            int loopCount = 0;
+            const int maxLoops = 20; // Safety limit
+            
             // perform the following actions until the computer has no moves to make
             do
             {
-                if (partial || added)
+                loopCount++;
+                if (loopCount > maxLoops)
+                {
+                    Debug.LogWarning($"<color=red>AI loop safety break after {maxLoops} iterations</color>");
+                    break;
+                }
+                
+                Debug.Log($"<color=white>--- Loop {loopCount}: partial={partial}, added={added}, chainExtracted={chainExtracted}</color>");
+                
+                if (partial || added || chainExtracted)
                     append = true;
                 MaximizePartialDrops(); // maximize the partial drops. Step 2 O(n*logm)
                 AssignFreeCardsToExistsSets(); // assign free cards to existing sets. Step 3 (O(n*logm)
+                MaximizeChainExtractions(); // NEW: chain extractions (1 hand + 2 board) Step 4
             }
-            while (partial || added); // do it on repeat till the computer has no moves to make
+            while (partial || added || chainExtracted); // do it on repeat till the computer has no moves to make
         }
         else if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet)
         {
             //if the player is not allowed to append cards to the board and the computer has less than 30 points of cards to drop
+            Debug.Log($"<color=orange>Drawing card - not enough points for first move ({gameBoard.GetMovesStackSum()}/{Constants.MinFirstSet})</color>");
             uiManager.DrawACardFromDeck();
+            PrintEndOfTurnSummary("Drew card (first move threshold)");
             return;
         }
         if (dropped || append) //if the computer has made a move, or have sets to drop.
         {
+            Debug.Log($"<color=green>CONFIRMING MOVE - dropped={dropped}, append={append}</color>");
             uiManager.ConfirmMove(); // confirm the move 
+            PrintEndOfTurnSummary("Confirmed move");
         }
         else
         {
+            Debug.Log($"<color=orange>NO MOVES FOUND - Drawing card</color>");
             uiManager.DrawACardFromDeck(); // draw a card if the computer has no moves to make
+            PrintEndOfTurnSummary("Drew card (no moves)");
         }
+    }
+    
+    /// <summary>
+    /// Print summary at end of turn for debugging
+    /// </summary>
+    private void PrintEndOfTurnSummary(string action)
+    {
+        try
+        {
+            Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
+            Debug.Log($"<color=cyan>COMPUTER TURN END - {action}</color>");
+            Debug.Log($"<color=cyan>Hand remaining: {myPlayer.GetPlayerHand().SortedByRun().Count} cards</color>");
+            
+            // Print remaining hand
+            string handStr = "";
+            foreach (Card c in myPlayer.GetPlayerHand())
+            {
+                if (c != null) handStr += $"{c.Color.ToString()[0]}{c.Number} ";
+            }
+            Debug.Log($"<color=white>Hand: [{handStr}]</color>");
+            
+            // Print board state
+            var boardSets = gameBoard.board.GetGameBoardValidSetsTable();
+            Debug.Log($"<color=white>Board has {boardSets.Count} sets</color>");
+            
+            Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"PrintEndOfTurnSummary error: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// NEW STRATEGY: Maximize chain extractions
+    /// Finds moves where:
+    /// - 1 card from hand + 2 cards extracted from board form a valid set
+    /// - Joker extraction to complete partials
+    /// - Chain moves (add to 3-group to enable extraction)
+    /// </summary>
+    private void MaximizeChainExtractions()
+    {
+        this.chainExtracted = false;
+        
+        try
+        {
+            // Debug: Print current state
+            chainExtractor.PrintDebugState("Before Chain Extractions");
+            
+            // Strategy 0: Extract jokers to complete partials (highest priority!)
+            var jokerPlans = chainExtractor.FindJokerExtractionPlans();
+            Debug.Log($"<color=magenta>Found {jokerPlans.Count} joker extraction plans</color>");
+            
+            foreach (var plan in jokerPlans)
+            {
+                if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
+                {
+                    Debug.Log($"<color=magenta>JOKER EXTRACTION: {plan}</color>");
+                    if (ExecuteJokerPlan(plan))
+                    {
+                        this.chainExtracted = true;
+                        return;
+                    }
+                }
+            }
+            
+            // Strategy 1: Single card from hand + 2 direct extractions from board
+            var directPlans = chainExtractor.FindSingleCardWithDoubleExtraction();
+            Debug.Log($"<color=cyan>Found {directPlans.Count} double extraction plans</color>");
+            
+            // Sort plans by value (prefer higher-value cards to get rid of them)
+            directPlans = directPlans.Where(p => p.HandCard != null)
+                                      .OrderByDescending(p => p.HandCard.Number)
+                                      .ToList();
+            
+            foreach (var plan in directPlans)
+            {
+                if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
+                {
+                    Debug.Log($"<color=green>DOUBLE EXTRACTION: {plan}</color>");
+                    if (ExecuteChainPlan(plan))
+                    {
+                        this.chainExtracted = true;
+                        return;
+                    }
+                }
+            }
+            
+            // Strategy 2: Chain extractions (move card A to enable extracting card B)
+            var chainPlans = chainExtractor.FindChainExtractionPlans();
+            Debug.Log($"<color=cyan>Found {chainPlans.Count} chain extraction plans</color>");
+            
+            foreach (var plan in chainPlans)
+            {
+                if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
+                {
+                    Debug.Log($"<color=blue>CHAIN EXTRACTION: {plan}</color>");
+                    if (ExecuteChainPlan(plan))
+                    {
+                        this.chainExtracted = true;
+                        return;
+                    }
+                }
+            }
+            
+            // Strategy 3: Advanced chain plans (complex multi-step extractions)
+            var advancedPlans = chainExtractor.FindAdvancedChainPlans();
+            Debug.Log($"<color=cyan>Found {advancedPlans.Count} advanced chain plans</color>");
+            
+            foreach (var plan in advancedPlans)
+            {
+                if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
+                {
+                    Debug.Log($"<color=yellow>ADVANCED CHAIN: {plan}</color>");
+                    if (ExecuteChainPlan(plan))
+                    {
+                        this.chainExtracted = true;
+                        return;
+                    }
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"<color=red>MaximizeChainExtractions ERROR: {ex.Message}\n{ex.StackTrace}</color>");
+        }
+    }
+    
+    /// <summary>
+    /// Execute a joker extraction plan (2 hand cards + 1 joker from board)
+    /// </summary>
+    private bool ExecuteJokerPlan(ChainExtractor.ExtractionPlan plan)
+    {
+        try
+        {
+            if (plan.HandCards == null || plan.HandCards.Count < 2) return false;
+            if (plan.BoardCards == null || plan.BoardCards.Count < 1) return false;
+            
+            // Extract joker from board
+            var jokerExtract = plan.BoardCards[0];
+            ExtractSingleCardFromBoard(jokerExtract.Card, jokerExtract.SetPosition, jokerExtract.IndexInSet);
+            
+            // Build new set
+            CardsSet newSet = new CardsSet();
+            List<Card> allCards = new List<Card>(plan.HandCards);
+            allCards.Add(jokerExtract.Card);
+            
+            // Sort for runs
+            if (plan.IsRun)
+            {
+                // Put joker in right position
+                allCards = allCards.OrderBy(c => c.Number == Constants.JokerRank ? int.MaxValue : c.Number).ToList();
+                
+                // Determine joker position
+                var nonJokers = allCards.Where(c => c.Number != Constants.JokerRank).OrderBy(c => c.Number).ToList();
+                if (nonJokers.Count >= 2)
+                {
+                    int first = nonJokers[0].Number;
+                    int second = nonJokers[1].Number;
+                    
+                    // Joker goes before, between, or after
+                    allCards.Clear();
+                    if (first > 1)
+                    {
+                        // Joker at start
+                        allCards.Add(jokerExtract.Card);
+                        allCards.AddRange(nonJokers);
+                    }
+                    else
+                    {
+                        // Joker at end
+                        allCards.AddRange(nonJokers);
+                        allCards.Add(jokerExtract.Card);
+                    }
+                }
+            }
+            
+            foreach (Card card in allCards)
+            {
+                newSet.AddCardToEnd(card);
+            }
+            
+            // Play the set
+            gameBoard.PlayCardSetOnBoard(newSet);
+            
+            Debug.Log($"<color=green>Executed joker plan successfully!</color>");
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"ExecuteJokerPlan error: {ex.Message}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Verify that an extraction plan is still valid given current board state
+    /// </summary>
+    private bool IsPlanStillValid(ChainExtractor.ExtractionPlan plan)
+    {
+        try
+        {
+            if (plan == null) return false;
+            
+            // For joker plans, check HandCards instead of HandCard
+            if (plan.HandCards != null && plan.HandCards.Count > 0)
+            {
+                foreach (var hc in plan.HandCards)
+                {
+                    if (hc == null || !myPlayer.GetPlayerHand().Contains(hc)) return false;
+                }
+            }
+            else if (plan.HandCard != null)
+            {
+                if (!myPlayer.GetPlayerHand().Contains(plan.HandCard)) return false;
+            }
+            else
+            {
+                return false;
+            }
+            
+            // Check all board cards are still extractable
+            if (plan.BoardCards == null) return false;
+            
+            foreach (var extractable in plan.BoardCards)
+            {
+                if (extractable == null || extractable.Card == null || extractable.SetPosition == null) 
+                    return false;
+                
+                CardsSet set = gameBoard.board.GetCardsSet(extractable.SetPosition);
+                if (set == null) return false;
+                if (!set.IsContainsCard(extractable.Card)) return false;
+                
+                // Verify still extractable (set has enough cards)
+                if (set.isGroupOfColors && set.GetDeckLength() < Constants.MaxInGroup) return false;
+                if (set.isRun && set.GetDeckLength() <= Constants.MinInRun) return false;
+            }
+            
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Execute a chain extraction plan
+    /// </summary>
+    private bool ExecuteChainPlan(ChainExtractor.ExtractionPlan plan)
+    {
+        try
+        {
+            Debug.Log($"<color=green>Executing plan: {plan}</color>");
+            
+            List<Card> extractedCards = new List<Card>();
+            
+            // Handle prerequisite moves first
+            foreach (var extractable in plan.BoardCards)
+            {
+                if (extractable == null) continue;
+                
+                if (extractable.RequiresPreExtraction && extractable.PrerequisiteExtraction != null)
+                {
+                    var enabler = extractable.PrerequisiteExtraction;
+                    
+                    Debug.Log($"<color=yellow>Pre-extraction: {enabler.Card} from set {enabler.SetPosition?.GetId()}</color>");
+                    
+                    // Extract enabler from its source set
+                    ExtractSingleCardFromBoard(enabler.Card, enabler.SetPosition, enabler.IndexInSet);
+                    
+                    // Add enabler to the target set
+                    AddCardToExistingSet(enabler.Card, extractable.SetPosition);
+                }
+            }
+            
+            // Now extract all the board cards
+            foreach (var extractable in plan.BoardCards)
+            {
+                if (extractable == null || extractable.Card == null) continue;
+                
+                Card card = extractable.Card;
+                Debug.Log($"<color=yellow>Extracting: {card} from set {extractable.SetPosition?.GetId()}</color>");
+                
+                ExtractSingleCardFromBoard(card, extractable.SetPosition, extractable.IndexInSet);
+                extractedCards.Add(card);
+            }
+            
+            // Build the new set
+            CardsSet newSet = new CardsSet();
+            List<Card> allCards = new List<Card>();
+            
+            if (plan.HandCard != null)
+            {
+                allCards.Add(plan.HandCard);
+            }
+            allCards.AddRange(extractedCards);
+            
+            // Sort for runs
+            if (plan.IsRun)
+            {
+                allCards = allCards.OrderBy(c => c.Number == Constants.JokerRank ? 999 : c.Number).ToList();
+            }
+            
+            foreach (Card card in allCards)
+            {
+                if (card != null)
+                    newSet.AddCardToEnd(card);
+            }
+            
+            // Play the new set on board
+            Debug.Log($"<color=green>Playing new set with {newSet.GetDeckLength()} cards</color>");
+            gameBoard.PlayCardSetOnBoard(newSet);
+            
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"<color=red>ExecuteChainPlan ERROR: {ex.Message}\n{ex.StackTrace}</color>");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Extract a single card from the board
+    /// </summary>
+    private void ExtractSingleCardFromBoard(Card card, SetPosition setPosition, int cardIndex)
+    {
+        CardsSet sourceSet = gameBoard.board.GetCardsSet(setPosition);
+        if (sourceSet == null) return;
+        
+        card.OldPosition = card.Position;
+        int index = sourceSet.RemoveCard(card);
+        
+        if (sourceSet.set.Count == 0)
+        {
+            int key = gameBoard.GetKeyFromPosition(card.OldPosition);
+            gameBoard.board.RemoveSetFromBothDic(key);
+        }
+        else if (index == 0 || index == sourceSet.set.Count)
+        {
+            gameBoard.board.HandleBeginningAndEndKeysUpdate(card, sourceSet, setPosition, index);
+        }
+        else
+        {
+            gameBoard.board.HandleMiddleSplit(card, sourceSet, setPosition, index);
+        }
+        
+        // Visual: Move card off its current slot (will be repositioned when new set is played)
+        if (card.transform.parent != null)
+        {
+            card.transform.SetParent(null);
+        }
+        
+        gameBoard.AddCardToMovesStack(card);
+    }
+    
+    /// <summary>
+    /// Add a card to an existing set on the board
+    /// </summary>
+    private void AddCardToExistingSet(Card card, SetPosition targetSetPosition)
+    {
+        CardsSet targetSet = gameBoard.board.GetCardsSet(targetSetPosition);
+        if (targetSet == null) return;
+        
+        // Determine where to add (beginning or end)
+        if (targetSet.CanAddCardLast(card))
+        {
+            int tileSlot = targetSet.GetLastCard().Position.GetTileSlot() + 1;
+            card.Position = new CardPosition(tileSlot);
+            uiManager.MoveCardToBoard(card, tileSlot, false);
+            gameBoard.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.DontRemove);
+        }
+        else if (targetSet.CanAddCardFirst(card))
+        {
+            int tileSlot = targetSet.GetFirstCard().Position.GetTileSlot() - 1;
+            card.Position = new CardPosition(tileSlot);
+            uiManager.MoveCardToBoard(card, tileSlot, false);
+            gameBoard.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.DontRemove);
+        }
+        else
+        {
+            // Need to rearrange the set
+            gameBoard.RearrangeCardsSet(targetSetPosition, card, AddPosition.End);
+        }
+        
+        gameBoard.AddCardToMovesStack(card);
     }
 
 
