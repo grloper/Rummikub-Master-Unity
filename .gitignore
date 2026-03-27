@@ -1,7 +1,26 @@
-/Library
-/Logs
-/Temp
-/obj
-/Assembly-CSharp.csproj
-/Rummikub-Master-Unity-Main.sln
-/Rummikub-Master-Unity-OFEK.sln
+# Unity generated
+/Library/
+/Logs/
+/Temp/
+/obj/
+
+# IDE and solution files
+*.csproj
+*.sln
+*.slnx
+.vs/
+.vscode/
+.vsconfig
+
+# User-specific files
+UserSettings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+[Bb]uild/
+[Bb]uilds/
+
+# Keep documentation files (pdf, docx, pptx) - NOT ignored
