@@ -21,6 +21,14 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     private List<Transform> originalParents = new List<Transform>();
     private List<Vector3> cardOffsets = new List<Vector3>();
     private bool isMultiDrag = false;
+    
+    // Animation settings
+    private const float LIFT_HEIGHT = 6f;
+    private const float LIFT_DELAY = 0.08f; // Delay between each card lift
+    private List<Vector3> originalPositions = new List<Vector3>();
+    private List<Card> liftedCards = new List<Card>();
+    private Coroutine liftCoroutine;
+    private bool isLifting = false;
 
     private void Start()
     {
@@ -31,13 +39,20 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     {
         if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
         {
+            // Stop any ongoing lift animation
+            if (liftCoroutine != null)
+            {
+                StopCoroutine(liftCoroutine);
+                liftCoroutine = null;
+            }
+            
             parentBeforeDrag = transform.parent;
             parentAfterDrag = transform.parent;
             
             // Check if this card is in the player grid (hand)
             if (parentBeforeDrag.parent != null && parentBeforeDrag.parent.CompareTag("PlayerGrid"))
             {
-                // Try to find adjacent cards that form a valid set
+                // Find adjacent cards (2+ for partial sets)
                 FindAdjacentSetCards();
             }
             else
@@ -49,6 +64,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             }
             
             // Move all dragged cards to root canvas
+            originalParents.Clear();
             for (int i = 0; i < draggedCards.Count; i++)
             {
                 Card card = draggedCards[i];
@@ -79,12 +95,11 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     }
     
     /// <summary>
-    /// Find adjacent cards in the player hand that form a valid run or group
+    /// Find adjacent cards in the player hand that form a partial or valid set (2+ cards)
     /// </summary>
     private void FindAdjacentSetCards()
     {
         draggedCards.Clear();
-        originalParents.Clear();
         cardOffsets.Clear();
         isMultiDrag = false;
         
@@ -112,7 +127,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             Card nextCard = slot.GetChild(0).GetComponent<Card>();
             if (nextCard == null) break;
             
-            // Check if this card continues a valid set
+            // Check if this card continues a valid set pattern
             if (CanExtendSet(potentialSet, nextCard))
             {
                 potentialSet.Add(nextCard);
@@ -124,13 +139,13 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             }
         }
         
-        // Only do multi-drag if we have 3+ cards that form a valid set
-        if (potentialSet.Count >= 3 && IsValidSet(potentialSet))
+        // Multi-drag if we have 2+ cards forming a partial set
+        if (potentialSet.Count >= 2)
         {
-            draggedCards = potentialSet;
-            originalParents = potentialParents;
+            draggedCards = new List<Card>(potentialSet);
+            originalParents = new List<Transform>(potentialParents);
             isMultiDrag = true;
-            Debug.Log($"<color=green>Multi-drag: {draggedCards.Count} cards forming valid set</color>");
+            Debug.Log($"<color=cyan>Multi-drag: {draggedCards.Count} cards (partial/full set)</color>");
         }
         else
         {
@@ -153,12 +168,23 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         Card lastCard = currentSet[currentSet.Count - 1];
         Card firstCard = currentSet[0];
         
-        // Handle jokers
+        // Handle jokers - they can extend anything
         if (newCard.Number == Constants.JokerRank) return true;
         if (lastCard.Number == Constants.JokerRank)
         {
             // After joker, accept anything same color (run) or same number (group)
-            return newCard.Color == firstCard.Color || newCard.Number == firstCard.Number;
+            // Find first non-joker card to determine pattern
+            Card patternCard = null;
+            foreach (Card c in currentSet)
+            {
+                if (c.Number != Constants.JokerRank)
+                {
+                    patternCard = c;
+                    break;
+                }
+            }
+            if (patternCard == null) return true; // All jokers so far
+            return newCard.Color == patternCard.Color || newCard.Number == patternCard.Number;
         }
         
         // Check for run (same color, consecutive numbers)
@@ -195,7 +221,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     }
     
     /// <summary>
-    /// Check if a set of cards forms a valid Rummikub set
+    /// Check if a set of cards forms a valid Rummikub set (3+ cards)
     /// </summary>
     private bool IsValidSet(List<Card> cards)
     {
@@ -265,87 +291,244 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             originalParents.Clear();
             cardOffsets.Clear();
             isMultiDrag = false;
+            liftedCards.Clear();
+            originalPositions.Clear();
         }
     }
     
     /// <summary>
-    /// Handle dropping multiple cards on the board
+    /// Handle dropping multiple cards on the board or hand
     /// </summary>
     private void HandleMultiCardDrop()
     {
-        // Check if dropped on a valid board position
         bool validDrop = false;
         
+        // Dropping on board
         if (parentAfterDrag != null && parentAfterDrag.parent != null && 
             parentAfterDrag.parent.CompareTag("BoardGrid"))
         {
-            // Check if there's enough space for all cards
-            int dropSlotIndex = parentAfterDrag.GetSiblingIndex();
-            Transform boardGrid = parentAfterDrag.parent;
-            
-            // Verify all slots to the right are empty
-            bool hasSpace = true;
-            for (int i = 0; i < draggedCards.Count; i++)
+            // Only allow board drop if it's a valid 3+ set
+            if (draggedCards.Count >= 3 && IsValidSet(draggedCards))
             {
-                int targetIndex = dropSlotIndex + i;
-                if (targetIndex >= boardGrid.childCount)
-                {
-                    hasSpace = false;
-                    break;
-                }
-                
-                Transform targetSlot = boardGrid.GetChild(targetIndex);
-                if (targetSlot.childCount > 0)
-                {
-                    hasSpace = false;
-                    break;
-                }
+                validDrop = TryPlaceOnBoard();
             }
-            
-            if (hasSpace)
+            else
             {
-                validDrop = true;
-                
-                // Place all cards
-                GameBoard board = GameObject.FindGameObjectWithTag("BoardGrid").GetComponent<GameBoard>();
-                
-                for (int i = 0; i < draggedCards.Count; i++)
-                {
-                    Card card = draggedCards[i];
-                    if (card == null) continue;
-                    
-                    int targetIndex = dropSlotIndex + i;
-                    Transform targetSlot = boardGrid.GetChild(targetIndex);
-                    
-                    // Set parent to the slot
-                    card.transform.SetParent(targetSlot);
-                    card.transform.localPosition = Vector3.zero;
-                    
-                    // Update card position
-                    int row = targetIndex / Constants.MaxBoardColumns;
-                    int col = targetIndex % Constants.MaxBoardColumns;
-                    card.Position = new CardPosition(row, col);
-                    
-                    // Mark as coming from hand and register the move
-                    card.CameFromPlayerHand = true;
-                    board.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.Remove);
-                    board.AddCardToMovesStack(card);
-                    
-                    // Re-enable raycast
-                    Image cardImage = card.GetComponent<Image>();
-                    if (cardImage != null) cardImage.raycastTarget = true;
-                }
-                
-                Debug.Log($"<color=green>Multi-drop successful: {draggedCards.Count} cards placed</color>");
+                Debug.Log("<color=yellow>Cannot drop partial set on board - need 3+ valid cards</color>");
             }
+        }
+        // Dropping on player hand (rearranging)
+        else if (parentAfterDrag != null && parentAfterDrag.parent != null && 
+                 parentAfterDrag.parent.CompareTag("PlayerGrid"))
+        {
+            validDrop = TryPlaceInHand();
         }
         
         // If not valid, return all cards to original positions
         if (!validDrop)
         {
-            Debug.Log("<color=yellow>Multi-drop failed - returning cards to hand</color>");
+            Debug.Log("<color=yellow>Multi-drop failed - returning cards</color>");
             ReturnCardsToOriginalPositions();
         }
+    }
+    
+    /// <summary>
+    /// Try to place cards on the board, finding space if needed
+    /// </summary>
+    private bool TryPlaceOnBoard()
+    {
+        Transform boardGrid = parentAfterDrag.parent;
+        int dropSlotIndex = parentAfterDrag.GetSiblingIndex();
+        
+        // First try the exact drop location
+        int? foundIndex = FindSpaceForCards(boardGrid, dropSlotIndex, draggedCards.Count);
+        
+        // If not found, search nearby
+        if (foundIndex == null)
+        {
+            foundIndex = FindNearestSpace(boardGrid, dropSlotIndex, draggedCards.Count);
+        }
+        
+        if (foundIndex == null)
+        {
+            Debug.Log("<color=red>No space found on board</color>");
+            return false;
+        }
+        
+        // Place all cards
+        GameBoard board = GameObject.FindGameObjectWithTag("BoardGrid").GetComponent<GameBoard>();
+        
+        for (int i = 0; i < draggedCards.Count; i++)
+        {
+            Card card = draggedCards[i];
+            if (card == null) continue;
+            
+            int targetIndex = foundIndex.Value + i;
+            Transform targetSlot = boardGrid.GetChild(targetIndex);
+            
+            // Set parent to the slot
+            card.transform.SetParent(targetSlot);
+            card.transform.localPosition = Vector3.zero;
+            
+            // Update card position
+            int row = targetIndex / Constants.MaxBoardColumns;
+            int col = targetIndex % Constants.MaxBoardColumns;
+            card.Position = new CardPosition(row, col);
+            
+            // Mark as coming from hand and register the move
+            card.CameFromPlayerHand = true;
+            board.MoveCardFromPlayerHandToGameBoard(card, RemoveOption.Remove);
+            board.AddCardToMovesStack(card);
+            
+            // Re-enable raycast
+            Image cardImage = card.GetComponent<Image>();
+            if (cardImage != null) cardImage.raycastTarget = true;
+        }
+        
+        Debug.Log($"<color=green>Multi-drop successful: {draggedCards.Count} cards placed at index {foundIndex}</color>");
+        return true;
+    }
+    
+    /// <summary>
+    /// Find space for N consecutive cards starting at or near startIndex
+    /// </summary>
+    private int? FindSpaceForCards(Transform grid, int startIndex, int count)
+    {
+        // Check if all slots from startIndex are empty
+        bool hasSpace = true;
+        for (int i = 0; i < count; i++)
+        {
+            int idx = startIndex + i;
+            if (idx >= grid.childCount || grid.GetChild(idx).childCount > 0)
+            {
+                hasSpace = false;
+                break;
+            }
+        }
+        
+        return hasSpace ? startIndex : (int?)null;
+    }
+    
+    /// <summary>
+    /// Find nearest space that can fit all cards
+    /// </summary>
+    private int? FindNearestSpace(Transform grid, int preferredIndex, int count)
+    {
+        int maxColumns = Constants.MaxBoardColumns;
+        int preferredRow = preferredIndex / maxColumns;
+        
+        // Search expanding outward from preferred position
+        for (int distance = 1; distance < grid.childCount; distance++)
+        {
+            // Try same row first (left then right)
+            int leftIdx = preferredIndex - distance;
+            int rightIdx = preferredIndex + distance;
+            
+            // Check left
+            if (leftIdx >= 0 && leftIdx / maxColumns == preferredRow)
+            {
+                int? found = FindSpaceForCards(grid, leftIdx, count);
+                if (found != null) return found;
+            }
+            
+            // Check right
+            if (rightIdx < grid.childCount && rightIdx / maxColumns == preferredRow)
+            {
+                int? found = FindSpaceForCards(grid, rightIdx, count);
+                if (found != null) return found;
+            }
+        }
+        
+        // If same row didn't work, search other rows
+        for (int row = 0; row < Constants.MaxBoardRows; row++)
+        {
+            if (row == preferredRow) continue;
+            
+            for (int col = 0; col <= maxColumns - count; col++)
+            {
+                int idx = row * maxColumns + col;
+                int? found = FindSpaceForCards(grid, idx, count);
+                if (found != null) return found;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Try to place cards in the player hand (rearranging)
+    /// </summary>
+    private bool TryPlaceInHand()
+    {
+        Transform playerGrid = parentAfterDrag.parent;
+        int dropSlotIndex = parentAfterDrag.GetSiblingIndex();
+        
+        // Find space in hand
+        int? foundIndex = FindSpaceForCards(playerGrid, dropSlotIndex, draggedCards.Count);
+        
+        if (foundIndex == null)
+        {
+            foundIndex = FindNearestSpaceInHand(playerGrid, dropSlotIndex, draggedCards.Count);
+        }
+        
+        if (foundIndex == null)
+        {
+            return false;
+        }
+        
+        // Place cards in hand
+        for (int i = 0; i < draggedCards.Count; i++)
+        {
+            Card card = draggedCards[i];
+            if (card == null) continue;
+            
+            int targetIndex = foundIndex.Value + i;
+            Transform targetSlot = playerGrid.GetChild(targetIndex);
+            
+            card.transform.SetParent(targetSlot);
+            card.transform.localPosition = Vector3.zero;
+            
+            // Update card position
+            int row = targetIndex / Constants.MaxPlayerColumns;
+            int col = targetIndex % Constants.MaxPlayerColumns;
+            card.Position = new CardPosition(row, col);
+            
+            // Re-enable raycast
+            Image cardImage = card.GetComponent<Image>();
+            if (cardImage != null) cardImage.raycastTarget = true;
+        }
+        
+        Debug.Log($"<color=cyan>Cards rearranged in hand at index {foundIndex}</color>");
+        return true;
+    }
+    
+    /// <summary>
+    /// Find nearest space in player hand
+    /// </summary>
+    private int? FindNearestSpaceInHand(Transform grid, int preferredIndex, int count)
+    {
+        int maxColumns = Constants.MaxPlayerColumns;
+        
+        // Search expanding outward
+        for (int distance = 1; distance < grid.childCount; distance++)
+        {
+            int leftIdx = preferredIndex - distance;
+            int rightIdx = preferredIndex + distance;
+            
+            if (leftIdx >= 0)
+            {
+                int? found = FindSpaceForCards(grid, leftIdx, count);
+                if (found != null) return found;
+            }
+            
+            if (rightIdx < grid.childCount)
+            {
+                int? found = FindSpaceForCards(grid, rightIdx, count);
+                if (found != null) return found;
+            }
+        }
+        
+        return null;
     }
     
     /// <summary>
@@ -374,9 +557,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public bool IsMultiDrag => isMultiDrag;
     public List<Card> GetDraggedCards() => draggedCards;
     
-    // Store original positions for all cards in multi-drag
-    private List<Vector3> originalPositions = new List<Vector3>();
-    
     public void OnPointerDown(PointerEventData eventData)
     {
         if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
@@ -384,10 +564,10 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             // Store the original position of the card
             originalPosition = image.transform.position;
             // Move the card up by a certain amount
-            image.transform.position = new Vector3(image.transform.position.x, image.transform.position.y + 6, image.transform.position.z);
+            image.transform.position = new Vector3(image.transform.position.x, image.transform.position.y + LIFT_HEIGHT, image.transform.position.z);
             
-            // Also lift adjacent cards that will be part of the multi-drag
-            LiftAdjacentSetCards();
+            // Start cascading lift animation for adjacent cards
+            liftCoroutine = StartCoroutine(LiftAdjacentCardsAnimated());
         }
     }
 
@@ -395,88 +575,48 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     {
         if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
         {
+            // Stop lift animation if still running
+            if (liftCoroutine != null)
+            {
+                StopCoroutine(liftCoroutine);
+                liftCoroutine = null;
+            }
+            
             // Move the card back to its original position
             image.transform.position = originalPosition;
             
-            // Lower all adjacent cards back
-            LowerAdjacentCards();
+            // Lower all lifted cards back with animation
+            StartCoroutine(LowerAdjacentCardsAnimated());
         }
     }
     
     /// <summary>
-    /// Lift adjacent cards that form a valid set (preview for multi-drag)
+    /// Lift adjacent cards one by one with a cascading animation
     /// </summary>
-    private void LiftAdjacentSetCards()
+    private IEnumerator LiftAdjacentCardsAnimated()
     {
+        isLifting = true;
         originalPositions.Clear();
+        liftedCards.Clear();
         
         Transform parent = transform.parent;
         if (parent == null || parent.parent == null || !parent.parent.CompareTag("PlayerGrid"))
-            return;
-        
-        Card thisCard = GetComponent<Card>();
-        if (thisCard == null) return;
-        
-        Transform playerGrid = parent.parent;
-        int thisSlotIndex = parent.GetSiblingIndex();
-        
-        // Build potential set like in FindAdjacentSetCards
-        List<Card> potentialSet = new List<Card> { thisCard };
-        
-        for (int i = thisSlotIndex + 1; i < playerGrid.childCount && potentialSet.Count < 13; i++)
         {
-            Transform slot = playerGrid.GetChild(i);
-            if (slot.childCount == 0) break;
-            
-            Card nextCard = slot.GetChild(0).GetComponent<Card>();
-            if (nextCard == null) break;
-            
-            if (CanExtendSet(potentialSet, nextCard))
-            {
-                potentialSet.Add(nextCard);
-            }
-            else
-            {
-                break;
-            }
-        }
-        
-        // If valid set, lift all cards except the first (already lifted)
-        if (potentialSet.Count >= 3 && IsValidSet(potentialSet))
-        {
-            for (int i = 1; i < potentialSet.Count; i++)
-            {
-                Card card = potentialSet[i];
-                Vector3 origPos = card.transform.position;
-                originalPositions.Add(origPos);
-                card.transform.position = new Vector3(origPos.x, origPos.y + 6, origPos.z);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Lower all adjacent cards back to original positions
-    /// </summary>
-    private void LowerAdjacentCards()
-    {
-        Transform parent = transform.parent;
-        if (parent == null || parent.parent == null || !parent.parent.CompareTag("PlayerGrid"))
-        {
-            originalPositions.Clear();
-            return;
+            isLifting = false;
+            yield break;
         }
         
         Card thisCard = GetComponent<Card>();
         if (thisCard == null)
         {
-            originalPositions.Clear();
-            return;
+            isLifting = false;
+            yield break;
         }
         
         Transform playerGrid = parent.parent;
         int thisSlotIndex = parent.GetSiblingIndex();
         
-        // Rebuild list to match originalPositions
+        // Build potential set (2+ for visual preview)
         List<Card> potentialSet = new List<Card> { thisCard };
         
         for (int i = thisSlotIndex + 1; i < playerGrid.childCount && potentialSet.Count < 13; i++)
@@ -497,16 +637,91 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             }
         }
         
-        // Lower cards back (skip first card, handled separately)
-        if (potentialSet.Count >= 3 && IsValidSet(potentialSet))
+        // Lift cards one by one with delay (skip first card, already lifted)
+        if (potentialSet.Count >= 2)
         {
-            for (int i = 1; i < potentialSet.Count && (i - 1) < originalPositions.Count; i++)
+            for (int i = 1; i < potentialSet.Count; i++)
             {
+                if (!isLifting) yield break; // Check if we should stop
+                
                 Card card = potentialSet[i];
-                card.transform.position = originalPositions[i - 1];
+                Vector3 origPos = card.transform.position;
+                originalPositions.Add(origPos);
+                liftedCards.Add(card);
+                
+                // Animate lift
+                yield return StartCoroutine(AnimateLift(card, origPos, LIFT_HEIGHT, 0.05f));
+                
+                // Small delay before next card
+                yield return new WaitForSeconds(LIFT_DELAY);
             }
         }
         
+        isLifting = false;
+    }
+    
+    /// <summary>
+    /// Animate a single card lifting up
+    /// </summary>
+    private IEnumerator AnimateLift(Card card, Vector3 startPos, float height, float duration)
+    {
+        Vector3 endPos = new Vector3(startPos.x, startPos.y + height, startPos.z);
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0, 1, elapsed / duration);
+            card.transform.position = Vector3.Lerp(startPos, endPos, t);
+            yield return null;
+        }
+        
+        card.transform.position = endPos;
+    }
+    
+    /// <summary>
+    /// Lower all lifted cards back with cascading animation
+    /// </summary>
+    private IEnumerator LowerAdjacentCardsAnimated()
+    {
+        isLifting = false;
+        
+        // Lower cards in reverse order for nice effect
+        for (int i = liftedCards.Count - 1; i >= 0; i--)
+        {
+            if (i < liftedCards.Count && i < originalPositions.Count)
+            {
+                Card card = liftedCards[i];
+                Vector3 targetPos = originalPositions[i];
+                
+                if (card != null)
+                {
+                    // Quick animate down
+                    yield return StartCoroutine(AnimateLower(card, targetPos, 0.03f));
+                }
+            }
+        }
+        
+        liftedCards.Clear();
         originalPositions.Clear();
+    }
+    
+    /// <summary>
+    /// Animate a single card lowering down
+    /// </summary>
+    private IEnumerator AnimateLower(Card card, Vector3 targetPos, float duration)
+    {
+        Vector3 startPos = card.transform.position;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0, 1, elapsed / duration);
+            card.transform.position = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+        
+        card.transform.position = targetPos;
     }
 }
