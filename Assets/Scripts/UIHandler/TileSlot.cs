@@ -32,6 +32,14 @@ public class TileSlot : MonoBehaviour, IDropHandler
         // get the card that is being dropped
         GameObject dropped = eventData.pointerDrag;
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
+        
+        // Skip TileSlot handling for multi-card drops - DraggableItem handles it
+        if (draggableItem.IsMultiDrag)
+        {
+            draggableItem.parentAfterDrag = transform;
+            return;
+        }
+        
         draggableItem.parentAfterDrag = transform;
 
         if (dropped.GetComponent<Card>() != null)
