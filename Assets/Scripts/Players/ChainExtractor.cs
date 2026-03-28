@@ -714,4 +714,167 @@ public class ChainExtractor
     
     #endregion
 
+    #region Joker From Hand + Extraction (Joker in hand + card in hand + extracted card)
+    
+    /// <summary>
+    /// Find plays where Joker from HAND + 1 card from HAND + 1 extracted card from BOARD form a valid set
+    /// Example: Hand has Joker + 6, board has run 4,5,6,7 -> extract 7 -> play Joker,6,7
+    /// </summary>
+    public List<ExtractionPlan> FindJokerFromHandWithExtractionPlans()
+    {
+        List<ExtractionPlan> plans = new List<ExtractionPlan>();
+        
+        try
+        {
+            // First, check if player has any jokers in hand
+            List<Card> handJokers = new List<Card>();
+            List<Card> handNonJokers = new List<Card>();
+            
+            foreach (Card card in player.GetPlayerHand())
+            {
+                if (card == null) continue;
+                if (card.Number == Constants.JokerRank)
+                    handJokers.Add(card);
+                else
+                    handNonJokers.Add(card);
+            }
+            
+            if (handJokers.Count == 0) return plans;
+            
+            if (DEBUG_MODE) Debug.Log($"<color=magenta>Found {handJokers.Count} joker(s) in hand, {handNonJokers.Count} regular cards</color>");
+            
+            var extractables = GetAllExtractableCards();
+            if (extractables.Count == 0) return plans;
+            
+            Card jokerInHand = handJokers[0]; // Use first joker
+            
+            foreach (Card handCard in handNonJokers)
+            {
+                // Strategy 1: Joker + handCard + extracted card form a RUN
+                // Joker can be at start, middle, or end
+                // If handCard is 6, we need either 5 or 7 or 8 (joker fills the gap)
+                
+                // Joker at start: J,handCard,handCard+1 -> need handCard+1
+                // Joker at end: handCard-1,handCard,J -> need handCard-1  
+                // Joker in middle: handCard-1,J,handCard+1 -> need handCard-1 AND handCard+1 (not this case)
+                // Actually for run: Joker,X,X+1 or X-1,X,Joker or X,Joker,X+2 etc.
+                
+                // Case A: Joker at beginning -> need card that is handCard+1
+                int neededNum = handCard.Number + 1;
+                if (neededNum <= Constants.MaxRank)
+                {
+                    var match = extractables.FirstOrDefault(e => 
+                        e.Card != null && 
+                        e.Card.Color == handCard.Color && 
+                        e.Card.Number == neededNum);
+                    
+                    if (match != null)
+                    {
+                        plans.Add(new ExtractionPlan
+                        {
+                            HandCard = handCard,
+                            HandCards = new List<Card> { jokerInHand, handCard },
+                            BoardCards = new List<ExtractableCard> { match },
+                            IsRun = true,
+                            Description = $"JokerHand+{handCard.Color}{handCard.Number}+extract{match.Card.Color}{match.Card.Number} (J,{handCard.Number},{neededNum})"
+                        });
+                    }
+                }
+                
+                // Case B: Joker at end -> need card that is handCard-1
+                neededNum = handCard.Number - 1;
+                if (neededNum >= 1)
+                {
+                    var match = extractables.FirstOrDefault(e => 
+                        e.Card != null && 
+                        e.Card.Color == handCard.Color && 
+                        e.Card.Number == neededNum);
+                    
+                    if (match != null)
+                    {
+                        plans.Add(new ExtractionPlan
+                        {
+                            HandCard = handCard,
+                            HandCards = new List<Card> { jokerInHand, handCard },
+                            BoardCards = new List<ExtractableCard> { match },
+                            IsRun = true,
+                            Description = $"JokerHand+{handCard.Color}{handCard.Number}+extract{match.Card.Color}{match.Card.Number} ({neededNum},{handCard.Number},J)"
+                        });
+                    }
+                }
+                
+                // Case C: Joker fills gap in middle -> handCard-2,Joker,handCard or handCard,Joker,handCard+2
+                neededNum = handCard.Number - 2;
+                if (neededNum >= 1)
+                {
+                    var match = extractables.FirstOrDefault(e => 
+                        e.Card != null && 
+                        e.Card.Color == handCard.Color && 
+                        e.Card.Number == neededNum);
+                    
+                    if (match != null)
+                    {
+                        plans.Add(new ExtractionPlan
+                        {
+                            HandCard = handCard,
+                            HandCards = new List<Card> { jokerInHand, handCard },
+                            BoardCards = new List<ExtractableCard> { match },
+                            IsRun = true,
+                            Description = $"JokerHand gap: {neededNum},J,{handCard.Number}"
+                        });
+                    }
+                }
+                
+                neededNum = handCard.Number + 2;
+                if (neededNum <= Constants.MaxRank)
+                {
+                    var match = extractables.FirstOrDefault(e => 
+                        e.Card != null && 
+                        e.Card.Color == handCard.Color && 
+                        e.Card.Number == neededNum);
+                    
+                    if (match != null)
+                    {
+                        plans.Add(new ExtractionPlan
+                        {
+                            HandCard = handCard,
+                            HandCards = new List<Card> { jokerInHand, handCard },
+                            BoardCards = new List<ExtractableCard> { match },
+                            IsRun = true,
+                            Description = $"JokerHand gap: {handCard.Number},J,{neededNum}"
+                        });
+                    }
+                }
+                
+                // Strategy 2: Joker + handCard + extracted card form a GROUP (same number, different colors)
+                var sameNumberDiffColor = extractables.Where(e => 
+                    e.Card != null && 
+                    e.Card.Number == handCard.Number && 
+                    e.Card.Color != handCard.Color).ToList();
+                
+                foreach (var match in sameNumberDiffColor)
+                {
+                    plans.Add(new ExtractionPlan
+                    {
+                        HandCard = handCard,
+                        HandCards = new List<Card> { jokerInHand, handCard },
+                        BoardCards = new List<ExtractableCard> { match },
+                        IsRun = false,
+                        Description = $"JokerHand group: {handCard.Number}x3 (J,{handCard.Color},{match.Card.Color})"
+                    });
+                }
+            }
+            
+            if (DEBUG_MODE) Debug.Log($"<color=magenta>Found {plans.Count} joker-from-hand extraction plans</color>");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"FindJokerFromHandWithExtractionPlans error: {ex.Message}");
+        }
+        
+        return plans;
+    }
+    
+    #endregion
+
 }

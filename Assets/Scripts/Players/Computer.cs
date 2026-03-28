@@ -363,6 +363,23 @@ public class Computer : Player
                     }
                 }
             }
+            
+            // Strategy 4: Joker FROM HAND + 1 hand card + 1 extracted board card
+            var jokerFromHandPlans = chainExtractor.FindJokerFromHandWithExtractionPlans();
+            Debug.Log($"<color=magenta>Found {jokerFromHandPlans.Count} joker-from-hand extraction plans</color>");
+            
+            foreach (var plan in jokerFromHandPlans)
+            {
+                if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
+                {
+                    Debug.Log($"<color=magenta>JOKER FROM HAND: {plan}</color>");
+                    if (ExecuteJokerFromHandPlan(plan))
+                    {
+                        this.chainExtracted = true;
+                        return;
+                    }
+                }
+            }
         }
         catch (System.Exception ex)
         {
@@ -561,6 +578,108 @@ public class Computer : Player
         catch (System.Exception ex)
         {
             Debug.LogError($"<color=red>ExecuteChainPlan ERROR: {ex.Message}\n{ex.StackTrace}</color>");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Execute a joker-from-hand extraction plan (joker from hand + 1 hand card + 1 extracted board card)
+    /// </summary>
+    private bool ExecuteJokerFromHandPlan(ChainExtractor.ExtractionPlan plan)
+    {
+        try
+        {
+            Debug.Log($"<color=magenta>Executing joker-from-hand plan: {plan}</color>");
+            
+            // Get the joker and regular card from hand
+            if (plan.HandCards == null || plan.HandCards.Count < 2)
+            {
+                Debug.LogError("ExecuteJokerFromHandPlan: Not enough hand cards");
+                return false;
+            }
+            
+            Card jokerCard = plan.HandCards.FirstOrDefault(c => c != null && c.Number == Constants.JokerRank);
+            Card regularCard = plan.HandCards.FirstOrDefault(c => c != null && c.Number != Constants.JokerRank);
+            
+            if (jokerCard == null || regularCard == null)
+            {
+                Debug.LogError("ExecuteJokerFromHandPlan: Missing joker or regular card");
+                return false;
+            }
+            
+            // Extract card from board
+            if (plan.BoardCards == null || plan.BoardCards.Count < 1)
+            {
+                Debug.LogError("ExecuteJokerFromHandPlan: No board cards to extract");
+                return false;
+            }
+            
+            var extractable = plan.BoardCards[0];
+            if (extractable?.Card == null)
+            {
+                Debug.LogError("ExecuteJokerFromHandPlan: Invalid extractable card");
+                return false;
+            }
+            
+            Debug.Log($"<color=yellow>Extracting: {extractable.Card} from set {extractable.SetPosition?.GetId()}</color>");
+            ExtractSingleCardFromBoard(extractable.Card, extractable.SetPosition, extractable.IndexInSet);
+            Card extractedCard = extractable.Card;
+            
+            // Build the new set
+            CardsSet newSet = new CardsSet();
+            List<Card> allCards = new List<Card> { jokerCard, regularCard, extractedCard };
+            
+            if (plan.IsRun)
+            {
+                // Sort non-jokers by number, place joker appropriately
+                var nonJokers = allCards.Where(c => c.Number != Constants.JokerRank).OrderBy(c => c.Number).ToList();
+                
+                if (nonJokers.Count >= 2)
+                {
+                    int num1 = nonJokers[0].Number;
+                    int num2 = nonJokers[1].Number;
+                    
+                    allCards.Clear();
+                    
+                    // Determine joker position based on gap
+                    if (num2 - num1 == 2)
+                    {
+                        // Joker fills middle gap: num1, Joker, num2
+                        allCards.Add(nonJokers[0]);
+                        allCards.Add(jokerCard);
+                        allCards.Add(nonJokers[1]);
+                    }
+                    else if (num1 > 1 && num2 == num1 + 1)
+                    {
+                        // Joker at start
+                        allCards.Add(jokerCard);
+                        allCards.AddRange(nonJokers);
+                    }
+                    else
+                    {
+                        // Joker at end
+                        allCards.AddRange(nonJokers);
+                        allCards.Add(jokerCard);
+                    }
+                }
+            }
+            // For groups, order doesn't matter
+            
+            foreach (Card card in allCards)
+            {
+                if (card != null)
+                    newSet.AddCardToEnd(card);
+            }
+            
+            // Play the new set on board
+            Debug.Log($"<color=green>Playing joker-from-hand set with {newSet.GetDeckLength()} cards</color>");
+            gameBoard.PlayCardSetOnBoard(newSet);
+            
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"<color=red>ExecuteJokerFromHandPlan ERROR: {ex.Message}\n{ex.StackTrace}</color>");
             return false;
         }
     }
