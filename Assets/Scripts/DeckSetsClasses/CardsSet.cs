@@ -67,10 +67,14 @@ public class CardsSet : ICardSet
     public CardsSet UnCombine(int offset)
     {
         CardsSet newSet = new CardsSet(); // create a new set of cards (returned set)
-        for (int i = 0; i < offset; i++)
+        // Safety: don't try to remove more cards than exist
+        int cardsToRemove = Mathf.Min(offset, set.Count);
+        for (int i = 0; i < cardsToRemove; i++)
         {
-            Debug.Log(" UnCombine " + set.GetFirstNode().Value.ToString());
-            newSet.set.AddLast(set.GetFirstNode().Value); // add the card to the new set
+            var firstNode = set.GetFirstNode();
+            if (firstNode == null) break; // Safety check
+            Debug.Log(" UnCombine " + firstNode.Value.ToString());
+            newSet.set.AddLast(firstNode.Value); // add the card to the new set
             set.RemoveFirst();
         }
         return newSet;

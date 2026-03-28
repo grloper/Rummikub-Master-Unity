@@ -974,19 +974,45 @@ public class Computer : Player
     {
         // Get the set from the game board 
         CardsSet Oldset = gameBoard.board.GetGameBoardValidSetsTable()[key];
+        
+        // Safety check: don't try to uncombine more cards than exist in the set
+        int setLength = Oldset.GetDeckLength();
+        if (offset > setLength)
+        {
+            Debug.LogWarning($"SplitSet: offset ({offset}) > set length ({setLength}), clamping");
+            offset = setLength;
+        }
+        
         // Uncombine the set into two sets, the first one with the offset (appending at the end the remaining card), the second one with the rest of the cards
         CardsSet newSet = Oldset.UnCombine(offset);
+        
         // Create a new set position with new id
-        if (removeOption == RemoveOption.Remove) // if we split the set in order to take the offset card (for partial) else = default for re-arrangement middle placement
+        if (removeOption == RemoveOption.Remove && Oldset.GetDeckLength() > 0)
         {
             Oldset.set.RemoveFirst();
         }
+        
         SetPosition newSetPos = new SetPosition(gameBoard.board.GetSetCountAndInc());
         // Add the new set to the game board
         gameBoard.board.AddCardsSet(newSetPos, newSet);
-        // Update the keys of the cards in the set
-        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
-        gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(Oldset.GetFirstCard().Position), gameBoard.GetKeyFromPosition(Oldset.GetLastCard().Position), key);
+        
+        // Update the keys of the cards in the new set
+        if (newSet.GetDeckLength() > 0)
+        {
+            gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(newSet.GetFirstCard().Position), gameBoard.GetKeyFromPosition(newSet.GetLastCard().Position), newSetPos);
+        }
+        
+        // Update the keys of the cards in the old set (only if it still has cards)
+        if (Oldset.GetDeckLength() > 0)
+        {
+            gameBoard.board.UpdateKeyMultiCardsSet(gameBoard.GetKeyFromPosition(Oldset.GetFirstCard().Position), gameBoard.GetKeyFromPosition(Oldset.GetLastCard().Position), key);
+        }
+        else
+        {
+            // Old set is empty, remove it from the board
+            gameBoard.board.GetGameBoardValidSetsTable().Remove(key);
+        }
+        
         return newSetPos;
     }
     private void SplitAndRearrangeCardsSet(SetPosition key, Card card, int offset)
