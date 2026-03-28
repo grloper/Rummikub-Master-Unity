@@ -374,6 +374,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public bool IsMultiDrag => isMultiDrag;
     public List<Card> GetDraggedCards() => draggedCards;
     
+    // Store original positions for all cards in multi-drag
+    private List<Vector3> originalPositions = new List<Vector3>();
+    
     public void OnPointerDown(PointerEventData eventData)
     {
         if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
@@ -382,6 +385,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             originalPosition = image.transform.position;
             // Move the card up by a certain amount
             image.transform.position = new Vector3(image.transform.position.x, image.transform.position.y + 6, image.transform.position.z);
+            
+            // Also lift adjacent cards that will be part of the multi-drag
+            LiftAdjacentSetCards();
         }
     }
 
@@ -391,6 +397,116 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         {
             // Move the card back to its original position
             image.transform.position = originalPosition;
+            
+            // Lower all adjacent cards back
+            LowerAdjacentCards();
         }
+    }
+    
+    /// <summary>
+    /// Lift adjacent cards that form a valid set (preview for multi-drag)
+    /// </summary>
+    private void LiftAdjacentSetCards()
+    {
+        originalPositions.Clear();
+        
+        Transform parent = transform.parent;
+        if (parent == null || parent.parent == null || !parent.parent.CompareTag("PlayerGrid"))
+            return;
+        
+        Card thisCard = GetComponent<Card>();
+        if (thisCard == null) return;
+        
+        Transform playerGrid = parent.parent;
+        int thisSlotIndex = parent.GetSiblingIndex();
+        
+        // Build potential set like in FindAdjacentSetCards
+        List<Card> potentialSet = new List<Card> { thisCard };
+        
+        for (int i = thisSlotIndex + 1; i < playerGrid.childCount && potentialSet.Count < 13; i++)
+        {
+            Transform slot = playerGrid.GetChild(i);
+            if (slot.childCount == 0) break;
+            
+            Card nextCard = slot.GetChild(0).GetComponent<Card>();
+            if (nextCard == null) break;
+            
+            if (CanExtendSet(potentialSet, nextCard))
+            {
+                potentialSet.Add(nextCard);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // If valid set, lift all cards except the first (already lifted)
+        if (potentialSet.Count >= 3 && IsValidSet(potentialSet))
+        {
+            for (int i = 1; i < potentialSet.Count; i++)
+            {
+                Card card = potentialSet[i];
+                Vector3 origPos = card.transform.position;
+                originalPositions.Add(origPos);
+                card.transform.position = new Vector3(origPos.x, origPos.y + 6, origPos.z);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Lower all adjacent cards back to original positions
+    /// </summary>
+    private void LowerAdjacentCards()
+    {
+        Transform parent = transform.parent;
+        if (parent == null || parent.parent == null || !parent.parent.CompareTag("PlayerGrid"))
+        {
+            originalPositions.Clear();
+            return;
+        }
+        
+        Card thisCard = GetComponent<Card>();
+        if (thisCard == null)
+        {
+            originalPositions.Clear();
+            return;
+        }
+        
+        Transform playerGrid = parent.parent;
+        int thisSlotIndex = parent.GetSiblingIndex();
+        
+        // Rebuild list to match originalPositions
+        List<Card> potentialSet = new List<Card> { thisCard };
+        
+        for (int i = thisSlotIndex + 1; i < playerGrid.childCount && potentialSet.Count < 13; i++)
+        {
+            Transform slot = playerGrid.GetChild(i);
+            if (slot.childCount == 0) break;
+            
+            Card nextCard = slot.GetChild(0).GetComponent<Card>();
+            if (nextCard == null) break;
+            
+            if (CanExtendSet(potentialSet, nextCard))
+            {
+                potentialSet.Add(nextCard);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Lower cards back (skip first card, handled separately)
+        if (potentialSet.Count >= 3 && IsValidSet(potentialSet))
+        {
+            for (int i = 1; i < potentialSet.Count && (i - 1) < originalPositions.Count; i++)
+            {
+                Card card = potentialSet[i];
+                card.transform.position = originalPositions[i - 1];
+            }
+        }
+        
+        originalPositions.Clear();
     }
 }
