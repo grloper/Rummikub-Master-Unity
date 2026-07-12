@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -76,10 +75,10 @@ public class PartialCardSet : ICardSet
 
 
 
-        return IsConsicutive(GetFirstCard(), GetLastCard()) &&
+        return IsConsecutive(GetFirstCard(), GetLastCard()) &&
                 IsSameColor(GetFirstCard(), GetLastCard().Color);
     }
-    public bool IsConsicutive(Card c1, Card c2)
+    public bool IsConsecutive(Card c1, Card c2)
     {
         return Mathf.Abs(c1.Number - c2.Number) == 1;
     }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Unity.VisualScripting;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 public class GameBoard : MonoBehaviour
 {
@@ -37,8 +32,6 @@ public class GameBoard : MonoBehaviour
         //game board valid sets need to have at max 0-7 sets which is the rows on board and every set can have many CardsSet which will held by location on board
         board = new Board();
         boardBackup = new Board();
-        ExplainGameRules();
-
     }
     public void UndoMoves()
     {
@@ -64,7 +57,7 @@ public class GameBoard : MonoBehaviour
             gameController.GetCurrentPlayer().AddCardToList(card);
             if (draggableItem != null)
             {
-                Debug.Log("<color=yellow>from board to board undo</color>");
+                GameLog.Verbose("<color=yellow>from board to board undo</color>");
                 //card.ParentBeforeDrag is the tile slot location on board when pushed first to the stack
                 draggableItem.parentAfterDrag = card.ParentBeforeDrag;
                 card.transform.parent = draggableItem.parentAfterDrag;
@@ -76,7 +69,7 @@ public class GameBoard : MonoBehaviour
         else
         {
             // Move the card back to the player's hand
-            Debug.Log("<color=yellow>from board to player undo</color>");
+            GameLog.Verbose("<color=yellow>from board to player undo</color>");
             //update the card position to null
             gameController.GetCurrentPlayer().AddCardToList(card);
             // Get the empty slot index in the player's hand and save the card in that slot
@@ -92,57 +85,28 @@ public class GameBoard : MonoBehaviour
     public void AddCardToMovesStack(Card card) => movesStack.Push(card);
 
     public Stack<Card> GetMovesStack() => movesStack;
-    // Move Card from GameBoard to GameBoard
 
-    // Print all items in gameBoardValidSets
-//     public void PrintGameBoardValidSets()
-//     {
-//         // create these two hashes
-//         Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-//         Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-//         Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
-//         //print the keys and their values from gameboard
-//         foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
-//         {
-//             Debug.Log("<color=green> Key:" + entry.Key.GetId() + " Value:" + entry.Value.ToString() + ", IsRun: "+entry.Value.isRun+", IsGroup: "+entry.Value.isGroupOfColors+"</color>");
-//         }
-//         Debug.Log("<color=red>Print keys of Sets</color>");
-// string output = string.Join(" |||", cardToSetPos.Keys.Select(key => $"<color=orange>Key:{key} Set Pos:{cardToSetPos[key].GetId()}</color>"));
-// Debug.Log(output);
-
-//     }
-public void PrintGameBoardValidSets()
-{
-    // Create these two dictionaries
-    Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
-    Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
-
-    Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
-
-    // For each set position in the game board valid sets
-    foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
+    // Dump both board dictionaries to the console.
+    // Compiled out (calls included) unless RUMMIKUB_VERBOSE is defined - see GameLog.
+    [System.Diagnostics.Conditional("RUMMIKUB_VERBOSE")]
+    public void PrintGameBoardValidSets()
     {
-        // Get the set position ID and the cards set details
-        string setPosId = entry.Key.GetId().ToString();
-        CardsSet cardsSet = entry.Value;
+        Dictionary<SetPosition, CardsSet> gameBoardValidSets = board.GetGameBoardValidSetsTable();
+        Dictionary<int, SetPosition> cardToSetPos = board.GetCardsToSetsTable();
 
-        // Find all card keys that map to the current set position
-        var cardKeys = cardToSetPos
-            .Where(kvp => kvp.Value.Equals(entry.Key))
-            .Select(kvp => kvp.Key)
-            .ToList();
+        Debug.Log("<color=red>---------------------------------------Print board---------------------------------------</color>");
+        foreach (KeyValuePair<SetPosition, CardsSet> entry in gameBoardValidSets)
+        {
+            // Find all card keys that map to the current set position
+            List<int> cardKeys = new List<int>();
+            foreach (KeyValuePair<int, SetPosition> kvp in cardToSetPos)
+                if (kvp.Value.Equals(entry.Key))
+                    cardKeys.Add(kvp.Key);
 
-        // Create a string representation of card keys
-        string cardKeysString = string.Join(", ", cardKeys);
-
-        // Print the set position, cards set, and associated card keys
-        Debug.Log($"<color=green> SetPosition: {setPosId} -> CardsSet: {cardsSet.ToString()}, IsRun: {cardsSet.isRun}, IsGroup: {cardsSet.isGroupOfColors}, Keys: {cardKeysString} -> SetPosition: {setPosId}</color>");
+            Debug.Log($"<color=green> SetPosition: {entry.Key.GetId()} -> CardsSet: {entry.Value}, IsRun: {entry.Value.isRun}, IsGroup: {entry.Value.isGroupOfColors}, Keys: {string.Join(", ", cardKeys)}</color>");
+        }
+        Debug.Log("<color=red>---------------------------------------End of Print---------------------------------------</color>");
     }
-
-    Debug.Log("<color=red>---------------------------------------End of Print---------------------------------------</color>");
-}
-
-
 
     // O(n) where n is the number of cards in the set instead of O(n^2) in the previous implementation where n is the number of sets on the board multiply the sum of the cards in all the sets List<Card>[] sets, iteration only on some row
     // Handle the movement of a card from the game board to the game board
@@ -282,16 +246,7 @@ public void PrintGameBoardValidSets()
     {
         board.CreateNewSet(card, key);
     }
-    public void ExplainGameRules()
-    {
-        print("The game is played with two sets of 52 cards and 2 jokers. Each " +
-            "player has 14 cards in his hand. The goal of the game is to get rid of all the cards in your hand. " +
-            "You can do this by creating sets of cards. There are two types of sets: a group and a run. A group is a set of " +
-            "3 or 4 cards with the same number but different colors. A run is a set of 3 or more cards with the same color and" +
-            " consecutive numbers. A joker can be used as any card. You can add cards to the sets on the board or create new sets." +
-            " You can also move cards inside the boards as long as you are not breaking the rules and keeps all the sets valids.");
-    }
-    // Get the sum of the moves on the board 
+    // Get the sum of the moves on the board
     public int GetMovesStackSum()
     {
         int sum = Constants.EmptyStack;
@@ -356,16 +311,16 @@ public void PrintGameBoardValidSets()
     // Get the index of the first empty slot in the game board that can hold 'amount' cards
     public int GetEmptySlotIndexFromGameBoard(int amount)
     {
-        GameObject boardGrid = GameObject.FindGameObjectWithTag("BoardGrid");
+        // this component lives on the board grid itself, so its own transform holds the slots
         int rowCount = Constants.MaxBoardRows;
         int colCount = Constants.MaxBoardColumns;
         // Array to keep track of the number of consecutive empty slots on the same row
         int[] emptySlotsCount = new int[rowCount];
 
         // Iterate over the slots in the board grid, which is a 2D grid of slots represented as a 1D array max is: 8*29 = 232
-        for (int i = 0; i < boardGrid.transform.childCount; i++)
+        for (int i = 0; i < transform.childCount; i++)
         {
-            GameObject currentSlot = boardGrid.transform.GetChild(i).gameObject;
+            GameObject currentSlot = transform.GetChild(i).gameObject;
             // get the current row
             int row = i / colCount;
 
@@ -399,13 +354,20 @@ public void PrintGameBoardValidSets()
     public void PlayCardSetOnBoard(CardsSet cardsSet, int add = 0, AddPosition p = AddPosition.End)
     {
         int tileslot = GetEmptySlotIndexFromGameBoard(cardsSet.set.Count + add); // if we want more than one empty slot (for partial length 2, with another 1)
+        if (tileslot < 0)
+        {
+            // No row has enough consecutive free slots - better to refuse the play than to index GetChild(-1)
+            Debug.LogWarning($"No space on the board for a set of {cardsSet.set.Count} cards.");
+            return;
+        }
         if (p == AddPosition.Beginning) // Indicate if we want the first slot to be empty
         {
             tileslot++;
         }
         foreach (Card card in cardsSet.set)
         {
-            card.OldPosition = card.Position;
+            // copy, don't alias: Position is mutated in place right after
+            card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
             card.Position.SetTileSlot(tileslot);
             uiManager.MoveCardToBoard(card, tileslot, true);
             tileslot++;
@@ -437,9 +399,14 @@ public void PrintGameBoardValidSets()
         int oldLeft = GetKeyFromPosition(set.GetFirstCard().Position);
         int oldRight = GetKeyFromPosition(set.GetLastCard().Position);
         int tileslot = GetEmptySlotIndexFromGameBoard(set.set.Count + 1);
+        if (tileslot < 0)
+        {
+            Debug.LogWarning($"No space on the board to rearrange a set of {set.set.Count} cards.");
+            return;
+        }
         if (addPosition==AddPosition.Beginning)
         {
-            givenCard.OldPosition = givenCard.Position;
+            givenCard.OldPosition = new CardPosition(givenCard.Position.Row, givenCard.Position.Column);
             givenCard.Position.SetTileSlot(tileslot);
             tileslot++;
         }
@@ -451,7 +418,8 @@ public void PrintGameBoardValidSets()
             Card card = current.Value;
             if (card != givenCard)
             {
-                card.OldPosition = card.Position;
+                // copy, don't alias: Position is mutated in place right after
+                card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
                 card.Position.SetTileSlot(tileslot);
                 // update visualy
                 uiManager.MoveCardToBoard(card, tileslot, false);
@@ -473,7 +441,7 @@ public void PrintGameBoardValidSets()
 
         if (addPosition==AddPosition.End)
         {
-            givenCard.OldPosition = givenCard.Position;
+            givenCard.OldPosition = new CardPosition(givenCard.Position.Row, givenCard.Position.Column);
             givenCard.Position.SetTileSlot(tileslot);
         }
         // move the given card to the free location

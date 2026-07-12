@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -28,6 +26,7 @@ public class RummikubDeck
         deck.Add(new Card(Constants.JokerRank, CardColor.Red));
         deck.Add(new Card(Constants.JokerRank, CardColor.Black));
     }
+    // O(1): swap the drawn card with the last one so the removal never shifts the list
     public Card DrawRandomCardFromDeck()
     {
         if (deck.Count == Constants.EmptyDeck)
@@ -36,7 +35,8 @@ public class RummikubDeck
         }
         int randomIndex = Random.Range(0, deck.Count);
         Card drawnCard = deck[randomIndex];
-        deck.RemoveAt(randomIndex);
+        deck[randomIndex] = deck[deck.Count - 1];
+        deck.RemoveAt(deck.Count - 1);
         return drawnCard;
     }
 

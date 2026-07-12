@@ -15,7 +15,6 @@ public class ChainExtractor
     private readonly GameBoard gameBoard;
     private readonly Player player;
     private readonly UImanager uiManager;
-    private const bool DEBUG_MODE = true;
 
     public ChainExtractor(GameBoard gameBoard, Player player, UImanager uiManager)
     {
@@ -67,11 +66,11 @@ public class ChainExtractor
     #endregion
 
     #region Debug Methods
-    
+
+    // Compiled out (calls included) unless RUMMIKUB_VERBOSE is defined - see GameLog.
+    [System.Diagnostics.Conditional("RUMMIKUB_VERBOSE")]
     public void PrintDebugState(string context)
     {
-        if (!DEBUG_MODE) return;
-        
         Debug.Log($"<color=yellow>═══ CHAIN DEBUG: {context} ═══</color>");
         
         try
@@ -146,9 +145,9 @@ public class ChainExtractor
             }
             
             // Must have at least 3 cards
-            if (allCards.Count < 3) 
+            if (allCards.Count < 3)
             {
-                if (DEBUG_MODE) Debug.Log($"Plan invalid: only {allCards.Count} cards");
+                GameLog.Verbose($"Plan invalid: only {allCards.Count} cards");
                 return false;
             }
             
@@ -160,9 +159,9 @@ public class ChainExtractor
             }
             
             bool valid = testSet.IsRun() || testSet.IsGroupOfColors();
-            if (!valid && DEBUG_MODE)
+            if (!valid)
             {
-                Debug.Log($"Plan invalid: cards don't form valid set");
+                GameLog.Verbose("Plan invalid: cards don't form valid set");
             }
             return valid;
         }
@@ -296,8 +295,8 @@ public class ChainExtractor
             var jokers = extractables.Where(e => e.IsJoker).ToList();
             
             if (jokers.Count == 0) return plans;
-            
-            if (DEBUG_MODE) Debug.Log($"<color=magenta>Found {jokers.Count} extractable joker(s)</color>");
+
+            GameLog.Verbose($"<color=magenta>Found {jokers.Count} extractable joker(s)</color>");
             
             foreach (var jokerExtract in jokers)
             {

@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 // This class is used to create a node for a doubly linked list. 
 public class Node<T>
 {

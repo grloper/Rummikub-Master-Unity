@@ -13,10 +13,11 @@ public class TileSlot : MonoBehaviour, IDropHandler
         this.gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
     }
 
-    // triggered when a card is dropped on the tile slot 
+    // triggered when a card is dropped on the tile slot
     public void OnDrop(PointerEventData eventData)
     {
-        if (transform.childCount == Constants.EmptyTileSlot && gameManager.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (transform.childCount == Constants.EmptyTileSlot && !gameManager.IsGameOver()
+            && gameManager.GetCurrentPlayer().GetPlayerType() == PlayerType.Human)
         {
             HandleValidDrop(eventData);
         }
@@ -34,21 +35,22 @@ public class TileSlot : MonoBehaviour, IDropHandler
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
         draggableItem.parentAfterDrag = transform;
 
-        if (dropped.GetComponent<Card>() != null)
+        Card card = dropped.GetComponent<Card>();
+        if (card != null)
         {
             // save the old position of the card in case of moving multiple times the same card in the board
-            if (dropped.GetComponent<Card>().Position != null)
+            if (card.Position != null)
             {
-                dropped.GetComponent<Card>().OldPosition = new CardPosition(dropped.GetComponent<Card>().Position.Row, dropped.GetComponent<Card>().Position.Column);
+                card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
             }
             // if the card is dropped on the human grid
             if (transform.parent.tag == "PlayerGrid")
             {
-                HandleDropOnHumanGrid(dropped.GetComponent<Card>(), draggableItem);
+                HandleDropOnHumanGrid(card, draggableItem);
             }
             else
             {// if the card is dropped on the board grid
-                HandleDropOnBoardGrid(dropped.GetComponent<Card>(), draggableItem);
+                HandleDropOnBoardGrid(card, draggableItem);
             }
         }
     }
@@ -67,14 +69,14 @@ public class TileSlot : MonoBehaviour, IDropHandler
         {
             // movement inside human grid
             card.Position = new CardPosition(GetRowIndexHuman(), GetColumnIndexHuman());
-            Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
+            GameLog.Verbose("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " HumanGrid ,Came from human hand?" + card.CameFromPlayerHand);
         }
     }
 
     private void HandleDropOnBoardGrid(Card card, DraggableItem draggableItem)
     {
         card.Position = new CardPosition(GetRowIndexBoard(), GetColumnIndexBoard());
-        Debug.Log("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
+        GameLog.Verbose("Dropped from: " + draggableItem.parentBeforeDrag.transform.parent.tag + " Dropped at Row: " + card.Position.Row + ", Column: " + card.Position.Column + " BoardGrid ,Came from human hand?" + card.CameFromPlayerHand);
 
         // movement from human hand to board grid
         if (draggableItem.parentBeforeDrag.transform.parent.tag == "PlayerGrid")
@@ -94,7 +96,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
                 card.CameFromPlayerHand = false;
                 // save the parent before drag in case of moving multiple times the same card in the board
                 card.ParentBeforeDrag = draggableItem.parentBeforeDrag;
-                print("Saved Card Position: " + card.OldPosition.Row + " " + card.OldPosition.Column + " Before Drag");
+                GameLog.Verbose("Saved Card Position: " + card.OldPosition.Row + " " + card.OldPosition.Column + " Before Drag");
                 card.OldPositionBeforeDrag = card.OldPosition;
                 // push the card to the moves stack
                 board.AddCardToMovesStack(card);
@@ -106,7 +108,7 @@ public class TileSlot : MonoBehaviour, IDropHandler
 
     private void ShowWaitForYourTurnDialog()
     {
-        Debug.Log("Wait For Your Turn");
+        GameLog.Verbose("Wait For Your Turn");
     }
 
 

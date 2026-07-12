@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class DoublyLinkedList<T> : IEnumerable<T>
 {
@@ -69,6 +68,7 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         {
             return; // Nothing to remove if the list is empty
         }
+        T removedValue = Head.Value; // keep the removed value so it can be dropped from the HashSet
 
         if (Head == Tail) // If there's only one element in the list
         {
@@ -77,18 +77,10 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         else // If there are more than one elements in the list
         {
             Head = Head.Next; // Move the head to the next node
-            if (Head != null) // If the head is not null
-            {
-                Head.Prev = null; // Set the previous pointer of the new head to null
-            }
+            Head.Prev = null; // Set the previous pointer of the new head to null
         }
-        Count = (Head == null) ? 0 : Count - 1; // Adjust count accordingly, if Head is null, set count to 0 else decrement count by 1
-
-        // Remove the value from the HashSet if Head is not null
-        if (Head != null)
-        {
-            valueSet.Remove(Head.Value); // Remove the value from the HashSet, O(1)
-        }
+        Count--; // Decrement the count
+        valueSet.Remove(removedValue); // Remove the removed value from the HashSet, O(1)
     }
     // Remove the last node in the linked list, O(1)
     public void RemoveLast()
@@ -97,6 +89,7 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         {
             return; // Nothing to remove if the list is empty
         }
+        T removedValue = Tail.Value; // keep the removed value so it can be dropped from the HashSet
 
         if (Head == Tail) // If there is only one element in the list
         {
@@ -106,18 +99,10 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         {
             // Move the tail to the previous node
             Tail = Tail.Prev;
-            if (Tail != null) // If the tail is not null (more than one element in the list)
-            {
-                Tail.Next = null; // Set the next pointer of the new tail to null
-            }
+            Tail.Next = null; // Set the next pointer of the new tail to null
         }
-        Count = (Tail == null) ? 0 : Count - 1; // Adjust count accordingly, if Tail is null, set count to 0 else decrement count by 1
-
-        // Remove the value from the HashSet if Tail is not null
-        if (Tail != null)
-        {
-            valueSet.Remove(Tail.Value); // Remove the value from the HashSet, O(1)
-        }
+        Count--; // Decrement the count
+        valueSet.Remove(removedValue); // Remove the removed value from the HashSet, O(1)
     }
 
     // Remove a node from the linked list, O(1)
@@ -148,7 +133,8 @@ public class DoublyLinkedList<T> : IEnumerable<T>
     }
 
 
-    // O(1), best function for the rummikub's data structure
+    // O(1) list splice (the HashSet union below is O(m) on the smaller, appended list),
+    // best function for the rummikub's data structure
     public void Append(DoublyLinkedList<T> other)
     {
         if (other == null || other.Head == null) // If the other list is null or empty, return
@@ -168,6 +154,7 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         // Set the tail to the other list's tail and increment the count
         Tail = other.Tail;
         Count += other.Count;
+        valueSet.UnionWith(other.valueSet); // Keep Contains() correct for the appended elements
     }
     // O(1)
     public bool Contains(T value)
