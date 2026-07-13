@@ -34,19 +34,13 @@ public class Card : MonoBehaviour
         OldPosition = new CardPosition();
         Position = new CardPosition();
     }
-    // ToString, Equals 
+    // Every card is unique: cards compare by reference (the default), even though the deck
+    // holds two tiles with the same number and color.
     public override string ToString()
     {
         // Return a string representation of the card
         return "Card: <color=" + color.ToString().ToLower() + ">" + number + "</color>("+((position.Row*100)+position.Column)+")";// + position.Row + " X:" + position.Column;
     }
-    // Every card is unique, so we can compare them by reference
-    public override bool Equals(object other)
-    {
-        // Check for reference equality
-        return ReferenceEquals(this, other);
-    }
-
 }
 
 

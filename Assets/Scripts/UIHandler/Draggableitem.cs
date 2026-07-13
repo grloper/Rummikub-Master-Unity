@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -21,9 +18,13 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     {
         gameController = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameController>();
     }
+    // Tiles may only be dragged while the game is running and it is the human's turn
+    private bool CanDrag() =>
+        !gameController.IsGameOver() && gameController.GetCurrentPlayer().GetPlayerType() == PlayerType.Human;
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (CanDrag())
         {
 
             parentBeforeDrag = transform.parent;
@@ -39,7 +40,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (CanDrag())
         {
             // Set the position of the card to the mouse position with the offset
             transform.position = Input.mousePosition;
@@ -48,7 +49,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (CanDrag())
         {
             // Set the parent of the card to the tile slot
             transform.SetParent(parentAfterDrag);
@@ -58,7 +59,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (CanDrag())
         {
             // Store the original position of the card
             originalPosition = image.transform.position;
@@ -69,7 +70,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (CanDrag())
         {
             // Move the card back to its original position
             image.transform.position = originalPosition;

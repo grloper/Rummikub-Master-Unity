@@ -1,13 +1,8 @@
-using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.VisualScripting;
 using UnityEngine;
-using static Unity.Collections.Unicode;
 
 public class Computer : Player
 {
@@ -191,10 +186,8 @@ public class Computer : Player
     // Main method for the computer move
     private void DoComputerMove()
     {
-        Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
-        Debug.Log($"<color=cyan>COMPUTER TURN START - Hand: {myPlayer.GetPlayerHand().SortedByRun().Count} cards</color>");
-        Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
-        
+        GameLog.Verbose($"<color=cyan>COMPUTER TURN START - Hand: {myPlayer.GetPlayerHand().Count} cards</color>");
+
         MaximizeValidDrops(); // maximize the valid drops. Step 1, O(n)
         bool append = false; // flag to indicate if we appended a card to the board (either mamximize partial or assigned free cards to existing sets)
         if (myPlayer.GetInitialMove()) //if the player is allowed to append cards to the board
@@ -211,9 +204,9 @@ public class Computer : Player
                     Debug.LogWarning($"<color=red>AI loop safety break after {maxLoops} iterations</color>");
                     break;
                 }
-                
-                Debug.Log($"<color=white>--- Loop {loopCount}: partial={partial}, added={added}, chainExtracted={chainExtracted}</color>");
-                
+
+                GameLog.Verbose($"<color=white>--- Loop {loopCount}: partial={partial}, added={added}, chainExtracted={chainExtracted}</color>");
+
                 if (partial || added || chainExtracted)
                     append = true;
                 MaximizePartialDrops(); // maximize the partial drops. Step 2 O(n*logm)
@@ -225,54 +218,44 @@ public class Computer : Player
         else if (gameBoard.GetMovesStackSum() < Constants.MinFirstSet)
         {
             //if the player is not allowed to append cards to the board and the computer has less than 30 points of cards to drop
-            Debug.Log($"<color=orange>Drawing card - not enough points for first move ({gameBoard.GetMovesStackSum()}/{Constants.MinFirstSet})</color>");
+            GameLog.Verbose($"<color=orange>Drawing card - not enough points for first move ({gameBoard.GetMovesStackSum()}/{Constants.MinFirstSet})</color>");
             uiManager.DrawACardFromDeck();
             PrintEndOfTurnSummary("Drew card (first move threshold)");
             return;
         }
         if (dropped || append) //if the computer has made a move, or have sets to drop.
         {
-            Debug.Log($"<color=green>CONFIRMING MOVE - dropped={dropped}, append={append}</color>");
-            uiManager.ConfirmMove(); // confirm the move 
+            GameLog.Verbose($"<color=green>CONFIRMING MOVE - dropped={dropped}, append={append}</color>");
+            uiManager.ConfirmMove(); // confirm the move
             PrintEndOfTurnSummary("Confirmed move");
         }
         else
         {
-            Debug.Log($"<color=orange>NO MOVES FOUND - Drawing card</color>");
+            GameLog.Verbose($"<color=orange>NO MOVES FOUND - Drawing card</color>");
             uiManager.DrawACardFromDeck(); // draw a card if the computer has no moves to make
             PrintEndOfTurnSummary("Drew card (no moves)");
         }
     }
-    
+
     /// <summary>
-    /// Print summary at end of turn for debugging
+    /// Print summary at end of turn for debugging.
+    /// Compiled out (calls included) unless RUMMIKUB_VERBOSE is defined - see GameLog.
     /// </summary>
+    [System.Diagnostics.Conditional("RUMMIKUB_VERBOSE")]
     private void PrintEndOfTurnSummary(string action)
     {
-        try
+        Debug.Log($"<color=cyan>COMPUTER TURN END - {action}</color>");
+
+        // Print remaining hand
+        string handStr = "";
+        foreach (Card c in myPlayer.GetPlayerHand())
         {
-            Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
-            Debug.Log($"<color=cyan>COMPUTER TURN END - {action}</color>");
-            Debug.Log($"<color=cyan>Hand remaining: {myPlayer.GetPlayerHand().SortedByRun().Count} cards</color>");
-            
-            // Print remaining hand
-            string handStr = "";
-            foreach (Card c in myPlayer.GetPlayerHand())
-            {
-                if (c != null) handStr += $"{c.Color.ToString()[0]}{c.Number} ";
-            }
-            Debug.Log($"<color=white>Hand: [{handStr}]</color>");
-            
-            // Print board state
-            var boardSets = gameBoard.board.GetGameBoardValidSetsTable();
-            Debug.Log($"<color=white>Board has {boardSets.Count} sets</color>");
-            
-            Debug.Log($"<color=cyan>═══════════════════════════════════════════════════</color>");
+            if (c != null) handStr += $"{c.Color.ToString()[0]}{c.Number} ";
         }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"PrintEndOfTurnSummary error: {ex.Message}");
-        }
+        Debug.Log($"<color=white>Hand ({myPlayer.GetPlayerHand().Count}): [{handStr}]</color>");
+
+        // Print board state
+        Debug.Log($"<color=white>Board has {gameBoard.board.GetGameBoardValidSetsTable().Count} sets</color>");
     }
     
     /// <summary>
@@ -293,13 +276,13 @@ public class Computer : Player
             
             // Strategy 0: Extract jokers to complete partials (highest priority!)
             var jokerPlans = chainExtractor.FindJokerExtractionPlans();
-            Debug.Log($"<color=magenta>Found {jokerPlans.Count} joker extraction plans</color>");
-            
+            GameLog.Verbose($"<color=magenta>Found {jokerPlans.Count} joker extraction plans</color>");
+
             foreach (var plan in jokerPlans)
             {
                 if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
                 {
-                    Debug.Log($"<color=magenta>JOKER EXTRACTION: {plan}</color>");
+                    GameLog.Verbose($"<color=magenta>JOKER EXTRACTION: {plan}</color>");
                     if (ExecuteJokerPlan(plan))
                     {
                         this.chainExtracted = true;
@@ -307,21 +290,21 @@ public class Computer : Player
                     }
                 }
             }
-            
+
             // Strategy 1: Single card from hand + 2 direct extractions from board
             var directPlans = chainExtractor.FindSingleCardWithDoubleExtraction();
-            Debug.Log($"<color=cyan>Found {directPlans.Count} double extraction plans</color>");
-            
+            GameLog.Verbose($"<color=cyan>Found {directPlans.Count} double extraction plans</color>");
+
             // Sort plans by value (prefer higher-value cards to get rid of them)
             directPlans = directPlans.Where(p => p.HandCard != null)
                                       .OrderByDescending(p => p.HandCard.Number)
                                       .ToList();
-            
+
             foreach (var plan in directPlans)
             {
                 if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
                 {
-                    Debug.Log($"<color=green>DOUBLE EXTRACTION: {plan}</color>");
+                    GameLog.Verbose($"<color=green>DOUBLE EXTRACTION: {plan}</color>");
                     if (ExecuteChainPlan(plan))
                     {
                         this.chainExtracted = true;
@@ -329,16 +312,16 @@ public class Computer : Player
                     }
                 }
             }
-            
+
             // Strategy 2: Chain extractions (move card A to enable extracting card B)
             var chainPlans = chainExtractor.FindChainExtractionPlans();
-            Debug.Log($"<color=cyan>Found {chainPlans.Count} chain extraction plans</color>");
-            
+            GameLog.Verbose($"<color=cyan>Found {chainPlans.Count} chain extraction plans</color>");
+
             foreach (var plan in chainPlans)
             {
                 if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
                 {
-                    Debug.Log($"<color=blue>CHAIN EXTRACTION: {plan}</color>");
+                    GameLog.Verbose($"<color=blue>CHAIN EXTRACTION: {plan}</color>");
                     if (ExecuteChainPlan(plan))
                     {
                         this.chainExtracted = true;
@@ -346,16 +329,16 @@ public class Computer : Player
                     }
                 }
             }
-            
+
             // Strategy 3: Advanced chain plans (complex multi-step extractions)
             var advancedPlans = chainExtractor.FindAdvancedChainPlans();
-            Debug.Log($"<color=cyan>Found {advancedPlans.Count} advanced chain plans</color>");
-            
+            GameLog.Verbose($"<color=cyan>Found {advancedPlans.Count} advanced chain plans</color>");
+
             foreach (var plan in advancedPlans)
             {
                 if (IsPlanStillValid(plan) && chainExtractor.ValidatePlan(plan))
                 {
-                    Debug.Log($"<color=yellow>ADVANCED CHAIN: {plan}</color>");
+                    GameLog.Verbose($"<color=yellow>ADVANCED CHAIN: {plan}</color>");
                     if (ExecuteChainPlan(plan))
                     {
                         this.chainExtracted = true;
@@ -382,7 +365,7 @@ public class Computer : Player
             
             // Extract joker from board
             var jokerExtract = plan.BoardCards[0];
-            ExtractSingleCardFromBoard(jokerExtract.Card, jokerExtract.SetPosition, jokerExtract.IndexInSet);
+            ExtractSingleCardFromBoard(jokerExtract.Card, jokerExtract.SetPosition);
             
             // Build new set
             CardsSet newSet = new CardsSet();
@@ -426,8 +409,8 @@ public class Computer : Player
             
             // Play the set
             gameBoard.PlayCardSetOnBoard(newSet);
-            
-            Debug.Log($"<color=green>Executed joker plan successfully!</color>");
+
+            GameLog.Verbose($"<color=green>Executed joker plan successfully!</color>");
             return true;
         }
         catch (System.Exception ex)
@@ -495,38 +478,38 @@ public class Computer : Player
     {
         try
         {
-            Debug.Log($"<color=green>Executing plan: {plan}</color>");
-            
+            GameLog.Verbose($"<color=green>Executing plan: {plan}</color>");
+
             List<Card> extractedCards = new List<Card>();
-            
+
             // Handle prerequisite moves first
             foreach (var extractable in plan.BoardCards)
             {
                 if (extractable == null) continue;
-                
+
                 if (extractable.RequiresPreExtraction && extractable.PrerequisiteExtraction != null)
                 {
                     var enabler = extractable.PrerequisiteExtraction;
-                    
-                    Debug.Log($"<color=yellow>Pre-extraction: {enabler.Card} from set {enabler.SetPosition?.GetId()}</color>");
-                    
+
+                    GameLog.Verbose($"<color=yellow>Pre-extraction: {enabler.Card} from set {enabler.SetPosition?.GetId()}</color>");
+
                     // Extract enabler from its source set
-                    ExtractSingleCardFromBoard(enabler.Card, enabler.SetPosition, enabler.IndexInSet);
-                    
+                    ExtractSingleCardFromBoard(enabler.Card, enabler.SetPosition);
+
                     // Add enabler to the target set
                     AddCardToExistingSet(enabler.Card, extractable.SetPosition);
                 }
             }
-            
+
             // Now extract all the board cards
             foreach (var extractable in plan.BoardCards)
             {
                 if (extractable == null || extractable.Card == null) continue;
-                
+
                 Card card = extractable.Card;
-                Debug.Log($"<color=yellow>Extracting: {card} from set {extractable.SetPosition?.GetId()}</color>");
-                
-                ExtractSingleCardFromBoard(card, extractable.SetPosition, extractable.IndexInSet);
+                GameLog.Verbose($"<color=yellow>Extracting: {card} from set {extractable.SetPosition?.GetId()}</color>");
+
+                ExtractSingleCardFromBoard(card, extractable.SetPosition);
                 extractedCards.Add(card);
             }
             
@@ -553,7 +536,7 @@ public class Computer : Player
             }
             
             // Play the new set on board
-            Debug.Log($"<color=green>Playing new set with {newSet.GetDeckLength()} cards</color>");
+            GameLog.Verbose($"<color=green>Playing new set with {newSet.GetDeckLength()} cards</color>");
             gameBoard.PlayCardSetOnBoard(newSet);
             
             return true;
@@ -568,12 +551,13 @@ public class Computer : Player
     /// <summary>
     /// Extract a single card from the board
     /// </summary>
-    private void ExtractSingleCardFromBoard(Card card, SetPosition setPosition, int cardIndex)
+    private void ExtractSingleCardFromBoard(Card card, SetPosition setPosition)
     {
         CardsSet sourceSet = gameBoard.board.GetCardsSet(setPosition);
         if (sourceSet == null) return;
-        
-        card.OldPosition = card.Position;
+
+        // copy, don't alias: OldPosition must keep pointing at the pre-extraction slot
+        card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
         int index = sourceSet.RemoveCard(card);
         
         if (sourceSet.set.Count == 0)
@@ -744,8 +728,6 @@ public class Computer : Player
     // handle the re-arrangement of the run - split the set
     private void HandleRearrangeRun(CardInfo info, CardsSet set)
     {
-        CardsSet setInBoard = gameBoard.board.GetCardsSet(info.GetSetPosition());
-        print(setInBoard.ToString());
         SplitSet(info.GetSetPosition(), info.GetCardIndex(), RemoveOption.Remove);
 
         if (info.GetPosition() == AddPosition.Beginning)
@@ -902,8 +884,8 @@ public class Computer : Player
         {
             bool found = false; // flag to indicate if we found a set to add the card to
             int offset = -1; // offset for the middle run
-            List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList(); // get the keys of the sets on the game board
-            keys.ToArray(); // convert the keys to an array
+            // snapshot the keys - the loop body mutates the sets table
+            List<SetPosition> keys = gameBoard.board.GetGameBoardValidSetsTable().Keys.ToList();
             for (int i = 0; i < keys.Count && !found; i++) // iterate over the keys such way that we break the loop if we found a set to add the card to
             {
                 SetPosition key = keys[i]; // get the key for the current iteration
@@ -943,8 +925,8 @@ public class Computer : Player
     // Moves the card to the next slot in the game board, O(1)
     private void MoveCardToNextSlot(Card card, int nextSlot)
     {
-        // Save the old position of the card
-        card.OldPosition = card.Position;
+        // Save the old position of the card (copy, don't alias - Position is mutated next)
+        card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
         // Set the new position of the card
         card.Position.SetTileSlot(nextSlot);
         // Play the card on the board, given false - play without removing the card from the player hand (we handle that at the end of the method)
@@ -954,8 +936,8 @@ public class Computer : Player
     // Moves the card to the previous slot in the game board, O(1)
     private void MoveCardToPreviousSlot(Card card, int previousSlot)
     {
-        // Save the old position of the card
-        card.OldPosition = card.Position;
+        // Save the old position of the card (copy, don't alias - Position is mutated next)
+        card.OldPosition = new CardPosition(card.Position.Row, card.Position.Column);
         // Set the new position of the card
         card.Position.SetTileSlot(previousSlot);
         // Play the card on the board, given false - play without removing the card from the player hand (we handle that at the end of the method)

@@ -1,12 +1,8 @@
-using Microsoft.Unity.VisualStudio.Editor;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using Image = UnityEngine.UI.Image;
 public class UImanager : MonoBehaviour
 {
    
@@ -40,7 +36,7 @@ public class UImanager : MonoBehaviour
     }
     public void BtnDeckClick()
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (!gameController.IsGameOver() && gameController.GetCurrentPlayer().GetPlayerType() == PlayerType.Human)
             DrawACardFromDeck();
     }
     public void DrawACardFromDeck()
@@ -48,7 +44,7 @@ public class UImanager : MonoBehaviour
         // if there is a move to undo - undo it
         if (board.GetMovesStack().Count > Constants.EmptyStack)
         {
-            print("Undoing");
+            GameLog.Verbose("Undoing");
             Undo();
         } // if the deck is not empty - draw a card and update the turn\deck text
         if (board.GetRummikubDeckInstance().GetDeckLength() > Constants.EmptyDeck)
@@ -78,7 +74,7 @@ public class UImanager : MonoBehaviour
     {
         try
         {
-            if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+            if (!gameController.IsGameOver() && gameController.GetCurrentPlayer().GetPlayerType() == PlayerType.Human)
                 Undo();
         }
         catch (UndoException)
@@ -87,25 +83,25 @@ public class UImanager : MonoBehaviour
         }
     }
     // Function to instantiate a card to a tile slot O(1)
-    public Card InstinitanteCard(Card GivvenCard, GameObject tileslot)
+    public Card InstantiateCard(Card givenCard, GameObject tileslot)
     {
-        Card card = InstinitanteCard(GivvenCard);
+        Card card = InstantiateCard(givenCard);
         card.transform.SetParent(tileslot.transform);
         return card;
     }
     // Function to instantiate a card
-    public Card InstinitanteCard(Card GivvenCard)
+    public Card InstantiateCard(Card givenCard)
     {
         // create by the prefab
         GameObject card = Instantiate(PrefabTile);
         // Set the card's sprite to the correct sprite
-        card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(GivvenCard)];
-        // Change the variable from GameObject to Card 
+        card.GetComponent<Image>().sprite = cardsUI[CalculateIndexOfSprite(givenCard)];
+        // Change the variable from GameObject to Card
         Card newCard = card.GetComponent<Card>();
         // Set the card's color and number
-        newCard.Color = GivvenCard.Color;
-        newCard.Number = GivvenCard.Number;
-        newCard.Position = GivvenCard.Position;
+        newCard.Color = givenCard.Color;
+        newCard.Number = givenCard.Number;
+        newCard.Position = givenCard.Position;
         return newCard;
     }
     private int CalculateIndexOfSprite(Card card)
@@ -139,7 +135,7 @@ public class UImanager : MonoBehaviour
     }
     public void BtnConfirmMoveClick()
     {
-        if (gameController.GetCurrentPlayer().GetPlayerType().Equals(PlayerType.Human))
+        if (!gameController.IsGameOver() && gameController.GetCurrentPlayer().GetPlayerType() == PlayerType.Human)
             ConfirmMove();
     }
     public void ConfirmMove()
@@ -147,7 +143,7 @@ public class UImanager : MonoBehaviour
 
         if (board.GetMoveStackCountPlayer() == Constants.EmptyStack)//check if dropped cards are valid)
         {
-            print("You Did not dropped any cards, tip: draw a card to skip this turn");
+            print("You did not drop any cards. Tip: draw a card to skip this turn");
         }
         else
         {
@@ -165,9 +161,15 @@ public class UImanager : MonoBehaviour
     }
 
 
-    public void UpdateTurnText() =>
-           turnDisplayText.text = "Turn: " + gameController.GetCurrentPlayer().GetPlayerType().ToString() + (gameController.GetCurrentPlayerIndex() + 1
-);
+    public void UpdateTurnText()
+    {
+        if (gameController.IsGameOver())
+            return; // keep the winner announcement on screen
+        turnDisplayText.text = "Turn: " + gameController.GetCurrentPlayer().GetPlayerType() + (gameController.GetCurrentPlayerIndex() + 1);
+    }
+
+    // Announce the winner on the turn display once the game ends
+    public void ShowWinner(string winner) => turnDisplayText.text = winner + " Wins!";
 
     public void BtnSortByRun()
     {

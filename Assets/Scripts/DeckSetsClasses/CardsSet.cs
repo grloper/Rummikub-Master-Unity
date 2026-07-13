@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 // This class is used to represent a set of cards on the board. with many utility methods to check if the set is a run or a group of colors and more
 public class CardsSet : ICardSet
 {
@@ -69,7 +68,6 @@ public class CardsSet : ICardSet
         CardsSet newSet = new CardsSet(); // create a new set of cards (returned set)
         for (int i = 0; i < offset; i++)
         {
-            Debug.Log(" UnCombine " + set.GetFirstNode().Value.ToString());
             newSet.set.AddLast(set.GetFirstNode().Value); // add the card to the new set
             set.RemoveFirst();
         }
@@ -101,9 +99,16 @@ public class CardsSet : ICardSet
         if (set == null || set.Count < Constants.MinInRun || set.Count > Constants.MaxInRun)
             return isRun = false; // A run must have at least 3 cards but no more than 13
         Node<Card> node = GetFirstNodeOfNotJoker(); // get the first node of a card that is not a joker
+        if (node == null)
+            return isRun = false; // no non-joker card to anchor the run
         CardColor SetColor = node.Value.Color; // get the color of the set
         int CurrentNum = node.Value.Number; // get the number of the first card
-        if(IsJoker(GetFirstCard())&& CurrentNum == Constants.MinRank) // if found Joker, 1, 2
+        // Jokers before the first real card must represent numbers below it;
+        // [Joker,1,2] or [Joker,Joker,2] would need tiles below rank 1, which do not exist
+        int leadingJokers = 0;
+        for (Node<Card> lead = set.GetFirstNode(); lead != node; lead = lead.Next)
+            leadingJokers++;
+        if (CurrentNum - leadingJokers < Constants.MinRank)
         {
             return isRun = false;
         }
@@ -152,12 +157,20 @@ public class CardsSet : ICardSet
             return isGroupOfColors = false; // A group must have either 3 or 4 cards
         }
         Node<Card> node = GetFirstNodeOfNotJoker(); // get the first node of a card that is not a joker
+        if (node == null)
+            return isGroupOfColors = false; // no non-joker card to anchor the group
         int CurrentNum = node.Value.Number; // get the number of the first card
-        HashSet<int> distinctColors = new HashSet<int>();// Use a HashSet to track distinct colors
+        int colorMask = 0; // one bit per color - allocation-free distinct-color tracking
         for (Node<Card> current = node; current != null; current = current.Next) // loop through the set of cards till the end
-            if (!IsJoker(current.Value) && (!distinctColors.Add((int)current.Value.Color) // if the color is repeated
-             || CurrentNum != current.Value.Number)) //or the number is not the same
-                return isGroupOfColors = false; 
+        {
+            if (IsJoker(current.Value))
+                continue; // a joker matches any missing color
+            int colorBit = 1 << (int)current.Value.Color;
+            if ((colorMask & colorBit) != 0 // if the color is repeated
+             || CurrentNum != current.Value.Number) //or the number is not the same
+                return isGroupOfColors = false;
+            colorMask |= colorBit;
+        }
         return isGroupOfColors = true;
     }
     // check if a card is the same color as the given color, if joker return true, O(1)
@@ -166,7 +179,7 @@ public class CardsSet : ICardSet
         return IsJoker(c1) || c1.Color == color;
     }
     // check if two cards are consecutive, if joker return true, O(1)
-    public bool IsConsicutive(Card c1, Card c2)
+    public bool IsConsecutive(Card c1, Card c2)
     {
         return IsJoker(c1) || c1.Number == c2.Number + 1;
     }
@@ -203,39 +216,44 @@ public class CardsSet : ICardSet
     }
  
     // check if a card can add to the beginning of the set to create a group of colors
-     public bool CanAddCardBeginningGroup(Card card)
+    // O(n) probe: temporarily adds the card, revalidates, then restores the set and its flags
+    public bool CanAddCardBeginningGroup(Card card)
     {
+        bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
         bool check = this.IsGroupOfColors();
         this.set.RemoveFirst();
+        isRun = run; isGroupOfColors = group;
         return check;
-
     }
-    // check if a card can add to the beginning of the set to create a run, O(1)
-      public bool CanAddCardBeginningRun(Card card)
+    // check if a card can add to the beginning of the set to create a run
+    public bool CanAddCardBeginningRun(Card card)
     {
+        bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
-        bool check= this.IsRun();
+        bool check = this.IsRun();
         this.set.RemoveFirst();
+        isRun = run; isGroupOfColors = group;
         return check;
-        
     }
     // check if a card can add to the end of the set to create a group of colors
-      public bool CanAddCardEndGroup(Card card)
+    public bool CanAddCardEndGroup(Card card)
     {
+        bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsGroupOfColors();
         this.set.RemoveLast();
+        isRun = run; isGroupOfColors = group;
         return check;
     }
-    // check if a card can be added to the end of the set to create a run, O(1)
+    // check if a card can be added to the end of the set to create a run
     public bool CanAddCardEndRun(Card card)
     {
-        //add the card to the set O(1)
+        bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsRun();
-        //remove the card from the set O(1)
         this.set.RemoveLast();
+        isRun = run; isGroupOfColors = group;
         return check;
     }
 
@@ -243,8 +261,11 @@ public class CardsSet : ICardSet
     // return the index where the card should be if can be added. otherside return -1
     public int CanAddCardMiddleRun(Card card)
     {
-        // Check if the set is long enough and the card has the same color O(1)
-        if (set.Count < Constants.MinSetLengthForMiddleRun || card.Color != set.GetFirstNode().Value.Color)
+        // Middle insertion maps numbers to positions via the edge cards, so a joker on either
+        // edge (or a joker candidate) would make the offset arithmetic meaningless. O(1)
+        if (set.Count < Constants.MinSetLengthForMiddleRun
+            || IsJoker(card) || IsJoker(set.GetFirstNode().Value) || IsJoker(set.GetLastNode().Value)
+            || card.Color != set.GetFirstNode().Value.Color)
             return -1;
         // Check if the card can be added in the middle O(1)
         if (card.Number >= set.GetFirstNode().Value.Number + Constants.MiddleRunOffset

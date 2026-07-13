@@ -1,8 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -16,23 +11,13 @@ public class Player : MonoBehaviour
     protected bool initialMove;
 
     // act as a constructor for the player because we are using : MonoBehaviour
+    // (the Computer component itself is added and initialized by GameController.InitPlayerList)
     public void SetPlayer(GameObject PlayerGrid)
     {
         this.initialMove = false;
         this.PlayerGrid = PlayerGrid;
         playerHand = new PlayerHand();
         Init();
-        switch (playerType)
-        {
-            case PlayerType.Human:
-                // Set up human player
-                break;
-            case PlayerType.Computer:
-                // Set up computer player
-                // add computer component
-                gameObject.AddComponent<Computer>();
-                break;
-        }
     }
     public bool IsComputer()
     {
@@ -43,17 +28,13 @@ public class Player : MonoBehaviour
     {
         uiManager.InitPlayerTileSlots(PlayerGrid.transform);
         // Draw random cards and assign them to 14 slots on the player board
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < Constants.CardsToDraw; i++)
         {
             GameObject tileSlot = PlayerGrid.transform.GetChild(i).gameObject;
 
             // Draw a random card from the deck using RummikubDeck
-            Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
+            Card randomCard = uiManager.InstantiateCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
             AddCardToList(randomCard);
-            if (randomCard == null)
-            {
-                Debug.LogWarning("Unable to draw a card for the player's board.");
-            }
         }
     }
 
@@ -135,7 +116,7 @@ public class Player : MonoBehaviour
             {
                 GameObject tileSlot = PlayerGrid.transform.GetChild(emptySlotIndex).gameObject;
                 // Draw a random card from the deck using RummikubDeck
-                Card randomCard = uiManager.InstinitanteCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
+                Card randomCard = uiManager.InstantiateCard(board.GetRummikubDeckInstance().DrawRandomCardFromDeck(), tileSlot);
                 playerHand.AddCard(randomCard);
             }
             catch (EmptyDeckException)
@@ -150,13 +131,9 @@ public class Player : MonoBehaviour
         }
     }
     // Check if the player's hand is empty O(1)
-    public bool IsDeckEmpty()
+    public bool IsHandEmpty()
     {
-        foreach(Card card in playerHand)
-        {
-            return false;
-        }
-        return true;
+        return playerHand.Count == 0;
     }
 
     public PlayerHand GetPlayerHand()
@@ -164,7 +141,7 @@ public class Player : MonoBehaviour
         return this.playerHand;
     }
 
-    public object GetPlayerType()
+    public PlayerType GetPlayerType()
     {
         return playerType;
     }

@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 //This class is used to store the card information, such as the card itself, the position of the card, the index of the card, and the set position of the card.
 // this is a card we are going to add to a partial set. in order to create a valid 3 length set.
 public class CardInfo 
