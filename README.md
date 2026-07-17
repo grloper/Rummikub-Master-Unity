@@ -1,5 +1,7 @@
 # Rummikub — Unity
 
+🌐 **Project page:** [grloper.github.io/Rummikub-Master-Unity](https://grloper.github.io/Rummikub-Master-Unity/)
+
 A complete, playable **Rummikub** board game built in **Unity 6** with drag-and-drop tiles, full rule
 enforcement, undo support, and a rule-based computer opponent — **no minimax, no brute force**.
 Every board manipulation (placing, extending, merging, splitting sets) is resolved through a
