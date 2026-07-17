@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rummikub — Unity | O(1) placement engine, rule-based AI</title>
+<meta name="description" content="A complete, playable Rummikub board game built in Unity 6 — drag-and-drop tiles, full rule enforcement, undo support, and a deterministic rule-based computer opponent.">
+<meta property="og:title" content="Rummikub — Unity">
+<meta property="og:description" content="Full Rummikub rules, drag &amp; drop play, undo system, and an O(1) placement engine — no minimax, no brute force.">
+<meta property="og:image" content="https://grloper.github.io/Rummikub-Master-Unity/images/gameplay.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect x='8' y='4' width='84' height='92' rx='14' fill='%23f5efe0'/&gt;&lt;text x='50' y='58' font-size='52' font-weight='bold' text-anchor='middle' fill='%23c0392b' font-family='Georgia,serif'&gt;7&lt;/text&gt;&lt;circle cx='50' cy='80' r='7' fill='%23c0392b'/&gt;&lt;/svg&gt;">
+<style>
+  :root {
+    --bg: #10141c;
+    --bg-soft: #171d28;
+    --card: #1d2432;
+    --line: #2b3446;
+    --text: #e8ebf1;
+    --muted: #9aa5b8;
+    --tile: #f5efe0;
+    --red: #e05a4e;
+    --blue: #4e8fe0;
+    --orange: #e0a24e;
+    --black: #2e3440;
+    --accent: #e0a24e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    padding: 72px 0 48px;
+    background:
+      radial-gradient(1000px 400px at 50% -100px, rgba(224,162,78,.12), transparent),
+      var(--bg);
+    text-align: center;
+  }
+  .tiles {
+    display: flex; justify-content: center; gap: 10px; margin-bottom: 28px;
+    perspective: 400px;
+  }
+  .tile {
+    width: 54px; height: 74px; border-radius: 9px;
+    background: linear-gradient(175deg, #fbf7ec, #e9e0c9);
+    box-shadow: 0 6px 16px rgba(0,0,0,.45), inset 0 1px 0 #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: Georgia, serif; font-size: 30px; font-weight: 700;
+    transform: rotate(var(--r, 0deg));
+  }
+  .tile small { font-size: 14px; line-height: 1; margin-top: 2px; }
+  .t-red { color: var(--red); }
+  .t-blue { color: var(--blue); }
+  .t-orange { color: #c77f1e; }
+  .t-black { color: var(--black); }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -.02em; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 1.15rem; max-width: 640px; margin: 14px auto 0; }
+  .cta { margin-top: 32px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 26px; border-radius: 10px; font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); text-decoration: none; }
+  .btn-primary { background: var(--accent); color: #1a1408; box-shadow: 0 4px 18px rgba(224,162,78,.35); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: var(--card); }
+
+  .shot { margin: 48px auto 0; max-width: 900px; padding: 0 24px; }
+  .shot img {
+    width: 100%; border-radius: 14px; border: 1px solid var(--line);
+    box-shadow: 0 24px 60px rgba(0,0,0,.55); display: block;
+  }
+
+  section { padding: 64px 0; }
+  section.alt { background: var(--bg-soft); }
+  h2 { font-size: 1.9rem; margin-bottom: 8px; letter-spacing: -.01em; }
+  .lead { color: var(--muted); margin-bottom: 32px; max-width: 720px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+  }
+  .card .ico { font-size: 1.6rem; }
+  .card h3 { margin: 10px 0 6px; font-size: 1.08rem; }
+  .card p { color: var(--muted); font-size: .95rem; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { background: rgba(224,162,78,.08); color: var(--accent); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  td { color: var(--muted); }
+  .table-scroll { overflow-x: auto; border-radius: 14px; }
+
+  pre {
+    background: #0c0f15; border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; overflow-x: auto; font-size: .88rem; line-height: 1.55;
+    color: #cdd6e4;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .k { color: var(--orange); }
+  .c { color: #5f6b80; }
+
+  footer { padding: 44px 0 56px; text-align: center; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); }
+  footer a { color: var(--text); }
+
+  @media (max-width: 560px) {
+    .tile { width: 42px; height: 58px; font-size: 22px; border-radius: 7px; }
+    section { padding: 48px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="tiles" aria-hidden="true">
+      <div class="tile t-red"    style="--r:-6deg">7<small>●</small></div>
+      <div class="tile t-blue"   style="--r:-2deg">8<small>●</small></div>
+      <div class="tile t-orange" style="--r: 2deg">9<small>●</small></div>
+      <div class="tile t-black"  style="--r: 6deg">☺<small>&nbsp;</small></div>
+    </div>
+    <h1>Rummikub <span>— Unity</span></h1>
+    <p class="sub">
+      A complete, playable Rummikub board game built in <strong>Unity&nbsp;6</strong> — drag-and-drop tiles,
+      full rule enforcement, undo support, and a rule-based computer opponent.
+      <strong>No minimax, no brute force</strong> — every placement resolves in <strong>O(1)</strong>.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="play/">▶ Play now — vs AI &amp; online</a>
+      <a class="btn btn-ghost" href="https://github.com/grloper/Rummikub-Master-Unity">View on GitHub</a>
+      <a class="btn btn-ghost" href="#architecture">How the O(1) engine works</a>
+    </div>
+  </div>
+  <div class="shot">
+    <img src="images/gameplay.png" alt="Rummikub gameplay screenshot — tiles arranged in runs and groups on the board with the player rack below">
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Features</h2>
+    <p class="lead">Everything the real game does — with the data structures doing the heavy lifting.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">🎮</div><h3>Full Rummikub rules</h3><p>Runs, groups, jokers, the 30-point initial meld, and win detection — every set on the board is validated before a turn is confirmed.</p></div>
+      <div class="card"><div class="ico">🖱️</div><h3>Drag &amp; drop play</h3><p>Grab tiles from your rack and drop them anywhere legal on the 8×29 board. Extend, merge, and rearrange sets freely once your meld is down.</p></div>
+      <div class="card"><div class="ico">↩️</div><h3>Undo system</h3><p>Every move in a turn is tracked on a stack — one click rolls the board back to the last confirmed state.</p></div>
+      <div class="card"><div class="ico">🤖</div><h3>Computer opponent</h3><p>A layered, deterministic AI that plays full sets, steals spare tiles from board sets, appends loose tiles, and performs multi-step chain extractions — including freeing jokers.</p></div>
+      <div class="card"><div class="ico">🃏</div><h3>Smart board maintenance</h3><p>Sets automatically merge when you bridge them and split when you pull a tile from the middle — data structures updated in place.</p></div>
+      <div class="card"><div class="ico">⚡</div><h3>O(1) placement engine</h3><p>No board rescans. Two hash tables and a doubly linked list resolve every edge-connection scenario in constant time.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>How to Play</h2>
+    <p class="lead">Each player starts with 14 tiles. First meld must total 30+ points from your own rack. First to empty their rack wins.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Action</th><th>How</th></tr>
+        <tr><td>Place a tile</td><td>Drag it from your rack onto an empty board slot</td></tr>
+        <tr><td>Extend / merge sets</td><td>Drop a tile directly next to an existing set</td></tr>
+        <tr><td>Rearrange the board</td><td>Drag tiles between board slots (once your initial meld is down)</td></tr>
+        <tr><td>Confirm your turn</td><td><strong>Confirm</strong> — validates every set on the board first</td></tr>
+        <tr><td>Take back your moves</td><td><strong>UNDO</strong> — restores the board to the start of your turn</td></tr>
+        <tr><td>Skip / draw</td><td>Click the <strong>Deck</strong> — draws a tile and passes the turn</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="wrap">
+    <h2>Architecture — the O(1) placement engine</h2>
+    <p class="lead">
+      Instead of searching the board for the set a tile belongs to, the game models the board with two
+      hash tables and a custom doubly linked list. <strong>Only the two edge tiles of every set are keyed.</strong>
+    </p>
+<pre><code><span class="k">cardToSetPos</span> : Dictionary&lt;int, SetPosition&gt;      <span class="c">// key = row * 100 + column  →  set id</span>
+<span class="k">validSets</span>    : Dictionary&lt;SetPosition, CardsSet&gt; <span class="c">// set id  →  the actual set</span>
+<span class="k">CardsSet</span>     : DoublyLinkedList&lt;Card&gt;            <span class="c">// O(1) add/remove at both ends, O(1) append</span></code></pre>
+    <p class="lead" style="margin-top:28px">
+      When a tile is dropped at <code>(row, col)</code>, the engine hashes its two horizontal neighbors
+      (<code>key ± 1</code>) and lands in exactly one of four O(1) scenarios:
+    </p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Scenario</th><th>Neighbor keys found</th><th>Work done</th></tr>
+        <tr><td>New set</td><td>none</td><td>Create set, key the tile</td></tr>
+        <tr><td>Extend left edge</td><td>right only</td><td>Prepend to linked list, move the edge key</td></tr>
+        <tr><td>Extend right edge</td><td>left only</td><td>Append to linked list, move the edge key</td></tr>
+        <tr><td><strong>Merge two sets</strong></td><td>both</td><td>Append one linked list to the other — O(1) — re-key edges</td></tr>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:28px">
+      Pulling a tile back off is the mirror image: edge tiles detach in O(1), while pulling from the
+      <strong>middle</strong> splits the linked list into two sets — O(k) for the k tiles that change set
+      identity, the theoretical minimum.
+    </p>
+    <img src="images/run-middle-insert.png" alt="A run of tiles being split by removing a middle tile"
+         style="border-radius:10px; border:1px solid var(--line); max-width:100%; image-rendering:auto;">
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Built with Unity 6 · <a href="https://github.com/grloper/Rummikub-Master-Unity">grloper/Rummikub-Master-Unity</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

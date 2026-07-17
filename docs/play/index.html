@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Play Rummikub — vs Computer & Online Rooms</title>
+<meta name="description" content="Play Rummikub in your browser — single-player vs a rule-based AI, local pass-and-play, or real online rooms over peer-to-peer WebRTC.">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect x='8' y='4' width='84' height='92' rx='14' fill='%23f5efe0'/&gt;&lt;text x='50' y='58' font-size='52' font-weight='bold' text-anchor='middle' fill='%23c0392b' font-family='Georgia,serif'&gt;7&lt;/text&gt;&lt;circle cx='50' cy='80' r='7' fill='%23c0392b'/&gt;&lt;/svg&gt;">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- MENU -->
+  <div id="screen-menu" class="menu">
+    <div class="logo" aria-hidden="true">
+      <div class="tile red">7<span class="dot"></span></div>
+      <div class="tile blue">8<span class="dot"></span></div>
+      <div class="tile orange">9<span class="dot"></span></div>
+      <div class="tile joker">☺</div>
+    </div>
+    <h1>Rummikub <span>Online</span></h1>
+    <p class="tag">Play in your browser — vs the computer, pass-and-play, or a real online room with friends.</p>
+    <div class="menu-grid">
+      <button class="menu-btn" data-act="ai">
+        <div class="ico">🤖</div>
+        <div class="big">Play vs Computer</div>
+        <div class="small">Single player against the rule-based AI opponent.</div>
+      </button>
+      <button class="menu-btn" data-act="local">
+        <div class="ico">👥</div>
+        <div class="big">Pass &amp; Play</div>
+        <div class="small">Two players sharing this one device, hot-seat style.</div>
+      </button>
+      <button class="menu-btn" data-act="create">
+        <div class="ico">🌐</div>
+        <div class="big">Create Online Room</div>
+        <div class="small">Get a room code and invite friends. Peer-to-peer, no server.</div>
+      </button>
+      <button class="menu-btn" data-act="join">
+        <div class="ico">🔑</div>
+        <div class="big">Join Online Room</div>
+        <div class="small">Enter a friend's room code to join their game.</div>
+      </button>
+    </div>
+    <div class="footer-link"><a href="../">← Back to project page</a></div>
+  </div>
+
+  <!-- LOBBY (host) -->
+  <div id="screen-host-lobby" class="lobby hidden">
+    <h2>Room created</h2>
+    <p class="hint">Share this code with your friends so they can join:</p>
+    <div class="code-box" id="host-code">····</div>
+    <p class="hint">Players in the room:</p>
+    <ul class="player-list" id="host-players"></ul>
+    <button class="btn btn-primary" id="host-start" disabled>Start game</button>
+    <p class="status" id="host-status">Waiting for players to join…</p>
+    <div class="back" data-act="menu">✕ Cancel room</div>
+  </div>
+
+  <!-- LOBBY (guest) -->
+  <div id="screen-join" class="lobby hidden">
+    <h2>Join a room</h2>
+    <p class="hint">Enter the 4-character room code from your host:</p>
+    <div class="field">
+      <input id="join-code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+      <button class="btn btn-primary" id="join-go">Join</button>
+    </div>
+    <div class="field">
+      <input id="join-name" maxlength="14" placeholder="Your name" style="text-transform:none">
+    </div>
+    <ul class="player-list" id="join-players"></ul>
+    <p class="status" id="join-status"></p>
+    <div class="back" data-act="menu">← Back</div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="hidden">
+    <div class="topbar">
+      <div class="turn-pill" id="turn-pill">—</div>
+      <div class="players-strip" id="players-strip"></div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="rack-area">
+      <div class="rack" id="rack"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-good" id="btn-confirm">Confirm</button>
+      <button class="btn btn-danger" id="btn-undo">Undo</button>
+      <button class="btn" id="btn-draw">Draw &amp; pass</button>
+      <button class="btn" id="btn-sort-run">Sort 1·2·3</button>
+      <button class="btn" id="btn-sort-grp">Sort 7·7·7</button>
+      <span class="spacer"></span>
+      <span class="meld-meter" id="meld-meter"></span>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="footer-link"><a href="#" id="leave-game">✕ Leave game</a></div>
+  </div>
+
+</div>
+
+<!-- game-over overlay -->
+<div id="overlay" class="overlay hidden">
+  <div class="over-card">
+    <h2>🏆 Game over</h2>
+    <p><span class="who" id="winner-name"></span> wins!</p>
+    <p style="margin:18px 0;color:var(--muted)" id="over-detail"></p>
+    <button class="btn btn-primary" id="over-menu">Back to menu</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="game.js"></script>
+<script src="ai.js"></script>
+<script src="net.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
