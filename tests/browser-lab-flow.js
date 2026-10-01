@@ -15,12 +15,12 @@ async (page) => {
   await page.getByRole('button',{name:'Undo draft',exact:true}).click();
   if(await page.locator('#remaining').textContent()!=='1') throw Error('Undo did not preserve committed tiles');
   await page.setViewportSize({width:1440,height:1050});
-  await page.screenshot({path:'Rummikub-Master-Unity/docs/images/structure-lab-desktop.png',fullPage:true,animations:'disabled'});
+  await page.screenshot({path:'docs/images/structure-lab-desktop.png',fullPage:true,animations:'disabled'});
   const widths=[];
   for(const width of [320,390,768,1440]) {await page.setViewportSize({width,height:900}); widths.push(await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth})));}
   if(widths.some(x=>x.scroll>x.width)) throw Error('Page horizontal overflow '+JSON.stringify(widths));
   await page.setViewportSize({width:390,height:844});
-  await page.screenshot({path:'Rummikub-Master-Unity/docs/images/structure-lab-mobile.png',fullPage:true,animations:'disabled'});
+  await page.screenshot({path:'docs/images/structure-lab-mobile.png',fullPage:true,animations:'disabled'});
   await page.getByRole('button',{name:'Reset fixture',exact:true}).click();
   await page.getByRole('button',{name:'Place orange 9',exact:true}).focus();
   await page.keyboard.press('Enter');

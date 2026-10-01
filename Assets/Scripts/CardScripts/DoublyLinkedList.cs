@@ -88,4 +88,3 @@ public class DoublyLinkedList<T> : IEnumerable<T>
     }
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
-

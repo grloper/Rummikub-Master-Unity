@@ -45,5 +45,3 @@ static class Program {
         Console.WriteLine($"PASS: {checks} assertions against linked production C# classes (Unity adapters; not a scene run).");
     }
 }
-
-
