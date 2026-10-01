@@ -52,7 +52,8 @@ public class PlayerHand : IEnumerable<Card>
     return sortedCards;
   }
 
-  // remove card from hand, O(1)
+  // O(k) bucket search, where k is this color/rank bucket's size.
+  // A legal 106-tile game bounds identical color/rank copies to two; this API does not enforce it.
   public void RemoveCard(Card card)
   {
     LinkedList<Card> bucket = cardMatrix[(int)card.Color, GetNumberIndex(card)];
@@ -70,7 +71,7 @@ public class PlayerHand : IEnumerable<Card>
       return cardMatrix[(int)CardColor.Red, numberIndex].First.Value; // Return the red Joker
     return null; // Return null if no Joker is found
   }
-  // if the hand contains this exact card instance, O(1)
+  // O(k) bucket search for this exact card; only the bucket index is O(1).
   // (the deck holds two identical copies of every tile, so identity matters - not just color/number)
   public bool Contains(Card card)
   {

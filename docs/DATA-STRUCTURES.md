@@ -25,7 +25,15 @@ The game caller `GameBoard.CombineSets` updates the donor's board positions befo
 
 ## Other structures and limits
 
-`PlayerHand` uses color/rank buckets. Choosing a bucket is constant index arithmetic; removal in a bucket depends on its actual container and lookup implementation. Deck and AI candidate search costs must be evaluated separately; an O(1) linked-node edit cannot establish O(1) move planning or a whole O(1) game. The separate browser implementation uses arrays and scans rather than these Unity lists.
+`PlayerHand` uses a 4-by-14 array of standard `LinkedList<Card>` buckets. Choosing a bucket is constant index arithmetic; AddLast is O(1). Contains and Remove(value) search that bucket in O(k). In a legal 106-tile game, a regular color/rank bucket has at most two physical copies; the generic public methods do not enforce that bound. SortedByRun and SortedByGroup walk all 56 buckets and n cards: O(56+n), without comparison sorting. GetJoker checks two fixed buckets.
+
+`Board` maps endpoint positions to immutable set IDs and IDs to `CardsSet` objects through dictionaries. An indexed endpoint lookup is expected O(1). `FindCardSetPosition` for an unindexed interior tile scans left through its row: O(c) dictionary probes up to the old column, not O(1). Board's copy constructor walks endpoint entries and copies every set list; logical undo backup is O(e+t) for e indexed endpoints and t tiles. Physical Unity Card objects are referenced, not cloned by that logical backup. `GameBoard.IsExistForStack` uses Stack.Contains, which is O(u) for u queued moves, and UndoMoves visits them.
+
+`RummikubDeck.DrawRandomCardFromDeck` chooses an index, swaps in the last element and removes the last List slot. It avoids a shifting middle removal: O(1) list work, aside from RNG behavior. The production-linked deck tests draw all 106 distinct physical objects, verify two jokers and reject an empty draw.
+
+Unity `Computer` and `ChainExtractor` contain hand/board traversals, candidate list construction and pair search. `FindSingleCardWithDoubleExtraction` loops over pairs of eligible board cards for each hand card; with h hand cards and b candidates the pair-search portion can perform O(h*b*b) combinations, with additional filtering/validation. `ExecuteChainPlan` also uses OrderBy on selected cards. These are source observations; no whole-AI timing or coroutine execution was verified. An O(1) linked-node edit cannot establish O(1) move planning or a whole O(1) game.
+
+The separate browser implementation stores an 8-by-22 array, scans cells to extract/validate sets, and sorts rack/candidate arrays in its greedy opponent. It does not use these Unity buckets, nodes, endpoint dictionaries or layered extraction plans.
 
 ## Execution evidence
 
