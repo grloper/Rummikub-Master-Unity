@@ -1,0 +1,29 @@
+{
+  "measuredAtUtc": "2026-10-01T11:51:48.5887182Z",
+  "runtime": "9.0.14",
+  "scope": "Production DoublyLinkedList\u003Cint\u003E linked into .NET harness; not Unity runtime, Card lifecycle, AI or gameplay latency",
+  "method": "Seven trials after lookup warmup. Median includes loop/modulo/hash costs; append timing excludes donor construction but includes receiver index allocation and node ownership transfer. Wall-clock noise, GC and JIT affect timings. No latency threshold or asymptotic claim inferred from timings alone.",
+  "rows": [
+    {
+      "nodes": 1000,
+      "trials": 7,
+      "queriesPerTrial": 200000,
+      "containsMedianNanoseconds": 9.0495,
+      "appendMedianMilliseconds": 0.0535
+    },
+    {
+      "nodes": 10000,
+      "trials": 7,
+      "queriesPerTrial": 200000,
+      "containsMedianNanoseconds": 8.26,
+      "appendMedianMilliseconds": 0.3916
+    },
+    {
+      "nodes": 100000,
+      "trials": 7,
+      "queriesPerTrial": 200000,
+      "containsMedianNanoseconds": 9.399,
+      "appendMedianMilliseconds": 3.5029
+    }
+  ]
+}

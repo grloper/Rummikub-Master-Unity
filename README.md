@@ -46,6 +46,12 @@ Browser checks cover malformed boards, duplicate physical IDs, runs/jokers, crow
 
 The Unity engine indexes set edges and stores connected tiles in doubly linked lists. Edge lookup and pointer splicing are constant-time; membership unions and appended-tile identity updates are O(m). Whole-board validation and set traversal add work. No measured benchmark supports universal O(1) placement.
 
+### Inspect a move and its structures
+
+Open `/play/lab.html` on the same local server. Select orange 9, orange 10 and the joker, check the 30-point opening meld, then commit or undo. This synthetic fixture executes the actual browser rule functions and displays their output. Its linked-node diagram explains the Unity source; it does not execute Unity or represent the browser's internal storage. See [the operation-by-operation data structure audit](docs/DATA-STRUCTURES.md).
+
+The C# list checks now also cover duplicate values, transferred node ownership, foreign/detached removals, self append and donor reuse against a reference list across 3,000 seeded operations. The original list failed the duplicate membership regression. Append consumes the donor instead of leaving two mutable lists sharing nodes. Hash-index claims are expected/amortized costs, not universal worst-case O(1).
+
 ## Demo evidence
 
 ![Local browser gameplay capture](docs/images/browser-verified.png)

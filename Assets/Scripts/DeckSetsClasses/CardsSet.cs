@@ -53,7 +53,7 @@ public class CardsSet : ICardSet
     {
         return set.Contains(card); // check if the set contains a certain card
     }
-    // Combine two sets of cards and return the new set of cards, O(1)
+    // Combine consumes set2: O(1) endpoint rewiring plus expected O(m) index/ownership transfer.
     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
         //append set2 to set2 while both contain set.set which is DoublyLinkedList<Card>

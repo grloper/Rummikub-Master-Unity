@@ -10,7 +10,9 @@ static class Program {
         return set;
     }
     static Card C(int n, CardColor color = CardColor.Red) => new(n, color);
-    static void Main() {
+    static void Main(string[] args) {
+        if (args.Contains("--measure")) { StructureMeasurements.Run(); return; }
+        ListChecks.Run(Check);
         Check(Set(C(1), C(2), C(3)).IsRun(), "basic run");
         Check(!Set(C(15), C(1), C(2)).IsRun(), "leading joker cannot be zero");
         Check(!Set(C(12), C(13), C(15)).IsRun(), "trailing joker cannot be fourteen");
@@ -29,6 +31,12 @@ static class Program {
         var list = new DoublyLinkedList<Card>(); list.AddLast(a); list.AddLast(b);
         list.RemoveFirst();
         Check(!list.Contains(a) && list.Contains(b) && list.Count == 1, "physical copies remain distinct");
+        var left = Set(C(3), C(4), C(5));
+        var right = Set(C(6), C(7), C(8));
+        left.Combine(left, right);
+        Check(left.IsRun() && left.set.Count == 6 && right.set.Count == 0, "production Combine consumes donor and preserves run");
+        var split = left.UnCombine(3);
+        Check(split.IsRun() && left.IsRun() && split.set.Count == 3 && left.set.Count == 3, "production UnCombine splits moved nodes into valid runs");
         var deck = new RummikubDeck(); var drawn = new HashSet<Card>();
         while (deck.GetDeckLength() > 0) Check(drawn.Add(deck.DrawRandomCardFromDeck()), "no repeated physical card");
         Check(drawn.Count == 106 && drawn.Count(c => c.Number == 15) == 2, "complete deck");
@@ -37,3 +45,5 @@ static class Program {
         Console.WriteLine($"PASS: {checks} assertions against linked production C# classes (Unity adapters; not a scene run).");
     }
 }
+
+
