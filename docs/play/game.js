@@ -82,6 +82,7 @@
   // Returns { valid, kind:'run'|'group', points, values:[perTile], jokerAs:[...] }.
   function validateSet(tileObjs) {
     if (!tileObjs || tileObjs.length < 3) return { valid: false };
+    if (tileObjs.some(function (t) { return !t; })) return { valid: false };
 
     var asGroup = tryGroup(tileObjs);
     if (asGroup.valid) return asGroup;
@@ -138,6 +139,22 @@
 
   // Every set on the board is well-formed. Returns { valid, badAt:[{row,col}] }.
   function validateBoard(board, tiles) {
+    // Reject malformed input before scanning sets. Tile identity is physical:
+    // two copies of the same number/color still have different IDs.
+    if (!Array.isArray(board) || board.length !== ROWS)
+      return { valid: false, badAt: [] };
+    var seen = {};
+    for (var r = 0; r < ROWS; r++) {
+      if (!Array.isArray(board[r]) || board[r].length !== COLS)
+        return { valid: false, badAt: [] };
+      for (var c = 0; c < COLS; c++) {
+        var id = board[r][c];
+        if (id == null) continue;
+        if (!Number.isInteger(id) || !Object.prototype.hasOwnProperty.call(tiles, id) || seen[id])
+          return { valid: false, badAt: [{ row: r, col: c }] };
+        seen[id] = true;
+      }
+    }
     var sets = extractSets(board);
     var bad = [];
     for (var i = 0; i < sets.length; i++) {

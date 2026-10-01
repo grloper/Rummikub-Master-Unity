@@ -219,6 +219,7 @@ public class CardsSet : ICardSet
     // O(n) probe: temporarily adds the card, revalidates, then restores the set and its flags
     public bool CanAddCardBeginningGroup(Card card)
     {
+        if (set.Contains(card)) return false; // a physical tile cannot appear twice
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
         bool check = this.IsGroupOfColors();
@@ -229,6 +230,7 @@ public class CardsSet : ICardSet
     // check if a card can add to the beginning of the set to create a run
     public bool CanAddCardBeginningRun(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
         bool check = this.IsRun();
@@ -239,6 +241,7 @@ public class CardsSet : ICardSet
     // check if a card can add to the end of the set to create a group of colors
     public bool CanAddCardEndGroup(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsGroupOfColors();
@@ -249,6 +252,7 @@ public class CardsSet : ICardSet
     // check if a card can be added to the end of the set to create a run
     public bool CanAddCardEndRun(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsRun();
