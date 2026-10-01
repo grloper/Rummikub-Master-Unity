@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net9.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/Scripts/CardScripts/Card.cs" Link="Card.cs" />
+    <Compile Include="../../Assets/Scripts/CardScripts/CardPosition.cs" Link="CardPosition.cs" />
+    <Compile Include="../../Assets/Scripts/CardScripts/DoublyLinkedList.cs" Link="DoublyLinkedList.cs" />
+    <Compile Include="../../Assets/Scripts/CardScripts/Node.cs" Link="Node.cs" />
+    <Compile Include="../../Assets/Scripts/Enums/CardColor.cs" Link="CardColor.cs" />
+    <Compile Include="../../Assets/Scripts/GameManagerScripts/Constants.cs" Link="Constants.cs" />
+    <Compile Include="../../Assets/Scripts/DeckSetsClasses/CardsSet.cs" Link="CardsSet.cs" />
+    <Compile Include="../../Assets/Scripts/DeckSetsClasses/ICardSet.cs" Link="ICardSet.cs" />
+    <Compile Include="../../Assets/Scripts/DeckSetsClasses/RummikubDeck.cs" Link="RummikubDeck.cs" />
+    <Compile Include="../../Assets/Scripts/Exceptions/EmptyDeckException.cs" Link="EmptyDeckException.cs" />
+  </ItemGroup>
+</Project>

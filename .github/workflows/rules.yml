@@ -1,0 +1,19 @@
+name: Rule regression checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  browser-and-csharp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: node --test tests/browser-rules.test.cjs
+      - run: dotnet run --project tests/core/CoreChecks.csproj

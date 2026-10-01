@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Play Rummikub — vs Computer & Online Rooms</title>
-<meta name="description" content="Play Rummikub in your browser — single-player vs a rule-based AI, local pass-and-play, or real online rooms over peer-to-peer WebRTC.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rummikub Lab - Play against the computer</title>
+<meta name="description" content="Play the standalone browser Rummikub game against a greedy computer opponent, try local pass-and-play, or inspect real rule transitions in the structure lab. Online rooms are experimental.">
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect x='8' y='4' width='84' height='92' rx='14' fill='%23f5efe0'/&gt;&lt;text x='50' y='58' font-size='52' font-weight='bold' text-anchor='middle' fill='%23c0392b' font-family='Georgia,serif'&gt;7&lt;/text&gt;&lt;circle cx='50' cy='80' r='7' fill='%23c0392b'/&gt;&lt;/svg&gt;">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -20,13 +20,14 @@
       <div class="tile orange">9<span class="dot"></span></div>
       <div class="tile joker">☺</div>
     </div>
-    <h1>Rummikub <span>Online</span></h1>
-    <p class="tag">Play in your browser — vs the computer, pass-and-play, or a real online room with friends.</p>
+    <h1>Rummikub <span>Lab</span></h1>
+    <p class="tag">Play against the computer, share a device, or explore how a legal move works.</p>
+    <p class="tag"><a href="lab.html">Explore the interactive structure lab &rarr;</a></p>
     <div class="menu-grid">
       <button class="menu-btn" data-act="ai">
         <div class="ico">🤖</div>
         <div class="big">Play vs Computer</div>
-        <div class="small">Single player against the rule-based AI opponent.</div>
+        <div class="small">Single player against the browser's greedy opponent.</div>
       </button>
       <button class="menu-btn" data-act="local">
         <div class="ico">👥</div>
@@ -36,12 +37,12 @@
       <button class="menu-btn" data-act="create">
         <div class="ico">🌐</div>
         <div class="big">Create Online Room</div>
-        <div class="small">Get a room code and invite friends. Peer-to-peer, no server.</div>
+        <div class="small">Experimental PeerJS room. Public signaling required; cross-device play unverified.</div>
       </button>
       <button class="menu-btn" data-act="join">
         <div class="ico">🔑</div>
         <div class="big">Join Online Room</div>
-        <div class="small">Enter a friend's room code to join their game.</div>
+        <div class="small">Experimental room connection; network access required.</div>
       </button>
     </div>
     <div class="footer-link"><a href="../">← Back to project page</a></div>

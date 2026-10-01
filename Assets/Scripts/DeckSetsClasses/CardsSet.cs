@@ -53,7 +53,7 @@ public class CardsSet : ICardSet
     {
         return set.Contains(card); // check if the set contains a certain card
     }
-    // Combine two sets of cards and return the new set of cards, O(1)
+    // Combine consumes set2: O(1) endpoint rewiring plus expected O(m) index/ownership transfer.
     public CardsSet Combine(CardsSet set1, CardsSet set2)
     {
         //append set2 to set2 while both contain set.set which is DoublyLinkedList<Card>
@@ -219,6 +219,7 @@ public class CardsSet : ICardSet
     // O(n) probe: temporarily adds the card, revalidates, then restores the set and its flags
     public bool CanAddCardBeginningGroup(Card card)
     {
+        if (set.Contains(card)) return false; // a physical tile cannot appear twice
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
         bool check = this.IsGroupOfColors();
@@ -229,6 +230,7 @@ public class CardsSet : ICardSet
     // check if a card can add to the beginning of the set to create a run
     public bool CanAddCardBeginningRun(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToBeginning(card);
         bool check = this.IsRun();
@@ -239,6 +241,7 @@ public class CardsSet : ICardSet
     // check if a card can add to the end of the set to create a group of colors
     public bool CanAddCardEndGroup(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsGroupOfColors();
@@ -249,6 +252,7 @@ public class CardsSet : ICardSet
     // check if a card can be added to the end of the set to create a run
     public bool CanAddCardEndRun(Card card)
     {
+        if (set.Contains(card)) return false;
         bool run = isRun, group = isGroupOfColors; // probes must not clobber the persistent flags
         AddCardToEnd(card);
         bool check = this.IsRun();

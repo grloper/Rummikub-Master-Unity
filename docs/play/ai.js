@@ -22,6 +22,7 @@
         while (j < pool.length) {
           var prev = run[run.length - 1].number;
           if (pool[j].number === prev + 1) { run.push(pool[j]); j++; }
+          else if (pool[j].number === prev) { j++; } // keep the other physical copy for a later set
           else if (pool[j].number === prev + 2 && jokerIdx < jokers.length) {
             run.push(jokers[jokerIdx]); jokerIdx++; run.push(pool[j]); j++;
           } else break;
@@ -145,7 +146,11 @@
           });
           played = true;
         }
-        if (played) meldedNow = true;
+        // Space may run out after only some chosen sets fit. A first meld is
+        // atomic: validate the tiles actually placed, not the planned total.
+        if (played && RK.evaluateCommit(board, work, tiles, { rack: rackIds, hasMelded: false }).ok)
+          meldedNow = true;
+        else return { board: board, rack: rackIds, melded: false, drew: true, played: false };
       }
     } else {
       // Play any full sets we can.
