@@ -1,0 +1,7 @@
+# Default owner for everything; gate and test paths listed explicitly.
+*                                @grloper
+/.github/                        @grloper
+/scripts/                        @grloper
+/scripts/unity-external-guids.txt @grloper
+/Assets/Scripts/                 @grloper
+/AGENTS.md                       @grloper

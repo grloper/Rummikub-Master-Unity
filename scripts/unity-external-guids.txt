@@ -1,0 +1,15 @@
+# Script GUIDs referenced from tracked assets that legitimately live in Unity packages (TextMesh Pro, UGUI, URP, ...)
+# and not under Assets/. They are NOT defined in this repo; they are ASSUMED to be package scripts (origin not verified offline).
+# Snapshot taken when the gate was introduced. Every addition is reviewed by the owner (CODEOWNERS); do not add a GUID to silence a missing-script error.
+0cd44c1031e13a943bb63640046fad76  # Assets/Scenes/SampleScene.unity
+2705215ac5b84b70bacc50632be6e391  # Assets/TextMesh Pro/Resources/TMP Settings.asset
+4e29b1a8efbd4b44bb3f3716e73f07ff  # Assets/Prefabs/Buttons.prefab
+4f231c4fb786f3946a6b90b886c48677  # Assets/Scenes/SampleScene.unity
+71c1514a6bd24e1e882cebbe1904ce04  # Assets/Fonts/Bangers SDF.asset
+76c392e42b5098c458856cdf6ecaaaa1  # Assets/Scenes/SampleScene.unity
+84a92b25f83d49b9bc132d206b370281  # Assets/TextMesh Pro/Resources/Sprite Assets/EmojiOne.asset
+8a8695521f0d02e499659fee002a26c2  # Assets/Prefabs/PlayerGrid.prefab
+ab2114bdc8544297b417dfefe9f1e410  # Assets/TextMesh Pro/Resources/Style Sheets/Default Style Sheet.asset
+dc42784cf147c0c48a680349fa168899  # Assets/Scenes/SampleScene.unity
+f4688fdb7df04437aeb418b961361dc5  # Assets/Prefabs/Buttons.prefab
+fe87c0e1cc204ed48ad3b37840f39efc  # Assets/Prefabs/Buttons.prefab
