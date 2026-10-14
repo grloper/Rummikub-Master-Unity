@@ -25,6 +25,9 @@
 .vs/
 .vsconfig
 *.csproj
+!tests/core/CoreChecks.csproj
+tests/core/bin/
+tests/core/obj/
 *.unityproj
 *.sln
 *.slnx

@@ -1,8 +1,10 @@
-// This class is used to create a node for a doubly linked list. 
+// Handles expose traversal but cannot publicly mutate the list topology or value.
 public class Node<T>
 {
-    // simple outline of a node.
-    public T Value { get; set; } // value of the node
-    public Node<T> Next { get; set; } // next node
-    public Node<T> Prev { get; set; } // previous node
+    public T Value { get; private set; }
+    public Node<T> Next { get; internal set; }
+    public Node<T> Prev { get; internal set; }
+    internal DoublyLinkedList<T> Owner { get; set; }
+    public Node() { }
+    internal Node(T value, DoublyLinkedList<T> owner) { Value = value; Owner = owner; }
 }

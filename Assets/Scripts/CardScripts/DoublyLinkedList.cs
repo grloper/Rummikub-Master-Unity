@@ -1,178 +1,90 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Values may repeat. Hash equality must remain stable while a value is in the list.
 public class DoublyLinkedList<T> : IEnumerable<T>
 {
-    public Node<T> Head { get; private set; } // head node
-    public Node<T> Tail { get; private set; } // tail node
-    public int Count { get; private set; } // number of elements in the list
-    private readonly HashSet<T> valueSet; // HashSet for constant time contains checks
-    // O(1)
-    // Constructor with no parameters, initializes the linked list
-    public DoublyLinkedList()
+    public Node<T> Head { get; private set; }
+    public Node<T> Tail { get; private set; }
+    public int Count { get; private set; }
+    private Dictionary<T, int> valueCounts = new Dictionary<T, int>();
+    private int nullCount;
+
+    private void IndexAdd(T value)
     {
-        Count = 0;
-        valueSet = new HashSet<T>();
+        if (value is null) { nullCount++; return; }
+        valueCounts.TryGetValue(value, out int count);
+        valueCounts[value] = count + 1;
     }
-    // O(1)
+    private void IndexRemove(T value)
+    {
+        if (value is null) { nullCount--; return; }
+        int count = valueCounts[value];
+        if (count == 1) valueCounts.Remove(value);
+        else valueCounts[value] = count - 1;
+    }
+    // Expected amortized O(1), including hash-index maintenance.
     public void AddFirst(T value)
     {
-        Node<T> node = new Node<T> { Value = value }; // Create a new node with the given value
-        if (Head == null) // If the list is empty
-        {
-            Head = Tail = node; // Set the head and tail to the new node
-        }
-        else // If the list is not empty
-        {
-            // Adjust the pointers to insert the new node at the beginning
-            node.Next = Head;
-            Head.Prev = node;
-            Head = node;
-        }
-        Count++; // Increment the count
-        valueSet.Add(value); // Add value to HashSet
+        var node = new Node<T>(value, this) { Next = Head };
+        if (Head == null) Tail = node;
+        else Head.Prev = node;
+        Head = node;
+        Count++;
+        IndexAdd(value);
     }
-    // O(1)
     public void AddLast(T value)
     {
-        Node<T> node = new Node<T> { Value = value }; // Create a new node with the given value
-        if (Tail == null) // If the list is empty
-        {
-            Head = Tail = node; // Set the head and tail to the new node
-        }
-        else // If the list is not empty
-        {
-            // Adjust the pointers to insert the new node at the end
-            node.Prev = Tail;
-            Tail.Next = node;
-            Tail = node;
-        }
+        var node = new Node<T>(value, this) { Prev = Tail };
+        if (Tail == null) Head = node;
+        else Tail.Next = node;
+        Tail = node;
+        Count++;
+        IndexAdd(value);
+    }
+    public Node<T> GetFirstNode() => Head;
+    public Node<T> GetLastNode() => Tail;
+    public void RemoveFirst() => Remove(Head);
+    public void RemoveLast() => Remove(Tail);
 
-        Count++; // Increment the count
-        valueSet.Add(value); // Add value to HashSet
-    }
-    // O(1)
-    public Node<T> GetFirstNode()
-    {
-        return Head; // Return the head node
-    }
-    // O(1)
-    public Node<T> GetLastNode()
-    {
-        return Tail; // Return the tail node
-    }
-    // Remove the first node in the linked list, O(1)
-    public void RemoveFirst()
-    {
-        if (Head == null) // If the list is empty
-        {
-            return; // Nothing to remove if the list is empty
-        }
-        T removedValue = Head.Value; // keep the removed value so it can be dropped from the HashSet
-
-        if (Head == Tail) // If there's only one element in the list
-        {
-            Head = Tail = null; // Set the head and tail to null
-        }
-        else // If there are more than one elements in the list
-        {
-            Head = Head.Next; // Move the head to the next node
-            Head.Prev = null; // Set the previous pointer of the new head to null
-        }
-        Count--; // Decrement the count
-        valueSet.Remove(removedValue); // Remove the removed value from the HashSet, O(1)
-    }
-    // Remove the last node in the linked list, O(1)
-    public void RemoveLast()
-    {
-        if (Tail == null) // If the list is empty
-        {
-            return; // Nothing to remove if the list is empty
-        }
-        T removedValue = Tail.Value; // keep the removed value so it can be dropped from the HashSet
-
-        if (Head == Tail) // If there is only one element in the list
-        {
-            Head = Tail = null; // Set the head and tail to null
-        }
-        else // If there are more than one elements in the list
-        {
-            // Move the tail to the previous node
-            Tail = Tail.Prev;
-            Tail.Next = null; // Set the next pointer of the new tail to null
-        }
-        Count--; // Decrement the count
-        valueSet.Remove(removedValue); // Remove the removed value from the HashSet, O(1)
-    }
-
-    // Remove a node from the linked list, O(1)
+    // A node handle is removable only by its current owner, exactly once.
     public void Remove(Node<T> node)
     {
-        if (node == null) // If the node is null
-        {
-            return; // Nothing to remove if the node is null
-        }
-
-        if (node == Head) // If the node is the head
-        {
-            RemoveFirst();
-        }
-        else if (node == Tail) // If the node is the tail
-        {
-            RemoveLast();
-        }
-        else // If the node is neither the head nor the tail
-        {
-            // Adjust the pointers to skip over the 'node'
-            node.Prev.Next = node.Next;
-            node.Next.Prev = node.Prev;
-            Count--;
-            // Remove the value from the HashSet
-            valueSet.Remove(node.Value);
-        }
+        if (node == null || node.Owner != this) return;
+        if (node.Prev == null) Head = node.Next;
+        else node.Prev.Next = node.Next;
+        if (node.Next == null) Tail = node.Prev;
+        else node.Next.Prev = node.Prev;
+        Count--;
+        IndexRemove(node.Value);
+        node.Prev = node.Next = null;
+        node.Owner = null;
     }
 
-
-    // O(1) list splice (the HashSet union below is O(m) on the smaller, appended list),
-    // best function for the rummikub's data structure
+    // Move nodes, consuming other. O(m) expected for m appended nodes:
+    // pointer splice is O(1); ownership and membership maintenance are O(m).
     public void Append(DoublyLinkedList<T> other)
     {
-        if (other == null || other.Head == null) // If the other list is null or empty, return
+        if (other == null || ReferenceEquals(other, this) || other.Count == 0) return;
+        for (var node = other.Head; node != null; node = node.Next)
         {
-            return;
+            node.Owner = this;
+            IndexAdd(node.Value);
         }
-        if (Head == null) // If the current list is empty, set the head and tail to the other list's head and tail
-        {
-            Head = other.Head; // Set the head to the other list's head
-        }
-        else // If the current list is not empty
-        {
-            // Adjust the pointers to append the other list to the current list
-            Tail.Next = other.Head;
-            other.Head.Prev = Tail;
-        }
-        // Set the tail to the other list's tail and increment the count
+        if (Tail == null) Head = other.Head;
+        else { Tail.Next = other.Head; other.Head.Prev = Tail; }
         Tail = other.Tail;
         Count += other.Count;
-        valueSet.UnionWith(other.valueSet); // Keep Contains() correct for the appended elements
+        other.Head = other.Tail = null;
+        other.Count = other.nullCount = 0;
+        // Replace rather than scan a possibly oversized historical hash table.
+        other.valueCounts = new Dictionary<T, int>();
     }
-    // O(1)
-    public bool Contains(T value)
+    // Expected O(1); hash collisions can make worst-case lookup linear.
+    public bool Contains(T value) => value is null ? nullCount > 0 : valueCounts.ContainsKey(value);
+    public IEnumerator<T> GetEnumerator()
     {
-        return valueSet.Contains(value); // O(1) time complexity for HashSet contains check
+        for (var node = Head; node != null; node = node.Next) yield return node.Value;
     }
-    // O(n) where n is the number of elements in the list (Count)
-       public IEnumerator<T> GetEnumerator()
-    {
-        Node<T> current = Head;
-        while (current != null)
-        {
-            yield return current.Value;
-            current = current.Next;
-        }
-    }
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
